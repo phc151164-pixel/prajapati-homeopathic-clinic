@@ -3,7 +3,7 @@ const json = (statusCode, obj) => ({statusCode,headers:{'Content-Type':'applicat
 const configured = () => ['SUPABASE_URL','PHC_SUPABASE_SERVER_KEY','RAZORPAY_KEY_ID','RAZORPAY_KEY_SECRET'].every(k=>Boolean(process.env[k]));
 const supa = async (path, method='GET', body) => {
   const url=process.env.SUPABASE_URL.replace(/\/$/,'')+'/rest/v1/'+path;
-  const res=await fetch(url,{method,headers:{apikey:process.env.PHC_SUPABASE_SERVER_KEY,Authorization:'Bearer '+process.env.process.env.PHC_SUPABASE_SERVER_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:body===undefined?undefined:JSON.stringify(body)});
+  const res=await fetch(url,{method,headers:{apikey:process.env.PHC_SUPABASE_SERVER_KEY,Authorization:'Bearer '+process.env.PHC_SUPABASE_SERVER_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:body===undefined?undefined:JSON.stringify(body)});
   const txt=await res.text();let data;try{data=txt?JSON.parse(txt):null}catch{data={message:'Unexpected database response'}}
   if(!res.ok){const e=new Error(data.message||data.details||'Database request failed');e.status=res.status; e.code=data.code;throw e;}return data;
 };
