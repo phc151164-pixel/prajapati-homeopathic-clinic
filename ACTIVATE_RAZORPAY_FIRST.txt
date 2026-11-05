@@ -1,0 +1,62 @@
+PHC — ACTIVATE RAZORPAY ON YOUR EXISTING NETLIFY WEBSITE
+
+YOUR RAZORPAY ACCOUNT IS CREATED: NEXT STEPS
+
+1. Complete Razorpay merchant activation / verification in its dashboard.
+2. Create a Supabase project. In its SQL Editor, execute the script:
+     setup/booking_database.sql
+3. AUDIO FEE = ₹300; VIDEO FEE = ₹300. The server charges 30000 paise for both.
+   No fee environment variable is required in this version.
+4. In your EXISTING Netlify PHC project, add these Environment variables:
+
+   RAZORPAY_KEY_ID             = your TEST key id, later LIVE key id
+   RAZORPAY_KEY_SECRET         = corresponding secret (SERVER ONLY)
+   RAZORPAY_WEBHOOK_SECRET     = independently generated webhook secret
+   SUPABASE_URL               = your project's API URL
+   SUPABASE_SERVICE_ROLE_KEY  = secret server-side database key
+
+   NEVER put the secret values inside index.html, chats, screenshots,
+   public GitHub repositories, or client-side JavaScript.
+
+5. Razorpay Dashboard > Webhooks: add the endpoint
+   https://YOUR-ACTUAL-NETLIFY-DOMAIN/.netlify/functions/consult-webhook
+   Set the same webhook secret on both sides and subscribe to
+   payment.captured and order.paid.
+
+6. Deploy the complete SITE, including netlify/functions, not ONLY index.html.
+   Recommended: Git-connected Netlify deploy (or Netlify CLI build/deploy).
+   The normal static HTML drag/drop may not publish server functions.
+7. Check your live endpoint:
+   https://YOUR-ACTUAL-NETLIFY-DOMAIN/.netlify/functions/consult-availability?date=YYYY-MM-DD
+   It should return ready:true for correctly configured test credentials.
+8. Test with Razorpay TEST MODE. Check that paid slots turn RED in a second
+   browser, a concurrent request cannot double-book, and abandoned payments
+   release their temporary hold. Verify the webhooks are received.
+9. Only after testing: switch Netlify environment vars to RAZORPAY LIVE keys,
+   enable approved live payment methods in Razorpay, and deploy again.
+
+HOW PAYMENT WORKS
+- Patient chooses video/audio, date and a GREEN time box.
+- Website requests a temporary hold and Razorpay order from Netlify Functions.
+- Razorpay Checkout offers supported UPI apps such as PhonePe, cards, banking,
+  wallets, depending on the merchant account and patient device.
+- Captured, verified payment marks the slot red/BOOKED in Supabase.
+- A payment callback failure or expired hold may require manual reconciliation
+  and refund handling; the clinic should monitor its payment dashboard.
+
+SAFETY / PRIVACY
+- Keep client contact details accessible only to authorized clinic staff.
+- Add a privacy notice and your cancellation/refund policy before going live.
+- Do not charge live patients until the full backend is verified.
+- The clinic handles the actual video/audio meeting; automatic meeting rooms
+  are not part of this code.
+
+Official help:
+https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/integration-steps/
+https://docs.netlify.com/build/functions/get-started/
+https://supabase.com/docs
+
+IMPORTANT AFTER THIS UPDATE:
+If you publish by dragging files into Netlify, the schedule boxes may be visible as grey "Not verified" placeholders. They are not real-time green available slots.
+To enable green/red true availability and Razorpay payments: run setup/booking_database.sql in Supabase, add all required environment variables in Netlify, and deploy Netlify Functions through a Git-connected build or Netlify CLI. Test with Razorpay Test Mode before accepting payments.
+Never disable the payment safeguards just to make the Pay button clickable.

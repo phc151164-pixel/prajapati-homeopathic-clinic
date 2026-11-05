@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="Prajapati Homeopathic Clinic, Ratlam. Dr. Umesh Prajapati. Green and white clinic website with visible categories and appointment booking." name="description"/>
+<title>Prajapati Homeopathic Clinic | Ratlam</title>
+<style>
+:root{
+  --green:#0d7a46; --green-dark:#075c32; --green-soft:#e8f6ee; --text:#163126; --muted:#557061; --white:#fff; --border:#d8e8de; --shadow:0 14px 32px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:#f7fbf8;line-height:1.5}
+a{text-decoration:none;color:inherit} img{max-width:100%;display:block}
+.container{width:min(1180px,92%);margin:auto}
+.header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:10px 0}
+.brand{display:flex;align-items:center;gap:14px}
+.brand img{width:78px;height:78px;object-fit:contain;border-radius:18px;background:#fff;box-shadow:0 8px 22px rgba(13,122,70,.15);padding:6px}
+.brand-text h1{font-size:1.22rem;line-height:1.1;margin:0}
+.brand-text p{margin:3px 0 0;color:var(--muted);font-size:.94rem}
+.nav-links{display:flex;gap:20px;align-items:center;flex-wrap:wrap;font-weight:700}
+.nav-links a:hover{color:var(--green)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:999px;font-weight:800;border:none;cursor:pointer;transition:.2s transform,.2s box-shadow,.2s background}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;box-shadow:0 12px 26px rgba(7,92,50,.25)}
+.btn-light{background:#fff;color:var(--green-dark);border:1px solid var(--border)}
+.btn-outline{background:transparent;color:var(--green-dark);border:2px solid var(--green)}
+.hero{padding:42px 0 28px;background:linear-gradient(180deg,#ffffff 0%,#f1fbf4 100%)}
+.hero-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:32px;align-items:center}
+.badge{display:inline-block;background:var(--green-soft);color:var(--green-dark);padding:8px 14px;border-radius:999px;font-weight:800;font-size:.9rem;border:1px solid var(--border)}
+.hero h2{font-size:clamp(2rem,4vw,3.6rem);line-height:1.05;margin:16px 0 12px}
+.hero p{font-size:1.04rem;color:var(--muted);max-width:62ch}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+.quick-info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:24px}
+.quick-box{background:#fff;border:1px solid var(--border);border-radius:20px;padding:16px;box-shadow:var(--shadow)}
+.quick-box strong{display:block;color:var(--green-dark);margin-bottom:4px}
+.hero-side{position:relative;background:linear-gradient(135deg,var(--green-dark),var(--green));border-radius:34px;padding:28px;color:#fff;overflow:hidden;box-shadow:var(--shadow)}
+.hero-side::before,.hero-side::after{content:'';position:absolute;right:-30px;width:180px;height:180px;background:rgba(255,255,255,.08);border-radius:28px;transform:rotate(35deg)}
+.hero-side::before{top:-20px} .hero-side::after{bottom:-26px}
+.hero-card{position:relative;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:22px}
+.hero-card img{width:96px;height:96px;object-fit:contain;background:#fff;border-radius:22px;padding:8px;margin-bottom:12px}
+.section{padding:56px 0}
+.section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:24px;flex-wrap:wrap}
+.section-head h2{margin:0;font-size:clamp(1.6rem,3vw,2.5rem)}
+.section-head p{margin:0;color:var(--muted);max-width:58ch}
+.searchbox input{padding:13px 16px;border-radius:14px;border:1px solid var(--border);min-width:280px;font-size:1rem}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.card{background:#fff;border:1px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.card img{height:230px;object-fit:cover}
+.card-body{padding:18px}
+.card h3{margin:0 0 8px;font-size:1.18rem}
+.card p{margin:0;color:var(--muted);min-height:72px}
+.card-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.card-actions .btn{flex:1 1 180px}
+.cta-strip{background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;border-radius:30px;padding:30px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.details-wrap{display:grid;gap:24px}
+.detail{background:#fff;border:1px solid var(--border);border-radius:28px;overflow:hidden;box-shadow:var(--shadow);display:grid;grid-template-columns:.95fr 1.05fr}
+.detail-image img{height:100%;min-height:320px;object-fit:cover}
+.detail-content{padding:26px}
+.section-tag{margin:0 0 10px;color:var(--green);font-weight:800;letter-spacing:.1em;font-size:.82rem}
+.detail-content h2{margin:0 0 10px;font-size:2rem}
+.condition-list{margin:16px 0 0;padding-left:20px;columns:2;gap:28px}
+.condition-list li{margin-bottom:10px}
+.detail-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.booking{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.info-card,.form-card{background:#fff;border:1px solid var(--border);border-radius:26px;padding:24px;box-shadow:var(--shadow)}
+.info-card ul{padding-left:20px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-row{display:flex;flex-direction:column;gap:6px}
+.form-row.full{grid-column:1/-1}
+label{font-weight:700}
+input,select,textarea{padding:13px 14px;border:1px solid var(--border);border-radius:14px;font-size:1rem;font-family:inherit}
+small.help{color:var(--muted)}
+.footer{background:#073d22;color:#eef7f1;margin-top:60px;padding:32px 0}
+.footer-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.footer h3{margin-top:0}
+.footer a{color:#eef7f1}
+.float-whatsapp{position:fixed;right:18px;bottom:18px;background:#1fae61;color:#fff;border-radius:999px;padding:14px 18px;font-weight:800;box-shadow:0 12px 30px rgba(0,0,0,.22);z-index:30}
+.note{color:var(--muted);font-size:.94rem}
+#noResults{display:none;color:#b03030;font-weight:700}
+@media (max-width:960px){
+  .hero-grid,.detail,.booking,.footer-grid{grid-template-columns:1fr}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .condition-list{columns:1}
+}
+@media (max-width:640px){
+  .nav{flex-direction:column;align-items:flex-start}
+  .nav-links{gap:12px}
+  .grid{grid-template-columns:1fr}
+  .quick-info,.form-grid{grid-template-columns:1fr}
+  .searchbox input{min-width:unset;width:100%}
+  .hero-side{padding:18px}
+  .brand img{width:66px;height:66px}
+  .hero h2{font-size:2rem}
+}
+
+/* Doctor portrait section updated to blend with white website background */
+.hero-side{padding:16px;overflow:hidden;background:#ffffff;color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow)}
+.hero-side::before,.hero-side::after{display:none}
+.doctor-portrait-wrap{border-radius:24px;overflow:hidden;background:linear-gradient(180deg,#ffffff 0%,#f7fbf8 100%);min-height:420px;border:1px solid #eef2ef;display:flex;align-items:flex-end;justify-content:center;}
+.doctor-photo{width:100%;height:420px;object-fit:contain;object-position:center bottom;display:block;background:radial-gradient(circle at 50% 18%, #ffffff 0%, #ffffff 62%, #edf7f0 100%);padding-top:10px;}
+.doctor-photo-info{text-align:center;padding:18px 14px 12px;position:relative;z-index:1}
+.doctor-photo-info h3{font-size:1.6rem;line-height:1.2;margin:5px 0;color:var(--green-dark)}
+.doctor-photo-info p{margin:6px 0;color:var(--muted)}
+.doctor-photo-info .doctor-reg{font-size:.86rem;color:var(--muted);opacity:1;margin-bottom:16px}
+.doctor-eyebrow{letter-spacing:.13em;font-size:.74rem;font-weight:800;color:var(--green)}
+@media(max-width:640px){.doctor-photo{height:340px}.doctor-portrait-wrap{min-height:340px}}
+
+/* Patient reviews - clean and accessible */
+#reviews{scroll-margin-top:115px;background:linear-gradient(180deg,#f8fcf9,#eff9f2)}
+.review-intro{max-width:720px;color:var(--muted);margin:0 0 20px}
+.reviews-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.review-panel{background:#fff;border:1px solid var(--border);border-radius:24px;padding:26px;box-shadow:var(--shadow)}
+.review-panel h3{margin:0 0 10px;font-size:1.3rem}
+.review-panel p{color:var(--muted)}
+.review-panel .btn{margin-top:8px}
+.review-stars{color:#d5a500;letter-spacing:3px;font-size:25px}
+.review-form{display:grid;gap:12px}
+.review-form label{display:block;margin-bottom:4px}
+.review-form input,.review-form textarea,.review-form select{width:100%}
+.review-form textarea{resize:vertical;min-height:100px}
+.review-form small{color:var(--muted)}
+.review-message{font-weight:700;color:var(--green-dark)}
+@media(max-width:720px){.reviews-grid{grid-template-columns:1fr}}
+
+/* Treatment modal: independent of the fixed PHC watermark and mobile friendly. */
+.treatment-overlay[hidden]{display:none!important}
+.treatment-overlay{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:20px;isolation:isolate}
+.treatment-backdrop{position:absolute;inset:0;background:rgba(3,44,24,.72);backdrop-filter:blur(5px)}
+.treatment-dialog{position:relative;z-index:1;background:#fff;border:1px solid #c6e7d1;border-radius:25px;padding:28px 30px;max-width:650px;width:100%;max-height:min(85vh,760px);overflow:auto;box-shadow:0 35px 90px rgba(3,40,21,.35);outline:none}
+.treatment-dialog h2{font-size:clamp(1.5rem,3vw,2rem);color:#075c32;margin:0 40px 8px 0}
+.treatment-description{color:#466b55;margin:0 0 17px}
+.treatment-close{position:absolute;right:17px;top:14px;border:none;background:#e8f6ee;color:#075c32;border-radius:50%;width:42px;height:42px;font-size:27px;cursor:pointer}
+.treatment-close:hover,.treatment-close:focus-visible{background:#c5ebd2}
+.treatment-conditions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 17px;list-style:none;padding:0;margin:0}
+.treatment-conditions li{padding:11px 13px 11px 32px;border-radius:10px;background:#f2f9f4;position:relative;font-size:.94rem}
+.treatment-conditions li::before{content:'✓';position:absolute;left:13px;top:10px;color:#147a46;font-weight:bold}
+.treatment-note{font-size:.82rem;color:#607568;margin-top:20px}
+.treatment-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+body.treatment-modal-open{overflow:hidden}
+@media(max-width:580px){.treatment-dialog{padding:22px 17px;max-height:90vh}.treatment-conditions{grid-template-columns:1fr}}
+
+
+/* Enhanced disease search */
+.health-searchbox{width:min(410px,100%);display:flex;flex-direction:column;gap:6px}
+.health-searchbox input{width:100%;min-width:240px}
+.search-label{font-size:.94rem;color:var(--green-dark)}
+.search-explain{font-size:.82rem;color:var(--muted);margin:0}
+.health-search-results{margin:0 0 25px;padding:20px;background:white;border:1px solid var(--border);box-shadow:var(--shadow);border-radius:20px}
+.health-search-results[hidden],#unknownDiseaseResults[hidden]{display:none!important}
+.search-results-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.search-clear{background:none;border:0;color:var(--green-dark);font-weight:800;cursor:pointer;padding:8px}
+.search-match{display:flex;justify-content:space-between;align-items:center;gap:14px;border-top:1px solid var(--border);padding:13px 0;flex-wrap:wrap}
+.search-match strong{display:block}
+.search-match small{display:block;color:var(--muted)}
+.search-actions{display:flex;flex-wrap:wrap;gap:9px}
+.search-actions .btn{padding:9px 14px;font-size:.88rem}
+.search-guard{font-size:.88rem;color:var(--muted)}
+#healthConcernRow{transition:background .2s ease}
+@media(max-width:640px){.search-match{align-items:flex-start}.health-searchbox{width:100%}.health-searchbox input{min-width:0}}
+
+/* Larger, searchable health directory and accessible treatment popups */
+.az-directory{padding:23px;background:#fff;border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow)}
+.az-directory details{margin:14px 0;padding:12px;border:1px solid var(--border);border-radius:13px}
+.az-directory summary{cursor:pointer;color:var(--green-dark);font-weight:800}
+.az-list{columns:3;column-gap:30px;padding-left:24px;max-height:430px;overflow:auto}
+.az-list li{break-inside:avoid;padding-bottom:8px;font-size:.92rem}
+.health-safety{font-weight:600;border-left:4px solid #d69b23;padding:12px 15px;background:#fff9ec;border-radius:5px}
+.treatment-dialog{max-height:90vh;overflow-y:auto}
+.treatment-conditions{max-height:48vh;overflow-y:auto;align-content:start}
+@media(max-width:850px){.az-list{columns:2}}@media(max-width:540px){.az-list{columns:1}}
+
+/* Online consultation now lives on the same homepage */
+#online-consultation{scroll-margin-top:110px;background:linear-gradient(180deg,#f0faf3,#fff)}
+.inline-consult-quick{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0 24px}
+.inline-consult-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.inline-consult-card{background:rgba(255,255,255,.97);border:1px solid var(--border);border-radius:24px;padding:25px;box-shadow:var(--shadow)}
+.inline-consult-card h2{color:var(--green-dark);font-size:1.45rem;margin:0 0 12px}
+.inline-consult-card p{line-height:1.55}
+.oc-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.oc-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.oc-field.oc-full{grid-column:1/-1}
+.oc-field label{font-weight:700}
+.oc-field input,.oc-field select{width:100%;max-width:100%;padding:12px 14px;border:1px solid #bcd7c7;border-radius:12px;background:#fff;font:inherit}
+.oc-field small,.oc-fine{font-size:.88rem;color:var(--muted)}
+.oc-status{min-height:24px;font-weight:700;color:var(--green-dark)}
+.oc-notice{background:#f0f8f2;border-left:4px solid var(--green);padding:15px;border-radius:12px;margin-top:16px}
+.oc-step{display:flex;gap:12px;margin:14px 0;align-items:flex-start}
+.oc-number{background:#e8f6ee;color:#075c32;border-radius:50%;height:32px;min-width:32px;display:grid;place-items:center;font-weight:900}
+.oc-step strong{display:block;color:#075c32}
+@media(max-width:780px){.inline-consult-grid{grid-template-columns:1fr}}
+@media(max-width:540px){.oc-form-grid{grid-template-columns:1fr}.inline-consult-card{padding:17px}}
+
+
+/* Original, muted botanical animation in the homepage background. */
+.hero{position:relative;isolation:isolate;overflow:hidden;background:#f6fcf8;}
+.hero .hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;pointer-events:none;}
+.hero .hero-video-tint{position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(95deg,rgba(255,255,255,.91),rgba(248,255,250,.82));}
+.hero>.container{position:relative;z-index:1;}
+@media(prefers-reduced-motion:reduce){.hero .hero-video{display:none}.hero{background:#f3fcf5}}
+@media(max-width:650px){.hero .hero-video-tint{background:rgba(255,255,255,.88)}}
+
+/* Clear box-style appointment times and accepted-payment preview */
+.paid-slots{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.paid-slot{border-width:2px;min-height:72px;border-radius:14px;font-size:1rem;box-shadow:0 4px 10px rgba(0,0,0,.04)}
+.paid-slot:focus-visible{outline:3px solid #063e29;outline-offset:2px}
+.payment-choice-preview{margin:18px 0 14px;padding:16px;background:#f3faf5;border:1px solid #bedccc;border-radius:18px;color:#143c28}
+.payment-choice-preview[hidden]{display:none!important}
+.payment-choice-preview strong{display:block;font-size:1rem;margin-bottom:6px}
+.payment-choice-preview p{margin:0 0 12px;color:#456e52;font-size:.9rem}
+.payment-method-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.payment-method-grid span{padding:12px 9px;border-radius:12px;background:#fff;border:1px solid #d2e6d8;font-size:.9rem;font-weight:700}
+.payment-choice-preview small{font-size:.78rem;color:#50675a}
+@media(max-width:560px){.paid-slots{grid-template-columns:repeat(2,minmax(0,1fr))}.payment-method-grid{grid-template-columns:1fr}}
+.razorpay-trust{color:#155c37;font-size:.91rem;margin:12px 0 8px;font-weight:600}
+</style>
+<style>
+/* PHC revision: doctor image centered on a seamless white background */
+.hero{background:#fff!important}
+.hero-grid{align-items:center}
+.hero-side{border:0!important;box-shadow:none!important;background:#fff!important;color:var(--text)!important;padding:0!important;border-radius:0!important;overflow:visible!important}
+.hero-side:before,.hero-side:after{display:none!important}
+.doctor-profile{display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff;width:100%;}
+.doctor-visual{width:min(100%,440px);min-height:380px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;background:#fff;border:0;border-radius:0}
+.doctor-cutout{display:block;width:100%;height:475px;max-height:61vw;min-height:315px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 12px 12px rgba(2,62,33,.05));}
+.doctor-below{padding:12px 14px 18px;max-width:520px;background:#fff}
+.doctor-below h3{font-size:clamp(1.45rem,2vw,2rem);line-height:1.2;margin:4px 0 8px;color:#075c32}
+.doctor-label{letter-spacing:.12em;color:var(--green);font-size:.78rem;font-weight:800;margin:0 0 5px}
+.doctor-qualification,.doctor-registration{margin:5px 0;color:#557061}
+.doctor-below .btn{margin-top:13px}
+/* Photo cards: photo completely separate from text, gentle authentic motion. */
+.card{isolation:isolate}
+.card>.category-photo{width:100%;height:235px;object-fit:cover;object-position:center;animation:phcPan 12s ease-in-out infinite alternate;transform-origin:center center}
+.detail-image{overflow:hidden;background:#fff}
+.detail-image>.category-photo{display:block;width:100%;min-height:310px;height:100%;object-fit:cover;animation:phcPan 14s ease-in-out infinite alternate}
+.card:nth-child(3n+2)>.category-photo,.detail:nth-child(3n+2) .category-photo{animation-delay:-4s}
+.card:nth-child(3n+3)>.category-photo,.detail:nth-child(3n+3) .category-photo{animation-delay:-7s}
+@keyframes phcPan{0%{transform:scale(1.01) translateY(0)}100%{transform:scale(1.065) translateY(-3px)}}
+.card-body{position:relative;z-index:2;background:#fff}
+.subcat-title{font-weight:800;color:#075c32;margin:12px 0 4px}
+.card .btn{min-height:46px}
+@media(max-width:640px){.doctor-cutout{height:390px;max-height:none}.doctor-visual{min-height:300px}.doctor-below{padding-top:2px}.card>.category-photo{height:220px}}
+@media(prefers-reduced-motion:reduce){.category-photo{animation:none!important}}
+</style><style>
+/* PHC original logo watermark: fixed relative to viewport while content scrolls */
+body{position:relative;isolation:isolate;background:#f7fbf8}
+body::before{
+ content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+ background-image:url("assets/phc-favicon.webp");
+ background-position:center center; background-repeat:no-repeat;
+ background-size:min(68vw,610px) auto; opacity:.09;
+}
+body>.header{z-index:20}
+body>main{position:relative;z-index:1}
+/* Transparent section backgrounds allow the fixed watermark to remain visible */
+.hero{background:rgba(255,255,255,.72)!important}
+.hero-side,.doctor-profile,.doctor-below{background:transparent!important}
+.doctor-profile{position:relative;isolation:isolate}
+.doctor-visual{position:relative;isolation:isolate;background:transparent!important}
+.doctor-visual::before{
+ content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background-image:url("assets/phc-favicon.webp");background-repeat:no-repeat;
+ background-size:min(90%,400px) auto;background-position:center 55%;opacity:.18;
+}
+.doctor-cutout{position:relative;z-index:1}
+.doctor-below{position:relative;z-index:2}
+/* Keep content readable, and let watermark show mainly in open spaces */
+.card,.detail,.form-card,.info-card,.quick-box{background:rgba(255,255,255,.96)}
+@media(max-width:640px){body::before{background-size:82vw auto;opacity:.075}.doctor-visual::before{background-size:80% auto;opacity:.15}}
+</style><style>
+/* PHC live Google Reviews module */
+.google-review-feed { background:#fff; border:1px solid #d9eadf; border-radius:24px; padding:22px; margin:20px 0; box-shadow:0 12px 30px rgba(5,72,40,.07); }
+.google-review-feed h3 { margin:0 0 8px; color:#075c32; }
+.google-review-feed p { margin:8px 0 14px; color:#496354; }
+.google-review-feed .live-google-review-body {min-height:76px;}
+.google-review-feed .google-review-actions { display:flex; gap:12px; flex-wrap:wrap; margin:20px 0 0; align-items:center; }
+.google-review-feed .review-provider-note {font-size:.83rem; color:#617568; margin-top:16px;}
+.google-review-feed .waiting-for-google {background:#f0f8f3;border:1px dashed #9bcfb0;padding:18px;border-radius:16px;color:#28523a}
+.google-review-feed .waiting-for-google p {margin:0 0 6px;}
+.google-review-feed .waiting-for-google p:last-child {margin-bottom:0}
+.google-review-feed .google-badge {display:inline-block;font-weight:800; font-size:.78rem; letter-spacing:.06em; color:#14854b; margin-bottom:6px}
+</style>
+<style>
+/* PHC continuously moving emergency notice */
+.phc-emergency-banner{position:relative;width:100%;overflow:hidden;background:#064727;color:#ff8585;border-bottom:1px solid #0c6c3d;z-index:15;min-height:26px;display:flex;align-items:center}
+.phc-emergency-banner .phc-emergency-moving{display:block;width:max-content;max-width:none;white-space:nowrap;font-size:12px;font-weight:400;line-height:1.3;padding:5px 0;animation:phcEmergencyRight 35s linear infinite;will-change:transform}
+@keyframes phcEmergencyRight{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+.phc-emergency-banner:focus-within .phc-emergency-moving,.phc-emergency-banner:hover .phc-emergency-moving{animation-play-state:paused}
+@media (prefers-reduced-motion:reduce){.phc-emergency-banner{overflow:auto}.phc-emergency-banner .phc-emergency-moving{animation:none;white-space:normal;padding:6px 12px}}
+</style><style>
+.phc-direct-google-reviews{padding:22px 18px;background:#f4faf6;border:1px solid #d6e8dc;border-radius:16px;margin:8px 0 14px;text-align:center;color:#145b35;}
+.phc-direct-google-reviews h3{margin:0 0 8px;font-size:1.22rem;}
+.phc-direct-google-reviews p{margin:0;line-height:1.5;color:#426f55;}
+</style><style>
+.paid-consult-section {background:linear-gradient(130deg,#f2faf5,#fff)}
+.paid-grid{display:grid;grid-template-columns:1.45fr 1fr;gap:24px;align-items:start}
+.paid-panel{padding:25px;background:#fff;border:1px solid #d8e9df;border-radius:22px;box-shadow:0 12px 38px rgba(7,92,50,.07)}
+.paid-topline{display:flex;flex-wrap:wrap;gap:16px;font-size:.85rem;margin-bottom:20px;color:#294e39}
+.paid-topline span{display:inline-flex;align-items:center;gap:7px}
+.slot-dot{display:inline-block;height:11px;width:11px;border-radius:100%}
+.slot-free{background:#168043}.slot-held{background:#d39c25}.slot-booked{background:#bd3838}
+.paid-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.paid-fields label{display:flex;flex-direction:column;gap:7px;font-weight:700;font-size:.94rem}
+.paid-fields input,.paid-fields select{width:100%;padding:12px;border:1px solid #bfd9c8;border-radius:10px;background:white;font:inherit}
+.paid-person{margin-top:22px}.paid-slot-label{font-weight:800;margin:20px 0 10px}
+.paid-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.paid-slot{min-height:64px;padding:9px 5px;line-height:1.25;border-radius:11px;border:1px solid #168043;background:#e4f7eb;color:#07512b;cursor:pointer;font-weight:700;font-size:.89rem}
+.paid-slot small{display:block;font-size:.72rem;font-weight:500;margin-top:3px}
+.paid-slot.selected{outline:3px solid #0b6e39;outline-offset:1px;background:#b7e9ca}
+.paid-slot.held{background:#fff0cc;color:#775108;border-color:#d39c25;cursor:not-allowed}
+.paid-slot.booked{background:#f9dfe0;color:#9f2020;border-color:#bd3838;cursor:not-allowed}
+.paid-slot.past{background:#e9eced;color:#697478;border-color:#c6d0d2;cursor:not-allowed}
+.paid-slot.unverified{background:#f3f5f4;color:#435d50;border:2px dashed #99ada2;cursor:not-allowed;opacity:1}
+.paid-slot.unverified small{color:#586e63}
+.paid-price{margin:20px 0 12px;font-size:1.06rem;font-weight:800;color:#085631}
+.paid-book{width:100%}.paid-book:disabled{opacity:.5;cursor:not-allowed}
+.paid-msg{font-size:.84rem;line-height:1.5;color:#617367;margin:12px 0 0;grid-column:1/-1}
+.paid-instructions h3{margin-top:0;color:#075c32}.paid-instructions p{line-height:1.65}
+.paid-hours{background:#eef9f1;padding:15px;border-radius:12px}
+.paid-hours p{margin:7px 0 0}.paid-warning{color:#7d362a;font-size:.88rem}
+@media(max-width:820px){.paid-grid{grid-template-columns:1fr}}
+@media(max-width:500px){.paid-panel{padding:16px}.paid-fields{grid-template-columns:1fr}.paid-slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style></head>
+<body>
+<header class="header">
+<div class="container nav">
+<a class="brand" href="#home">
+<img alt="PHC logo" src="assets/phc-logo.webp"/>
+<div class="brand-text">
+<h1>Prajapati Homeopathic Clinic</h1>
+<p>Your Health, Our Responsibility</p>
+</div>
+</a>
+<nav class="nav-links">
+<a href="#home">Home</a>
+<a href="#treatments">Treatments</a>
+<a href="#appointment">Appointment</a><a href="#online-consultation">Online Consultation</a>
+<a href="#reviews">Reviews</a>
+<a href="#contact">Contact</a>
+<a class="btn btn-primary" href="#appointment">Book Appointment</a>
+</nav>
+</div>
+<div aria-label="Important emergency medical notice" class="phc-emergency-banner" role="note"><span class="phc-emergency-moving">For emergency symptoms, pregnancy complications, severe infections, heart or neurological emergencies, seek appropriate urgent medical care. Homeopathy should not delay proven treatment</span></div></header>
+<main>
+<section class="hero" id="home"><video aria-hidden="true" autoplay="" class="hero-video" loop="" muted="" playsinline="" poster="assets/phc-wellness-poster.webp" preload="metadata"><source src="assets/phc-wellness-loop.mp4" type="video/mp4"/></video><div aria-hidden="true" class="hero-video-tint"></div>
+<div class="container hero-grid">
+<div>
+<span class="badge">Dr. Umesh Prajapati · B.H.M.S.</span>
+<h2>Personalised Consultations. A Caring Clinic Experience.</h2>
+<p>Welcome to Prajapati Homeopathic Clinic, Ratlam. Meet Dr. Umesh Prajapati, explore all 12 health categories, and request your preferred appointment time.</p>
+<div class="hero-cta">
+<a class="btn btn-primary" href="#treatments">Explore Treatments</a>
+<a class="btn btn-light" href="#appointment">Request Appointment</a>
+<a class="btn btn-light" href="https://www.google.com/maps/place/Dr+Umesh+Prajapati/@23.3459452,75.0371519,17z/data=!3m1!4b1!4m6!3m5!1s0x3963ff004a6ae321:0x770e5e9e1d7e2551!8m2!3d23.3459452!4d75.0397268!16s%2Fg%2F11z53d6jnt?entry=ttu&amp;g_ep=EgoyMDI2MTAyOC4wIKXMDSoASAFQAw%3D%3D" rel="noopener noreferrer" target="_blank">Find Location</a>
+<a class="btn btn-light" href="#online-consultation">Online Consultation · Call / WhatsApp</a></div>
+<div class="quick-info">
+<div class="quick-box"><strong>Clinic Mobile</strong>+91 81036 84642</div>
+<div class="quick-box"><strong>Confirmation Mobile</strong>+91 81036 84642</div>
+<div class="quick-box"><strong>Monday to Saturday</strong>11 AM – 2 PM · 5 PM – 8 PM</div>
+<div class="quick-box"><strong>Sunday</strong>11 AM – 2 PM</div>
+</div>
+</div>
+<aside class="hero-side"><div class="doctor-profile"><div class="doctor-visual"><img alt="Dr. Umesh Prajapati" class="doctor-cutout" loading="eager" src="assets/doctor-portrait.webp"/></div><div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><a class="btn btn-primary" href="#appointment">Book a Consultation →</a></div></div></aside>
+</div>
+</section>
+<section class="section" id="treatments">
+<div class="container">
+<div class="section-head">
+<div>
+<h2>Our Treatments</h2>
+<p>Browse consultation topics and related medical conditions. Listings do not establish treatment effectiveness or replace evidence-based care.</p>
+</div>
+<div class="searchbox health-searchbox"><label class="search-label" for="searchInput">Find a health concern</label><input aria-controls="conditionSearchResults" aria-describedby="searchInfo" aria-label="Search treatments and related conditions" autocomplete="off" id="searchInput" maxlength="100" placeholder="Search a disease or health concern..." type="text"/><p class="search-explain" id="searchInfo">Browse consultation topics and related medical conditions. Listings do not establish treatment effectiveness or replace evidence-based care.</p></div>
+</div>
+<div aria-live="polite" class="health-search-results" hidden="" id="conditionSearchResults">
+<div class="search-results-heading"><strong id="searchResultsTitle">Search results</strong><button class="search-clear" id="clearDiseaseSearch" type="button">Clear search ×</button></div>
+<div id="knownDiseaseResults"></div>
+<div hidden="" id="unknownDiseaseResults">
+<p><strong>Not found in our current treatment list.</strong> You can research the term using Google or request an appointment to discuss it with the clinic.</p>
+<p class="search-guard">Online search results are not a diagnosis or a recommendation for treatment. For urgent symptoms, seek appropriate medical care.</p>
+<div class="search-actions"><a class="btn btn-outline" href="https://www.google.com/" id="googleDiseaseSearch" rel="noopener noreferrer" target="_blank">Search Google ↗</a><button class="btn btn-primary" id="bookUnlistedDisease" type="button">Request an Appointment</button></div>
+</div>
+</div>
+<div class="grid" id="categoryGrid">
+<article class="card" data-search="skin diseases &amp; hair treatment acne, eczema, psoriasis, dandruff, fungal infections, hair fall and related concerns. acne and pimples eczema (atopic dermatitis) psoriasis fungal skin infections urticaria (hives) dandruff and seborrheic dermatitis hair loss (alopecia) vitiligo" id="card-skin-hair">
+<img alt="Illustrative photograph for Skin Diseases &amp; Hair Treatment category" class="category-photo" decoding="async" loading="lazy" onerror="" referrerpolicy="no-referrer" src="assets/skin-and-hair.webp"/>
+<div class="card-body">
+<h3>Skin Diseases &amp; Hair Treatment</h3>
+<p>Acne, eczema, psoriasis, dandruff, fungal infections, hair fall and related concerns.</p>
+<div class="card-actions">
+<a aria-label="View conditions under Skin Diseases &amp; Hair Treatment" class="btn btn-primary" data-treatment="skin-hair" href="#treatments" role="button">View Conditions</a>
+<a class="btn btn-light" data-specialty="Skin Diseases &amp; Hair Treatment" href="#appointment">Book Consultation</a>
+</div>
+</div>
+</article>
+<article class="card" data-search="male sexual health confidential consultations for reproductive health, fertility concerns and related symptoms. male infertility erectile dysfunction premature ejaculation low sexual desire reproductive hormone concerns semen analysis and fertility assessment prostate-related symptoms" id="card-male-sexual-health">
+<img alt="Illustrative photograph for Male Sexual Health category" class="category-photo" decoding="async" loading="lazy" onerror="" referrerpolicy="no-referrer" src="assets/male-sexual-health.webp"/>
+<div class="card-body">
+<h3>Male Sexual Health</h3>
+<p>Confidential consultations for reproductive health, fertility concerns and related symptoms.</p>
+<div class="card-actions">
+<a aria-label="View conditions under Male Sexual Health" class="btn btn-primary" data-treatment="male-sexual-health" href="#treatments" role="button">View Conditions</a>
+<a class="btn btn-light" data-specialty="Male Sexual Health" href="#appointment">Book Consultation</a>
+</div>
+</div>
+</article>
+<article class="card" data-search="respiratory diseases breathing and chest-related concerns including cough, asthma and sinus symptoms. asthma allergic rhinitis bronchitis chronic obstructive pulmonary disease (copd) pneumonia sinusitis persistent cough" id="card-respiratory">
+<img alt="Illustrative photograph for Respiratory Diseases category" class="category-photo" decoding="async" loading="lazy" onerror="" referrerpolicy="no-referrer" src="assets/respiratory.webp"/>
+<div class="card-body">
+<h3>Respiratory Diseases</h3>
+<p>Breathing and chest-related concerns including cough, asthma and sinus symptoms.</p>
+<div class="card-actions">
+<a aria-label="View conditions under Respiratory Diseases" class="btn btn-primary" data-treatment="respiratory" href="#treatments" role="button">View Conditions</a>
+<a class="btn btn-light" data-specialty="Respiratory Diseases" href="#appointment">Book Consultation</a>
+</div>
+</div>
+</article>
+<article class="card" data-search="kidney &amp; urinary diseases support for urinary issues, kidney concerns, stones and recurrent urinary complaints. urinary tract infection (uti) kidney stones chronic kidney disease urinary incontinence frequent urination prostate enlargement (bph)" id="card-kidney-urinary">
+<img alt="Illustrative photograph for Kidney &amp; Urinary Diseases category" class="category-photo" decoding="async" loading="lazy" onerror="" referrerpolicy="no-referrer" src="assets/kidney-and-urinary.webp"/>
+<div class="card-body">
+<h3>Kidney &amp; Urinary Diseases</h3>
+<p>Support for urinary issues, kidney concerns, stones and recurrent urinary complaints.</p>
+<div class="card-actions">
+<a aria-label="View conditions under Kidney &amp; Urinary Diseases" class="btn btn-primary" data-treatment="kidney-urinary" href="#treatments" role="button">View Conditions</a>
+<a class="btn btn-light" data-specialty="Kidney &amp; Urinary Diseases" href="#appointment">Book Consultation</a>
+</div>
+</div>
+</article>
+<article class="card" data-search="digestive &amp; liver diseases care for acidity, constipation, ibs, gastritis and liver-related discomfort. acid reflux (gerd) gastritis constipation irritable bowel syndrome (ibs) fatty liver disease hepatitis gallstones" id="card-digestive-liver">
+<img alt="Illustrative photograph for Digestive &amp; Liver Diseases category" class="category-photo" decoding="async" loading="lazy" onerror="" referrerpolicy="no-referrer" src="assets/digestive-and-liver.webp"/>
+<div class="card-body">
+<h3>Digestive &amp; Liver Diseases</h3>
+<p>Care for acidity, constipation, IBS, gastritis and liver-related discomfort.</p>
+<div class="card-actions">
+<a aria-label="View conditions under Digestive &amp; Liver Diseases" class="btn btn-primary" data-treatment="digestive-liver" href="#treatments" role="button">View Conditions</a>
+<a class="btn btn-light" data-specialty="Digestive &amp; Liver Diseases" href="#appointment">Book Consultation</a>
+</div>
+</div>
+</article>
+<article class="card" data-search="bone, joint &amp; muscle pain consultation for back pain, neck pain, arthritis and other muscle or joint complaints. osteoarthritis rheumatoid arthritis back pain neck pain muscle strains tendinitis gout" id="card-bone-joint-muscle">
+<img alt="Illustrative photograph for Bone, Joint &amp; Muscle Pain category" class="category-photo" decoding="async" loading="lazy" onerror="" referrerpolicy="no-referrer" src="assets/bone-joint-muscle.webp"/>
+<div class="card-body">
+<h3>Bone, Joint &amp; Muscle Pain</h3>
+<p>Consultation for back pain, neck pain, arthritis and other muscle or joint complaints.</p>
+<div class="card-actions">
+<a aria-label="View conditions under Bone, Joint &amp; Muscle Pain" class="btn btn-primary" data-treatment="bone-joint-muscle" href="#treatments" role="button">View Conditions</a>
+<a class="btn btn-light" data-specialty="Bone, Joint &amp; Muscle Pain" href="#appointment">Book Consultation</a>
+</div>
+</div>
+</article>
+<article class="card" data-search="neurological diseases supportive consultation for headache, vertigo, nerve discomfort and neurological symptoms. migraine tension headache peripheral neuropathy epilepsy parkinson’s disease vertigo stroke-related symptoms" id="card-neurology">
+<img alt="Illustrative photograph for Neurological Diseases category" class="category-photo" decoding="async" loading="lazy" onerror="" referrerpolicy="no-referrer" src="assets/neurological.webp"/>
+<div class="card-body">
+<h3>Neurological Diseases</h3>
+<p>Supportive consultation for headache, vertigo, nerve discomfort and neurological symptoms.</p>
+<div class="card-actions">
+<a aria-label="View conditions under Neurological Diseases" class="btn btn-primary" data-treatment="neurology" href="#treatments" role="button">View Conditions</a>
+<a class="btn btn-light" data-specialty="Neurological Diseases" href="#appointment">Book Consultation</a>
+</div>
+</div>
+</article>
+<article class="card" data-search="women's health issues women's care for menstrual, hormonal, urinary and menopausal concerns. menstrual irregularities painful periods polycystic ovary syndrome (pcos) menopausal symptoms vaginal infections urinary infections breast concerns female infertility and fertility assessment" id="card-womens-health">
+<img alt="Illustrative photograph for Women's Health Issues category" class="category-photo" decoding="async" loading="lazy" onerror="" referrerpolicy="no-referrer" src="assets/womens-health.webp"/>
+<div class="card-body">
+<h3>Women's Health Issues</h3>
+<p>Women's care for menstrual, hormonal, urinary and menopausal concerns.</p>
+<div class="card-actions">
+<a aria-label="View conditions under Women's Health Issues" class="btn btn-primary" data-treatment="womens-health" href="#treatments" role="button">View Conditions</a>
+<a class="btn btn-light" data-specialty="Women's Health Issues" href="#appointment">Book Consultation</a>
+</div>
+</div>
+</article>
+<article class="card" data-search="children's health issues child-friendly consultation for common infections, allergies, digestive and skin concerns. common cold and cough childhood allergies asthma in children eczema in children digestive complaints fever growth and development concerns" id="card-childrens-health">
+<img alt="Illustrative photograph for Children's Health Issues category" class="category-photo" decoding="async" loading="lazy" onerror="" referrerpolicy="no-referrer" src="assets/childrens-health.webp"/>
+<div class="card-body">
+<h3>Children's Health Issues</h3>
+<p>Child-friendly consultation for common infections, allergies, digestive and skin concerns.</p>
+<div class="card-actions">
+<a aria-label="View conditions under Children's Health Issues" class="btn btn-primary" data-treatment="childrens-health" href="#treatments" role="button">View Conditions</a>
+<a class="btn btn-light" data-specialty="Children's Health Issues" href="#appointment">Book Consultation</a>
+</div>
+</div>
+</article>
+<article class="card" data-search="ent &amp; allergic problems care for throat, ear, nose, sinus and seasonal allergy-related concerns. allergic rhinitis sinusitis tonsillitis ear infections hearing difficulties sore throat seasonal allergies" id="card-ent-allergy">
+<img alt="Illustrative photograph for ENT &amp; Allergic Problems category" class="category-photo" decoding="async" loading="lazy" onerror="" referrerpolicy="no-referrer" src="assets/ent-and-allergy.webp"/>
+<div class="card-body">
+<h3>ENT &amp; Allergic Problems</h3>
+<p>Care for throat, ear, nose, sinus and seasonal allergy-related concerns.</p>
+<div class="card-actions">
+<a aria-label="View conditions under ENT &amp; Allergic Problems" class="btn btn-primary" data-treatment="ent-allergy" href="#treatments" role="button">View Conditions</a>
+<a class="btn btn-light" data-specialty="ENT &amp; Allergic Problems" href="#appointment">Book Consultation</a>
+</div>
+</div>
+</article>
+<article class="card" data-search="endocrine &amp; metabolic disturbance consultation related to thyroid, diabetes, metabolism and hormone-related imbalances. diabetes mellitus thyroid disorders obesity-related health concerns high cholesterol polycystic ovary syndrome (pcos) metabolic syndrome" id="card-endocrine-metabolic">
+<img alt="Illustrative photograph for Endocrine &amp; Metabolic Disturbance category" class="category-photo" decoding="async" loading="lazy" onerror="" referrerpolicy="no-referrer" src="assets/endocrine-and-metabolic.webp"/>
+<div class="card-body">
+<h3>Endocrine &amp; Metabolic Disturbance</h3>
+<p>Consultation related to thyroid, diabetes, metabolism and hormone-related imbalances.</p>
+<div class="card-actions">
+<a aria-label="View conditions under Endocrine &amp; Metabolic Disturbance" class="btn btn-primary" data-treatment="endocrine-metabolic" href="#treatments" role="button">View Conditions</a>
+<a class="btn btn-light" data-specialty="Endocrine &amp; Metabolic Disturbance" href="#appointment">Book Consultation</a>
+</div>
+</div>
+</article>
+<article class="card" data-search="mental health &amp; sleep disorder supportive consultation for stress, sleep difficulty, anxiety and mood-related complaints. insomnia anxiety disorders depression stress-related symptoms panic attacks sleep apnea other sleep disturbances" id="card-mental-health-sleep">
+<img alt="Illustrative photograph for Mental Health &amp; Sleep Disorder category" class="category-photo" decoding="async" loading="lazy" onerror="" referrerpolicy="no-referrer" src="assets/mental-health-and-sleep.webp"/>
+<div class="card-body">
+<h3>Mental Health &amp; Sleep Disorder</h3>
+<p>Supportive consultation for stress, sleep difficulty, anxiety and mood-related complaints.</p>
+<div class="card-actions">
+<a aria-label="View conditions under Mental Health &amp; Sleep Disorder" class="btn btn-primary" data-treatment="mental-health-sleep" href="#treatments" role="button">View Conditions</a>
+<a class="btn btn-light" data-specialty="Mental Health &amp; Sleep Disorder" href="#appointment">Book Consultation</a>
+</div>
+</div>
+</article>
+</div>
+</div>
+</section>
+<section class="section">
+<div class="container">
+<div class="cta-strip">
+<div>
+<h2 style="margin:0 0 8px">Need quick booking?</h2>
+<p style="margin:0">Choose your category and send an appointment request on WhatsApp.</p>
+</div>
+<a class="btn btn-light" href="#appointment">Book Now</a>
+</div>
+</div>
+</section>
+<section class="section" id="health-directory"><div class="container"><div class="section-head"><div><h2>Additional Health Conditions A–Z</h2><p>Browse additional health conditions, including those outside our clinic categories. Entries are for information and referral, not a claim of homeopathic treatment.</p></div></div><div class="az-directory"><p>500 unique health concerns and terms in the searchable directory, including the clinic card terms and categories. Cancers are excluded.</p><details><summary>View additional conditions outside the 12 categories (61)</summary><ul class="az-list"><li>Abdominal aortic aneurysm</li><li>Acid and chemical burns</li><li>Animal and human bites</li><li>Atrial fibrillation</li><li>Angina</li><li>Brain stem death</li><li>Burns and scalds</li><li>Cardiac arrest</li><li>Cardiovascular disease</li><li>Chest and rib injury</li><li>Chest pain</li><li>Coma</li><li>Concussion</li><li>Congenital heart disease</li><li>Coronary heart disease</li><li>Cuts and grazes</li><li>Deafblindness</li><li>Deep vein thrombosis</li><li>Dehydration</li><li>Delirium</li><li>Dental abscess</li><li>Edwards’ syndrome</li><li>Ebola virus disease</li><li>Fever in adults</li><li>Heart attack</li><li>Heart block</li><li>Heart disease</li><li>Heart failure</li><li>Heart palpitations</li><li>Heatstroke and heat illness</li><li>HIV</li><li>Hypothermia (low body temperature)</li><li>Inherited heart conditions</li><li>Jellyfish and sea creature stings</li><li>Lead poisoning</li><li>Lyme disease</li><li>Lymphoedema</li><li>Malaria</li><li>Meningitis</li><li>Minor head injury</li><li>Patau’s syndrome</li><li>Postural orthostatic tachycardia syndrome (PoTS)</li><li>Sepsis</li><li>Septic shock</li><li>Severe head injury</li><li>Shigella</li><li>Spleen problems and spleen removal</li><li>Stillbirth</li><li>Streptococcus A (strep A)</li><li>Supraventricular tachycardia</li><li>Tick bites</li><li>Treatment for bites and stings</li><li>Types of bites and stings</li><li>Varicose veins</li><li>Yellow fever</li><li>Zika virus</li><li>Shiga toxin-producing E. coli (STEC)</li><li>Sjogren’s disease</li><li>Lipoedema</li><li>Thirst</li><li>Dengue fever</li></ul></details><p class="health-safety">For emergency symptoms, pregnancy complications, severe infections, heart or neurological emergencies, seek appropriate urgent medical care. Homeopathy should not delay proven treatment.</p></div></div></section><section class="section" id="appointment">
+<div class="container booking">
+<div class="info-card">
+<p class="section-tag">BOOK APPOINTMENT</p>
+<h2 style="margin-top:0">Request your clinic visit</h2>
+<p>Appointment requests are sent to WhatsApp. The clinic will confirm availability on mobile <strong>8103684642</strong>.</p>
+<ul>
+<li>Morning slot: 11:00 AM – 2:00 PM</li>
+<li>Evening slot: 5:00 PM – 8:00 PM (Monday to Saturday)</li>
+<li>Sunday: Morning only</li>
+<li>Time slots are shown in 30-minute gaps</li>
+</ul>
+<p class="note">Please choose a valid category, date, and time. This form creates a WhatsApp request, not an automatic confirmation.</p>
+</div>
+<div class="form-card">
+<form id="bookingForm">
+<div class="form-grid">
+<div class="form-row">
+<label for="patientName">Patient Name</label>
+<input id="patientName" placeholder="Enter your name" required="" type="text"/>
+</div>
+<div class="form-row">
+<label for="patientMobile">Mobile Number</label>
+<input id="patientMobile" maxlength="10" placeholder="10-digit number" required="" type="tel"/>
+</div>
+<div class="form-row full">
+<label for="specialty">Category</label>
+<select id="specialty" required="">
+<option value="">Select category</option>
+<option value="Skin Diseases &amp; Hair Treatment">Skin Diseases &amp; Hair Treatment</option><option value="Male Sexual Health">Male Sexual Health</option><option value="Respiratory Diseases">Respiratory Diseases</option><option value="Kidney &amp; Urinary Diseases">Kidney &amp; Urinary Diseases</option><option value="Digestive &amp; Liver Diseases">Digestive &amp; Liver Diseases</option><option value="Bone, Joint &amp; Muscle Pain">Bone, Joint &amp; Muscle Pain</option><option value="Neurological Diseases">Neurological Diseases</option><option value="Women's Health Issues">Women's Health Issues</option><option value="Children's Health Issues">Children's Health Issues</option><option value="ENT &amp; Allergic Problems">ENT &amp; Allergic Problems</option><option value="Endocrine &amp; Metabolic Disturbance">Endocrine &amp; Metabolic Disturbance</option><option value="Mental Health &amp; Sleep Disorder">Mental Health &amp; Sleep Disorder</option>
+<option value="Other health concern (not listed)">Other health concern (not listed)</option></select>
+</div><div class="form-row full" id="healthConcernRow">
+<label for="healthConcern">Specific health concern (optional)</label>
+<input autocomplete="off" id="healthConcern" maxlength="100" placeholder="e.g., the condition you searched for" type="text"/>
+<small class="help">Only enter the condition name; avoid sharing sensitive medical details through WhatsApp.</small>
+</div>
+<div class="form-row">
+<label for="appointmentDate">Preferred Date</label>
+<input id="appointmentDate" required="" type="date"/>
+</div>
+<div class="form-row">
+<label for="appointmentTime">Preferred Time</label>
+<select id="appointmentTime" required="">
+<option value="">Select a 30-minute slot</option>
+</select>
+<small class="help" id="slotHelp">Choose a date to see available clinic time slots.</small>
+</div>
+<div class="form-row full">
+<button class="btn btn-primary" type="submit">Send Appointment Request</button>
+</div>
+</div>
+</form>
+<p class="note" id="formStatus"></p>
+</div>
+</div>
+</section>
+
+<section class="section paid-consult-section" id="online-consultation">
+<div class="container">
+<div class="section-head"><div>
+<p class="section-tag">VIDEO &amp; AUDIO</p>
+<h2>Online Consultation</h2>
+<p>Choose audio or video (₹300 each), select an available time, and pay securely to request confirmation. All times are Indian Standard Time (IST).</p>
+</div></div>
+<div class="paid-grid">
+<div class="paid-panel">
+<div class="paid-topline"><span><span class="slot-dot slot-free"></span> Available</span><span><span class="slot-dot slot-held"></span> Payment in progress</span><span><span class="slot-dot slot-booked"></span> Booked</span></div>
+<form id="paidConsultForm" novalidate="">
+<div class="paid-fields">
+<label>Consultation method<select id="paidMode" required=""><option value="video">Video Consultation</option><option value="audio">Audio Consultation</option></select></label>
+<label>Consultation date<input id="paidDate" required="" type="date"/></label>
+</div>
+<p class="paid-slot-label">Select consultation time</p>
+<div aria-live="polite" class="paid-slots" id="paidSlots"><p class="paid-msg">Choose a date to view slots.</p></div>
+<div class="paid-fields paid-person">
+<label>Patient name<input autocomplete="name" id="paidName" maxlength="80" placeholder="Patient name" required=""/></label>
+<label>Mobile number<input autocomplete="tel" id="paidMobile" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="10-digit mobile" required=""/></label>
+</div>
+<p class="razorpay-trust">🔒 Secure online payment via Razorpay · UPI / PhonePe / Cards / Net Banking</p>
+<div class="paid-price" id="paidFee">Audio consultation ₹300 · Video consultation ₹300</div>
+<div class="payment-choice-preview" id="paidPaymentMethods" hidden><strong>Payment options at secure checkout</strong><p>Choose your preferred method in the Razorpay payment window:</p><div class="payment-method-grid"><span>📱 PhonePe / UPI apps</span><span>💳 Debit / Credit Card</span><span>🏦 Net Banking</span><span>👛 Wallets (if enabled)</span></div><small>Available options depend on your payment provider settings and the patient’s device.</small></div><button class="btn btn-primary paid-book" disabled="" id="paidBookButton" type="submit">Continue to Payment</button>
+<p aria-live="polite" class="paid-msg" id="paidStatus" role="status">Select a date to see scheduled consultation times. Live booking and payment require secure activation.</p>
+</form>
+</div>
+<aside class="paid-panel paid-instructions">
+<h3>How booking works</h3>
+<p><strong>1.</strong> Choose Video or Audio and select a green time box.</p>
+<p><strong>2.</strong> Tap Continue to Payment and choose UPI, card, net banking or other available methods in secure checkout. The slot is temporarily held during payment.</p>
+<p><strong>3.</strong> Once payment is verified, the appointment is confirmed and the slot turns red for every visitor.</p>
+<p><strong>4.</strong> The clinic arranges the call or video link after confirmation.</p>
+<div class="paid-hours"><strong>Clinic hours (IST)</strong><p>Monday–Saturday: 11 AM–2 PM and 5 PM–8 PM<br/>Sunday: 11 AM–2 PM</p></div>
+<p class="paid-warning">For urgent or emergency symptoms, seek immediate appropriate medical care rather than waiting for a remote consultation. Paid bookings are not active until gateway setup is complete.</p>
+<a class="btn btn-light" href="https://wa.me/918103684642?text=Hello%20PHC%2C%20I%20have%20a%20question%20about%20online%20consultations." rel="noopener noreferrer" target="_blank">Ask the clinic on WhatsApp</a>
+</aside>
+</div>
+</div>
+</section>
+<section aria-labelledby="reviewsHeading" class="section" id="reviews">
+<div class="container">
+<div class="section-head">
+<div><h2 id="reviewsHeading">Patient Reviews &amp; Feedback</h2></div>
+<a class="btn btn-outline" href="./reviews.html">Open Review Page</a>
+</div>
+<div class="google-review-feed">
+<div class="live-google-review-body" data-google-reviews-feed=""><div class="phc-direct-google-reviews"><h3>Patient Reviews on Google</h3><p>Read genuine patient reviews or share your feedback on our Google Maps listing.</p></div></div>
+<div class="google-review-actions"><a class="btn btn-primary" href="https://www.google.com/maps/place/Dr+Umesh+Prajapati/@23.3459452,75.0371519,17z/data=!3m1!4b1!4m6!3m5!1s0x3963ff004a6ae321:0x770e5e9e1d7e2551!8m2!3d23.3459452!4d75.0397268!16s%2Fg%2F11z53d6jnt?entry=ttu" rel="noopener noreferrer" target="_blank">Read or Write a Google Review ↗</a></div>
+</div>
+<div class="reviews-grid">
+<article class="review-panel">
+<h3>Review PHC on Google</h3>
+<p>Open our Google Maps listing to view existing public reviews or leave your own experience. Google may ask you to sign in.</p>
+<a class="btn btn-primary" href="https://www.google.com/maps/place/Dr+Umesh+Prajapati/@23.3459452,75.0371519,17z/data=!3m1!4b1!4m6!3m5!1s0x3963ff004a6ae321:0x770e5e9e1d7e2551!8m2!3d23.3459452!4d75.0397268!16s%2Fg%2F11z53d6jnt?entry=ttu&amp;g_ep=EgoyMDI2MTAyOC4wIKXMDSoASAFQAw%3D%3D" rel="noopener noreferrer" target="_blank">Open Google Reviews ↗</a>
+</article>
+<article class="review-panel">
+<h3>Send private feedback</h3>
+<form class="review-form" id="reviewForm">
+<div><label for="reviewName">Your name (optional)</label><input autocomplete="name" id="reviewName" maxlength="80" placeholder="Name" type="text"/></div>
+<div><label for="reviewRating">Your experience</label><select id="reviewRating" required=""><option value="">Select a rating</option><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Average</option><option value="2">2 — Below expectations</option><option value="1">1 — Poor</option></select></div>
+<div><label for="reviewText">Your feedback</label><textarea id="reviewText" maxlength="1200" placeholder="Share feedback about your clinic visit. Please avoid including medical or sensitive personal information." required=""></textarea></div>
+<button class="btn btn-primary" type="submit">Send via WhatsApp</button>
+<small>Submitting opens WhatsApp with a prepared message. Press Send there to share it. Your feedback is not posted publicly.</small>
+<p aria-live="polite" class="review-message" id="reviewMessage" role="status"></p>
+</form>
+</article>
+</div>
+</div>
+</section>
+</main>
+<footer class="footer" id="contact">
+<div class="container footer-grid">
+<div>
+<h3>Prajapati Homeopathic Clinic</h3>
+<p>Dr. Umesh Prajapati<br/>B.H.M.S.<br/>Reg No: 29926<br/>NRH No.: NRH/0091536<br/>Homeopathic Consultant</p>
+</div>
+<div>
+<h3>Contact</h3>
+<p>Mobile: <a href="tel:+918103684642">+91 81036 84642</a><br/>Address: 24/58 Indira Nagar, Kanahiya Murti Art, Ratlam, M.P.</p>
+<p><a href="https://www.google.com/maps/place/Dr+Umesh+Prajapati/@23.3459452,75.0371519,17z/data=!3m1!4b1!4m6!3m5!1s0x3963ff004a6ae321:0x770e5e9e1d7e2551!8m2!3d23.3459452!4d75.0397268!16s%2Fg%2F11z53d6jnt?entry=ttu&amp;g_ep=EgoyMDI2MTAyOC4wIKXMDSoASAFQAw%3D%3D" rel="noopener noreferrer" target="_blank">Find location on Google Maps ↗</a></p>
+</div>
+<div>
+<h3>Clinic Hours</h3>
+<p>Monday – Saturday<br/>Morning: 11 AM – 2 PM<br/>Evening: 5 PM – 8 PM</p>
+<p>Sunday<br/>Morning: 11 AM – 2 PM</p>
+</div>
+</div>
+<div class="container" style="padding-top:18px;border-top:1px solid rgba(255,255,255,.15);margin-top:18px">
+    © <span id="year"></span> Prajapati Homeopathic Clinic. All rights reserved.
+  </div>
+</footer>
+<a class="float-whatsapp" href="https://wa.me/918103684642?text=Hello%20PHC,%20I%20would%20like%20to%20book%20an%20appointment." rel="noopener noreferrer" target="_blank">WhatsApp</a>
+<script>
+const searchInput = document.getElementById('searchInput');
+const cards = [...document.querySelectorAll('.card')];
+const diseasePanel = document.getElementById('conditionSearchResults');
+const diseaseKnown = document.getElementById('knownDiseaseResults');
+const diseaseUnknown = document.getElementById('unknownDiseaseResults');
+const resultsTitle = document.getElementById('searchResultsTitle');
+const googleDiseaseSearch = document.getElementById('googleDiseaseSearch');
+const bookUnlistedDisease = document.getElementById('bookUnlistedDisease');
+const diseaseIndex = [{"slug":"skin-hair","title":"Skin Diseases & Hair Treatment","conditions":["Acne and pimples","Eczema (atopic dermatitis)","Psoriasis","Fungal skin infections","Urticaria (hives)","Dandruff and seborrheic dermatitis","Hair loss (alopecia)","Vitiligo","Acne","Atopic eczema","Discoid eczema","Dermatitis herpetiformis","Varicose eczema","Psoriatic arthritis","Allergies","Hives","Angioedema","Dandruff","Fungal infections","Fungal nail infection","Fungal scalp infection (tinea capitis)","Athlete’s foot","Ringworm","Scabies","Impetigo","Cellulitis","Rosacea","Lichen planus","Warts and verrucas","Chilblains","Skin light sensitivity (photosensitivity)","Itchy skin","Benign skin lesions","Blisters","Cold sore","Excessive sweating (hyperhidrosis)","Ingrown toenail","Pressure ulcers","Venous leg ulcer","Shingles","Sunburn","Head lice and nits","Skin rashes in children","Fissure","Piles (haemorrhoids)","Hair fall","Eczema"]},{"slug":"male-sexual-health","title":"Male Sexual Health","conditions":["Male infertility","Erectile dysfunction","Premature ejaculation","Low sexual desire","Reproductive hormone concerns","Semen analysis and fertility assessment","Prostate-related symptoms","Infertility","Erectile dysfunction (impotence)","Low sex drive (loss of libido)","Low libido","Benign prostate enlargement","Prostate problems","Testicular lumps and swellings","Breast swelling in men","Genital herpes","Genital warts","Chlamydia","Gonorrhoea","Syphilis","Trichomonas infection","Mycoplasma genitalium (Mgen)","Managing genital symptoms","Penile health concerns","Infertility (male)","Male sexual disorders"]},{"slug":"respiratory","title":"Respiratory Diseases","conditions":["Asthma","Allergic rhinitis","Bronchitis","Chronic obstructive pulmonary disease (COPD)","Pneumonia","Sinusitis","Persistent cough","Acute respiratory infection (ARI)","Asbestosis","Bronchiectasis","Chest infection","Cough","Cold","Common cold","Coronavirus (COVID-19)","Long-term effects of COVID-19","Coronavirus (COVID-19): Longer-term effects (long COVID)","Croup","Cystic fibrosis","Flu","Idiopathic pulmonary fibrosis","Legionnaires’ disease","Pleurisy","Respiratory syncytial virus (RSV)","Shortness of breath","Breathlessness","Tuberculosis (TB)","Whooping cough","Respiratory problems","Allergy","Tonsillitis"]},{"slug":"kidney-urinary","title":"Kidney & Urinary Diseases","conditions":["Urinary tract infection (UTI)","Kidney stones","Chronic kidney disease","Urinary incontinence","Frequent urination","Prostate enlargement (BPH)","Kidney infection","Cystitis","Urinary incontinence in women","Urinary problems","Kidney-related health concerns","Benign prostate enlargement","Kidney stone","Prostate problems"]},{"slug":"digestive-liver","title":"Digestive & Liver Diseases","conditions":["Acid reflux (GERD)","Gastritis","Constipation","Irritable bowel syndrome (IBS)","Fatty liver disease","Hepatitis","Gallstones","Acidity","Gastro-oesophageal reflux disease (GORD)","Indigestion","Diarrhoea in adults","Diarrhoea in children and babies","Gastroenteritis in adults","Gastroenteritis in children and babies","Food poisoning","Stomach ache and abdominal pain","Stomach ulcer","Piles (haemorrhoids)","Anal fissure","Crohn’s disease","Ulcerative colitis","Inflammatory bowel disease (IBD)","Coeliac disease","Lactose intolerance","Diverticular disease and diverticulitis","Gallbladder stone","Acute cholecystitis","Acute pancreatitis","Chronic pancreatitis","Alcohol-related liver disease","Non-alcoholic fatty liver disease (NAFLD)","Liver disease","Liver disorders","Cirrhosis","Hepatitis A","Hepatitis B","Hepatitis C","Hiatus hernia","Bowel polyps","Bowel incontinence","Clostridium difficile","Norovirus","Nausea and vomiting","Vomiting in adults","Vomiting in children and babies","Farting","Itchy bottom","Dysphagia (swallowing problems)","Appendicitis","IBS","Diarrhoea","Fissure"]},{"slug":"bone-joint-muscle","title":"Bone, Joint & Muscle Pain","conditions":["Osteoarthritis","Rheumatoid arthritis","Back pain","Neck pain","Muscle strains","Tendinitis","Gout","Achilles tendinopathy","Ankle problems","Ankle sprain","Ankle avulsion fracture","Ankylosing spondylitis","Arthritis","Back problems","Joint pain","Cervical spondylosis","Cervical myelopathy","Mechanical neck pain","Neck injury","Neck problems","Carpal tunnel syndrome","Chronic pain","Clavicle (collar bone) fracture","Elbow problems","Elbow (radial head or neck) fracture","Fibromyalgia","Foot and toe problems","Fragility fracture of the hip","Frozen shoulder","Ganglion cyst","Golfers elbow","Greater trochanteric pain syndrome","Hip problems","Hip problems in children and young people","Joint hypermobility","Knee problems","Leg cramps","Lupus","Metacarpal fracture of the hand","Osteoarthritis of the hip","Osteoarthritis of the knee","Osteoarthritis of the hand","Osteoporosis","Patellofemoral pain syndrome","Pelvic girdle pain","Plantar heel pain","Polymyalgia rheumatica","Psoriatic arthritis","Raynaud’s phenomenon","Reactive arthritis","Sciatica","About scoliosis","Shoulder problems","Soft tissue injury","Spinal stenosis","Subacromial pain syndrome","Tennis elbow","Thigh problems","Thumb fracture","Whiplash","Wrist fracture","Wrist, hand, finger and thumb problems","Bow legs and knock knees in children and young people"]},{"slug":"neurology","title":"Neurological Diseases","conditions":["Migraine","Tension headache","Peripheral neuropathy","Epilepsy","Parkinson’s disease","Vertigo","Stroke-related symptoms","Alzheimer’s disease","Ataxia","Becker muscular dystrophy","Cerebral palsy","Dementia","Dementia with Lewy bodies","Degenerative cervical myelopathy","Dizziness (lightheadedness)","Down’s syndrome","Duchenne muscular dystrophy (DMD)","Dystonia","Emery-Dreifuss muscular dystrophy","Facial palsy","Facioscapulohumeral muscular dystrophy (FSHD)","Febrile seizures","Functional neurological disorder (FND)","Headaches","Huntington’s disease","Hydrocephalus","Labyrinthitis","Learning disability","Limb girdle muscular dystrophy","Meniere’s disease","Motor neurone disease (MND)","Multiple sclerosis (MS)","Multiple system atrophy (MSA)","Muscular dystrophy","Myasthenia gravis","Myotonic dystrophy","Oculopharyngeal muscular dystrophy (OPMD)","Polio","Post-concussion syndrome","Post-polio syndrome","Progressive supranuclear palsy (PSP)","Restless legs syndrome","Spina bifida","Tinnitus","Tourette’s syndrome","Transverse myelitis","Trigeminal neuralgia","Vascular dementia","Vision and hearing problems","Brain and nerve disorders","Stroke","Transient ischaemic attack (TIA)","Congenital muscular dystrophy (CMD)"]},{"slug":"womens-health","title":"Women's Health Issues","conditions":["Menstrual irregularities","Painful periods","Polycystic ovary syndrome (PCOS)","Menopausal symptoms","Vaginal infections","Urinary infections","Breast concerns","Female infertility and fertility assessment","Adenomyosis","Bacterial vaginosis","Breast pain","Early miscarriage","Ectopic pregnancy","Endometriosis","Fibroids","Infertility","Female infertility","Irregular periods","Menstrual problems","Menopause","Late miscarriage","Miscarriage","Recurrent miscarriage","Molar pregnancy","Ovarian cyst","Pelvic inflammatory disease","Pelvic organ prolapse","PCOD / PCOS","Postnatal depression","Vaginal discharge","Leucorrhoea","Urinary incontinence in women","Nipple discharge","Nipple inversion (inside out nipple)","Breast swelling","Genital herpes","Genital warts","Genital symptoms","Thrush","Urinary tract infection (UTI)","Menstrual cramps","Hormonal imbalance","Infertility (female)"]},{"slug":"childrens-health","title":"Children's Health Issues","conditions":["Common cold and cough","Childhood allergies","Asthma in children","Eczema in children","Digestive complaints","Fever","Growth and development concerns","ADHD in children and young people","Anxiety disorders in children and young people","Aplastic anaemia in children and young people","Bottom shuffling in young children","Bow legs and knock knees in children and young people","Breathing problems in children","Chickenpox","Croup","Diarrhoea in children and babies","Down’s syndrome","Earache","Ear infection","Febrile seizures","Fever in children","Flat feet in children and young people","Gastroenteritis in children and babies","Hand, foot and mouth disease","Hip problems in children and young people","Intoeing (pigeon toe) in children and young people","Measles","Mumps","PIMS","Popliteal cysts in children and young people","Positional talipes in children and young people","Scarlet fever","Skin rashes in children","Slapped cheek syndrome","Slipped upper femoral epiphysis (SUFE) in children and young people","Snapping hip in children and young people","Toe problems in children and young people","Toe walking in children and young people","Traction apophysitis of the hip in children and young people","Trigger thumb or trigger finger in children and young people","Trips and falls in young children","Vomiting in children and babies","Child health problems","Common cold","Tonsillitis"]},{"slug":"ent-allergy","title":"ENT & Allergic Problems","conditions":["Allergic rhinitis","Sinusitis","Tonsillitis","Ear infections","Hearing difficulties","Sore throat","Seasonal allergies","Allergies","Allergy","Anaphylaxis","Catarrh","Common cold","Conjunctivitis","Dry mouth","Earache","Earwax build-up","Feeling of something in your throat (Globus)","Food allergy","Glandular fever","Hay fever","Hearing loss","Laryngitis","Labyrinthitis","Meniere’s disease","Middle ear infection (otitis media)","Mouth ulcer","Nosebleed","Oral thrush in adults","Outer ear infection (otitis externa)","Swollen glands","Tinnitus","Toothache","Tooth decay","Gum disease","Cough","Cold","Allergic problems"]},{"slug":"endocrine-metabolic","title":"Endocrine & Metabolic Disturbance","conditions":["Diabetes mellitus","Thyroid disorders","Obesity-related health concerns","High cholesterol","Polycystic ovary syndrome (PCOS)","Metabolic syndrome","Addison’s disease","Complications of type 1 diabetes","Diabetes","Type 1 diabetes","Type 2 diabetes","Diabetic foot issues","Diabetic ketoacidosis (DKA)","Diabetic retinopathy","Folate deficiency anaemia","High blood pressure (hypertension)","Hormonal imbalances","Hyperglycaemia (high blood sugar)","Hypoglycaemia (low blood sugar)","Iron deficiency anaemia","Malnutrition","Obesity","Overactive thyroid","Underactive thyroid","Vitamin B12 deficiency","Polyendocrine metabolic ovarian syndrome (PMOS)","Low blood pressure (hypotension)","Sickle cell disease","Aplastic anaemia","High blood pressure"]},{"slug":"mental-health-sleep","title":"Mental Health & Sleep Disorder","conditions":["Insomnia","Anxiety disorders","Depression","Stress-related symptoms","Panic attacks","Sleep apnea","Other sleep disturbances","ADHD in adults","Anorexia nervosa","Anxiety disorders in children and young people","Anxiety","Bipolar disorder","Binge eating disorder (BED)","Bulimia nervosa","Eating disorders","Generalised anxiety disorder (GAD)","Mental health concerns","Obsessive compulsive disorder (OCD)","Obstructive sleep apnoea","Panic disorder","Personality disorder","Phobias","Post-traumatic stress disorder (PTSD)","Postnatal depression","Psychosis","Psychotic depression","Schizophrenia","Seasonal affective disorder (SAD)","Sleep disorders","Social anxiety disorder","Stress","Sleep disturbances","Myalgic encephalomyelitis (ME) or chronic fatigue syndrome (CFS)","Restless legs syndrome","Munchausen syndrome"]}];
+const additionalConditions = ["Abdominal aortic aneurysm","Acid and chemical burns","Animal and human bites","Atrial fibrillation","Angina","Brain stem death","Burns and scalds","Cardiac arrest","Cardiovascular disease","Chest and rib injury","Chest pain","Coma","Concussion","Congenital heart disease","Coronary heart disease","Cuts and grazes","Deafblindness","Deep vein thrombosis","Dehydration","Delirium","Dental abscess","Edwards’ syndrome","Ebola virus disease","Fever in adults","Heart attack","Heart block","Heart disease","Heart failure","Heart palpitations","Heatstroke and heat illness","HIV","Hypothermia (low body temperature)","Inherited heart conditions","Jellyfish and sea creature stings","Lead poisoning","Lyme disease","Lymphoedema","Malaria","Meningitis","Minor head injury","Patau’s syndrome","Postural orthostatic tachycardia syndrome (PoTS)","Sepsis","Septic shock","Severe head injury","Shigella","Spleen problems and spleen removal","Stillbirth","Streptococcus A (strep A)","Supraventricular tachycardia","Tick bites","Treatment for bites and stings","Types of bites and stings","Varicose veins","Yellow fever","Zika virus","Shiga toxin-producing E. coli (STEC)","Sjogren’s disease","Lipoedema","Thirst","Dengue fever"];
+const urgentTerms = ["cardiac arrest","heart attack","chest pain","stroke","transient ischaemic attack","ectopic pregnancy","sepsis","septic shock","anaphylaxis","diabetic ketoacidosis","deep vein thrombosis","coma","severe head injury","meningitis","hypoglycaemia","heatstroke","breathing problems","shortness of breath","heart failure","supraventricular tachycardia","brain stem death","acute pancreatitis","appendicitis"];
+function isUrgentConcern(text){return urgentTerms.some(x=>text.toLocaleLowerCase().includes(x));}
+function setSelectedConcern(condition, category) {
+  const selection = document.getElementById('specialty');
+  const concern = document.getElementById('healthConcern');
+  const available = [...selection.options].some(opt => opt.value === category);
+  selection.value = available ? category : 'Other health concern (not listed)';
+  concern.value = condition;
+  document.getElementById('appointment').scrollIntoView({behavior:'smooth',block:'start'});
+  concern.focus({preventScroll:true});
+}
+function makeBookingButton(label, concern, category){
+  const button=document.createElement('button');
+  button.type='button'; button.className='btn btn-primary'; button.textContent=label;
+  button.addEventListener('click',()=>setSelectedConcern(concern,category));
+  return button;
+}
+function renderDiseaseSearch(){
+  const term=searchInput.value.trim().slice(0,100);
+  const query=term.toLocaleLowerCase();
+  diseaseKnown.replaceChildren();
+  if(!term){
+    cards.forEach(card=>card.style.display='');
+    diseasePanel.hidden=true; diseaseUnknown.hidden=true;return;
+  }
+  const categoryHits=diseaseIndex.filter(record=>record.title.toLocaleLowerCase().includes(query));
+  const conditionHits=[];
+  diseaseIndex.forEach(record=>record.conditions.forEach(name=>{
+    if(name.toLocaleLowerCase().includes(query))conditionHits.push({name,category:record.title,slug:record.slug});
+  }));
+  const additionalHits=additionalConditions.filter(name=>name.toLocaleLowerCase().includes(query));
+  const activeSlugs=new Set([...categoryHits.map(x=>x.slug),...conditionHits.map(x=>x.slug)]);
+  cards.forEach(card=>{card.style.display=activeSlugs.has(card.id.replace('card-',''))?'':'none'});
+  diseasePanel.hidden=false;
+  diseaseUnknown.hidden=activeSlugs.size>0 || additionalHits.length>0;
+  resultsTitle.textContent=activeSlugs.size ? 'Matches in the health conditions directory' : (additionalHits.length ? 'Additional health conditions (information only)' : 'Search outside our health directory');
+  conditionHits.slice(0,10).forEach(hit=>{
+    const row=document.createElement('div');row.className='search-match';
+    const info=document.createElement('div');
+    const name=document.createElement('strong');name.textContent=hit.name;
+    const category=document.createElement('small');category.textContent='Listed under '+hit.category;
+    info.append(name,category);
+    if(isUrgentConcern(hit.name)){
+      const note=document.createElement('small');note.textContent='May require urgent medical care. Contact emergency services if symptoms are severe.';note.style.color='#a12424';info.append(note);
+    }else{
+      row.append(makeBookingButton('Enquire About Consultation',hit.name,hit.category));
+    }
+    row.prepend(info);
+    diseaseKnown.append(row);
+  });
+  additionalHits.slice(0,10).forEach(name=>{
+    const row=document.createElement('div');row.className='search-match';
+    const info=document.createElement('div');const title=document.createElement('strong');title.textContent=name;
+    const note=document.createElement('small');note.textContent='Additional health information · Not a claimed clinic treatment';info.append(title,note);row.append(info);
+    if(isUrgentConcern(name)){
+      const warn=document.createElement('small');warn.textContent='Seek prompt appropriate medical care';warn.style.color='#a12424';row.append(warn);
+    }else{
+      row.append(makeBookingButton('Enquire',name,'Other health concern (not listed)'));
+    }
+    diseaseKnown.append(row);
+  });
+  if(activeSlugs.size && !conditionHits.length && !additionalHits.length){
+    const note=document.createElement('p');
+    note.className='search-guard';
+    note.textContent='Matching treatment cards appear below. Select View Conditions to browse related concerns.';
+    diseaseKnown.append(note);
+  }
+  googleDiseaseSearch.href='https://www.google.com/search?q='+encodeURIComponent(term+' health condition information');
+}
+searchInput.addEventListener('input',renderDiseaseSearch);
+document.getElementById('clearDiseaseSearch').addEventListener('click',()=>{searchInput.value='';renderDiseaseSearch();searchInput.focus();});
+bookUnlistedDisease.addEventListener('click',()=>setSelectedConcern(searchInput.value.trim(),'Other health concern (not listed)'));
+
+document.getElementById('year').textContent = new Date().getFullYear();
+
+const specialtySelect = document.getElementById('specialty');
+document.querySelectorAll('[data-specialty]').forEach(btn => btn.addEventListener('click', () => {
+  specialtySelect.value = btn.getAttribute('data-specialty');
+}));
+
+const dateInput = document.getElementById('appointmentDate');
+const timeSelect = document.getElementById('appointmentTime');
+const slotHelp = document.getElementById('slotHelp');
+const formStatus = document.getElementById('formStatus');
+const today = new Date();
+const pad = n => String(n).padStart(2,'0');
+const localDate = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+dateInput.min = localDate(today);
+function formatLabel(minutes){
+  const h = Math.floor(minutes/60), m = minutes % 60;
+  const hour12 = h % 12 || 12;
+  const suffix = h >= 12 ? 'PM' : 'AM';
+  return `${hour12}:${pad(m)} ${suffix}`;
+}
+function buildSlots(){
+  timeSelect.innerHTML = '<option value="">Select a 30-minute slot</option>';
+  if(!dateInput.value){ slotHelp.textContent = 'Choose a date to see available clinic time slots.'; return; }
+  const selected = new Date(dateInput.value + 'T12:00:00');
+  const day = selected.getDay();
+  const ranges = day === 0 ? [[660,840]] : [[660,840],[1020,1200]];
+  let count = 0;
+  ranges.forEach(([start,end]) => {
+    for(let mins=start; mins+30<=end; mins+=30){
+      if(dateInput.value === localDate(today) && mins <= today.getHours()*60 + today.getMinutes()) continue;
+      const opt = document.createElement('option');
+      opt.value = `${pad(Math.floor(mins/60))}:${pad(mins%60)}`;
+      opt.textContent = `${formatLabel(mins)} – ${formatLabel(mins+30)}`;
+      timeSelect.appendChild(opt);
+      count++;
+    }
+  });
+  slotHelp.textContent = count ? 'Requested times are subject to clinic confirmation.' : 'No remaining slots for this date. Please choose another date.';
+}
+dateInput.addEventListener('change', buildSlots);
+buildSlots();
+
+document.getElementById('bookingForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = document.getElementById('patientName').value.trim();
+  const mobile = document.getElementById('patientMobile').value.replace(/\s+/g,'').trim();
+  if(!name || !/^[0-9]{10}$/.test(mobile) || !specialtySelect.value || !dateInput.value || !timeSelect.value){
+    formStatus.textContent = 'Please complete all fields with a valid 10-digit mobile number.';
+    formStatus.style.color = '#c0392b';
+    return;
+  }
+  const [hh,mm] = timeSelect.value.split(':').map(Number);
+  const start = hh*60 + mm;
+  const end = start + 30;
+  const msg = `Hello Prajapati Homeopathic Clinic, I would like to request an appointment.
+
+Patient: ${name}
+Mobile: ${mobile}
+Category: ${specialtySelect.value}
+Health concern: ${document.getElementById('healthConcern').value.trim() || 'Not specified'}
+Preferred date: ${dateInput.value}
+Preferred time: ${formatLabel(start)} – ${formatLabel(end)}
+
+Please confirm whether this appointment is available.`;
+  const url = 'https://wa.me/918103684642?text=' + encodeURIComponent(msg);
+  formStatus.textContent = 'Opening WhatsApp. Your appointment is not confirmed until the clinic replies.';
+  formStatus.style.color = '#0d7a46';
+  window.open(url, '_blank', 'noopener,noreferrer');
+});
+</script>
+<script>
+(function(){
+  const form=document.getElementById('reviewForm');
+  if(!form) return;
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const name=document.getElementById('reviewName').value.trim() || 'Anonymous visitor';
+    const rating=document.getElementById('reviewRating').value;
+    const feedback=document.getElementById('reviewText').value.trim();
+    const status=document.getElementById('reviewMessage');
+    if(!rating || !feedback){status.textContent='Please select a rating and enter feedback.';return;}
+    const msg='Private clinic feedback for Prajapati Homeopathic Clinic\nName: '+name+'\nRating: '+rating+'/5\nFeedback: '+feedback+'\n\nThis is feedback only, not a public review.';
+    const url='https://wa.me/918103684642?text='+encodeURIComponent(msg);
+    const link=document.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Open WhatsApp to send your feedback';
+    status.replaceChildren(document.createTextNode('Please send the prepared message in WhatsApp. '),link);
+    window.open(url,'_blank','noopener,noreferrer');
+  });
+})();
+</script>
+<div class="treatment-overlay" hidden="" id="treatmentDialog" role="presentation">
+<div class="treatment-backdrop" data-close-treatment="true"></div>
+<section aria-describedby="treatmentDescription" aria-labelledby="treatmentTitle" aria-modal="true" class="treatment-dialog" role="dialog" tabindex="-1">
+<button aria-label="Close conditions" class="treatment-close" id="closeTreatment" type="button">×</button>
+<p class="section-tag">HEALTH CONCERNS</p>
+<h2 id="treatmentTitle">Treatment</h2>
+<p class="treatment-description" id="treatmentDescription">Related conditions for consultation</p>
+<ul class="treatment-conditions" id="treatmentConditions"></ul>
+<p class="treatment-note">These are consultation categories, not a claim that homeopathy can cure these conditions. Some conditions require prompt medical evaluation or evidence-based care.</p>
+<div class="treatment-actions">
+<a class="btn btn-primary" href="#appointment" id="treatmentBook">Request Appointment</a>
+<button class="btn btn-outline" id="treatmentBack" type="button">Close</button>
+</div>
+</section>
+</div><script>
+(() => {
+  const treatmentData = {"skin-hair":{"title":"Skin Diseases & Hair Treatment","description":"Acne, eczema, psoriasis, dandruff, fungal infections, hair fall and related concerns.","conditions":["Acne and pimples","Eczema (atopic dermatitis)","Psoriasis","Fungal skin infections","Urticaria (hives)","Dandruff and seborrheic dermatitis","Hair loss (alopecia)","Vitiligo","Acne","Atopic eczema","Discoid eczema","Dermatitis herpetiformis","Varicose eczema","Psoriatic arthritis","Allergies","Hives","Angioedema","Dandruff","Fungal infections","Fungal nail infection","Fungal scalp infection (tinea capitis)","Athlete’s foot","Ringworm","Scabies","Impetigo","Cellulitis","Rosacea","Lichen planus","Warts and verrucas","Chilblains","Skin light sensitivity (photosensitivity)","Itchy skin","Benign skin lesions","Blisters","Cold sore","Excessive sweating (hyperhidrosis)","Ingrown toenail","Pressure ulcers","Venous leg ulcer","Shingles","Sunburn","Head lice and nits","Skin rashes in children","Fissure","Piles (haemorrhoids)","Hair fall","Eczema"]},"male-sexual-health":{"title":"Male Sexual Health","description":"Confidential consultations for reproductive health, fertility concerns and related symptoms.","conditions":["Male infertility","Erectile dysfunction","Premature ejaculation","Low sexual desire","Reproductive hormone concerns","Semen analysis and fertility assessment","Prostate-related symptoms","Infertility","Erectile dysfunction (impotence)","Low sex drive (loss of libido)","Low libido","Benign prostate enlargement","Prostate problems","Testicular lumps and swellings","Breast swelling in men","Genital herpes","Genital warts","Chlamydia","Gonorrhoea","Syphilis","Trichomonas infection","Mycoplasma genitalium (Mgen)","Managing genital symptoms","Penile health concerns","Infertility (male)","Male sexual disorders"]},"respiratory":{"title":"Respiratory Diseases","description":"Breathing and chest-related concerns including cough, asthma and sinus symptoms.","conditions":["Asthma","Allergic rhinitis","Bronchitis","Chronic obstructive pulmonary disease (COPD)","Pneumonia","Sinusitis","Persistent cough","Acute respiratory infection (ARI)","Asbestosis","Bronchiectasis","Chest infection","Cough","Cold","Common cold","Coronavirus (COVID-19)","Long-term effects of COVID-19","Coronavirus (COVID-19): Longer-term effects (long COVID)","Croup","Cystic fibrosis","Flu","Idiopathic pulmonary fibrosis","Legionnaires’ disease","Pleurisy","Respiratory syncytial virus (RSV)","Shortness of breath","Breathlessness","Tuberculosis (TB)","Whooping cough","Respiratory problems","Allergy","Tonsillitis"]},"kidney-urinary":{"title":"Kidney & Urinary Diseases","description":"Support for urinary issues, kidney concerns, stones and recurrent urinary complaints.","conditions":["Urinary tract infection (UTI)","Kidney stones","Chronic kidney disease","Urinary incontinence","Frequent urination","Prostate enlargement (BPH)","Kidney infection","Cystitis","Urinary incontinence in women","Urinary problems","Kidney-related health concerns","Benign prostate enlargement","Kidney stone","Prostate problems"]},"digestive-liver":{"title":"Digestive & Liver Diseases","description":"Care for acidity, constipation, IBS, gastritis and liver-related discomfort.","conditions":["Acid reflux (GERD)","Gastritis","Constipation","Irritable bowel syndrome (IBS)","Fatty liver disease","Hepatitis","Gallstones","Acidity","Gastro-oesophageal reflux disease (GORD)","Indigestion","Diarrhoea in adults","Diarrhoea in children and babies","Gastroenteritis in adults","Gastroenteritis in children and babies","Food poisoning","Stomach ache and abdominal pain","Stomach ulcer","Piles (haemorrhoids)","Anal fissure","Crohn’s disease","Ulcerative colitis","Inflammatory bowel disease (IBD)","Coeliac disease","Lactose intolerance","Diverticular disease and diverticulitis","Gallbladder stone","Acute cholecystitis","Acute pancreatitis","Chronic pancreatitis","Alcohol-related liver disease","Non-alcoholic fatty liver disease (NAFLD)","Liver disease","Liver disorders","Cirrhosis","Hepatitis A","Hepatitis B","Hepatitis C","Hiatus hernia","Bowel polyps","Bowel incontinence","Clostridium difficile","Norovirus","Nausea and vomiting","Vomiting in adults","Vomiting in children and babies","Farting","Itchy bottom","Dysphagia (swallowing problems)","Appendicitis","IBS","Diarrhoea","Fissure"]},"bone-joint-muscle":{"title":"Bone, Joint & Muscle Pain","description":"Consultation for back pain, neck pain, arthritis and other muscle or joint complaints.","conditions":["Osteoarthritis","Rheumatoid arthritis","Back pain","Neck pain","Muscle strains","Tendinitis","Gout","Achilles tendinopathy","Ankle problems","Ankle sprain","Ankle avulsion fracture","Ankylosing spondylitis","Arthritis","Back problems","Joint pain","Cervical spondylosis","Cervical myelopathy","Mechanical neck pain","Neck injury","Neck problems","Carpal tunnel syndrome","Chronic pain","Clavicle (collar bone) fracture","Elbow problems","Elbow (radial head or neck) fracture","Fibromyalgia","Foot and toe problems","Fragility fracture of the hip","Frozen shoulder","Ganglion cyst","Golfers elbow","Greater trochanteric pain syndrome","Hip problems","Hip problems in children and young people","Joint hypermobility","Knee problems","Leg cramps","Lupus","Metacarpal fracture of the hand","Osteoarthritis of the hip","Osteoarthritis of the knee","Osteoarthritis of the hand","Osteoporosis","Patellofemoral pain syndrome","Pelvic girdle pain","Plantar heel pain","Polymyalgia rheumatica","Psoriatic arthritis","Raynaud’s phenomenon","Reactive arthritis","Sciatica","About scoliosis","Shoulder problems","Soft tissue injury","Spinal stenosis","Subacromial pain syndrome","Tennis elbow","Thigh problems","Thumb fracture","Whiplash","Wrist fracture","Wrist, hand, finger and thumb problems","Bow legs and knock knees in children and young people"]},"neurology":{"title":"Neurological Diseases","description":"Supportive consultation for headache, vertigo, nerve discomfort and neurological symptoms.","conditions":["Migraine","Tension headache","Peripheral neuropathy","Epilepsy","Parkinson’s disease","Vertigo","Stroke-related symptoms","Alzheimer’s disease","Ataxia","Becker muscular dystrophy","Cerebral palsy","Dementia","Dementia with Lewy bodies","Degenerative cervical myelopathy","Dizziness (lightheadedness)","Down’s syndrome","Duchenne muscular dystrophy (DMD)","Dystonia","Emery-Dreifuss muscular dystrophy","Facial palsy","Facioscapulohumeral muscular dystrophy (FSHD)","Febrile seizures","Functional neurological disorder (FND)","Headaches","Huntington’s disease","Hydrocephalus","Labyrinthitis","Learning disability","Limb girdle muscular dystrophy","Meniere’s disease","Motor neurone disease (MND)","Multiple sclerosis (MS)","Multiple system atrophy (MSA)","Muscular dystrophy","Myasthenia gravis","Myotonic dystrophy","Oculopharyngeal muscular dystrophy (OPMD)","Polio","Post-concussion syndrome","Post-polio syndrome","Progressive supranuclear palsy (PSP)","Restless legs syndrome","Spina bifida","Tinnitus","Tourette’s syndrome","Transverse myelitis","Trigeminal neuralgia","Vascular dementia","Vision and hearing problems","Brain and nerve disorders","Stroke","Transient ischaemic attack (TIA)","Congenital muscular dystrophy (CMD)"]},"womens-health":{"title":"Women's Health Issues","description":"Women's care for menstrual, hormonal, urinary and menopausal concerns.","conditions":["Menstrual irregularities","Painful periods","Polycystic ovary syndrome (PCOS)","Menopausal symptoms","Vaginal infections","Urinary infections","Breast concerns","Female infertility and fertility assessment","Adenomyosis","Bacterial vaginosis","Breast pain","Early miscarriage","Ectopic pregnancy","Endometriosis","Fibroids","Infertility","Female infertility","Irregular periods","Menstrual problems","Menopause","Late miscarriage","Miscarriage","Recurrent miscarriage","Molar pregnancy","Ovarian cyst","Pelvic inflammatory disease","Pelvic organ prolapse","PCOD / PCOS","Postnatal depression","Vaginal discharge","Leucorrhoea","Urinary incontinence in women","Nipple discharge","Nipple inversion (inside out nipple)","Breast swelling","Genital herpes","Genital warts","Genital symptoms","Thrush","Urinary tract infection (UTI)","Menstrual cramps","Hormonal imbalance","Infertility (female)"]},"childrens-health":{"title":"Children's Health Issues","description":"Child-friendly consultation for common infections, allergies, digestive and skin concerns.","conditions":["Common cold and cough","Childhood allergies","Asthma in children","Eczema in children","Digestive complaints","Fever","Growth and development concerns","ADHD in children and young people","Anxiety disorders in children and young people","Aplastic anaemia in children and young people","Bottom shuffling in young children","Bow legs and knock knees in children and young people","Breathing problems in children","Chickenpox","Croup","Diarrhoea in children and babies","Down’s syndrome","Earache","Ear infection","Febrile seizures","Fever in children","Flat feet in children and young people","Gastroenteritis in children and babies","Hand, foot and mouth disease","Hip problems in children and young people","Intoeing (pigeon toe) in children and young people","Measles","Mumps","PIMS","Popliteal cysts in children and young people","Positional talipes in children and young people","Scarlet fever","Skin rashes in children","Slapped cheek syndrome","Slipped upper femoral epiphysis (SUFE) in children and young people","Snapping hip in children and young people","Toe problems in children and young people","Toe walking in children and young people","Traction apophysitis of the hip in children and young people","Trigger thumb or trigger finger in children and young people","Trips and falls in young children","Vomiting in children and babies","Child health problems","Common cold","Tonsillitis"]},"ent-allergy":{"title":"ENT & Allergic Problems","description":"Care for throat, ear, nose, sinus and seasonal allergy-related concerns.","conditions":["Allergic rhinitis","Sinusitis","Tonsillitis","Ear infections","Hearing difficulties","Sore throat","Seasonal allergies","Allergies","Allergy","Anaphylaxis","Catarrh","Common cold","Conjunctivitis","Dry mouth","Earache","Earwax build-up","Feeling of something in your throat (Globus)","Food allergy","Glandular fever","Hay fever","Hearing loss","Laryngitis","Labyrinthitis","Meniere’s disease","Middle ear infection (otitis media)","Mouth ulcer","Nosebleed","Oral thrush in adults","Outer ear infection (otitis externa)","Swollen glands","Tinnitus","Toothache","Tooth decay","Gum disease","Cough","Cold","Allergic problems"]},"endocrine-metabolic":{"title":"Endocrine & Metabolic Disturbance","description":"Consultation related to thyroid, diabetes, metabolism and hormone-related imbalances.","conditions":["Diabetes mellitus","Thyroid disorders","Obesity-related health concerns","High cholesterol","Polycystic ovary syndrome (PCOS)","Metabolic syndrome","Addison’s disease","Complications of type 1 diabetes","Diabetes","Type 1 diabetes","Type 2 diabetes","Diabetic foot issues","Diabetic ketoacidosis (DKA)","Diabetic retinopathy","Folate deficiency anaemia","High blood pressure (hypertension)","Hormonal imbalances","Hyperglycaemia (high blood sugar)","Hypoglycaemia (low blood sugar)","Iron deficiency anaemia","Malnutrition","Obesity","Overactive thyroid","Underactive thyroid","Vitamin B12 deficiency","Polyendocrine metabolic ovarian syndrome (PMOS)","Low blood pressure (hypotension)","Sickle cell disease","Aplastic anaemia","High blood pressure"]},"mental-health-sleep":{"title":"Mental Health & Sleep Disorder","description":"Supportive consultation for stress, sleep difficulty, anxiety and mood-related complaints.","conditions":["Insomnia","Anxiety disorders","Depression","Stress-related symptoms","Panic attacks","Sleep apnea","Other sleep disturbances","ADHD in adults","Anorexia nervosa","Anxiety disorders in children and young people","Anxiety","Bipolar disorder","Binge eating disorder (BED)","Bulimia nervosa","Eating disorders","Generalised anxiety disorder (GAD)","Mental health concerns","Obsessive compulsive disorder (OCD)","Obstructive sleep apnoea","Panic disorder","Personality disorder","Phobias","Post-traumatic stress disorder (PTSD)","Postnatal depression","Psychosis","Psychotic depression","Schizophrenia","Seasonal affective disorder (SAD)","Sleep disorders","Social anxiety disorder","Stress","Sleep disturbances","Myalgic encephalomyelitis (ME) or chronic fatigue syndrome (CFS)","Restless legs syndrome","Munchausen syndrome"]}};
+  const dialogRoot = document.getElementById('treatmentDialog');
+  const dialog = dialogRoot.querySelector('.treatment-dialog');
+  const titleEl = document.getElementById('treatmentTitle');
+  const descEl = document.getElementById('treatmentDescription');
+  const listEl = document.getElementById('treatmentConditions');
+  const booking = document.getElementById('treatmentBook');
+  const categorySelect = document.getElementById('specialty');
+  let lastFocus = null;
+  function close() {
+    dialogRoot.hidden = true;
+    document.body.classList.remove('treatment-modal-open');
+    if (lastFocus && lastFocus.isConnected) lastFocus.focus();
+  }
+  function open(slug, trigger) {
+    const item = treatmentData[slug];
+    if (!item) return;
+    lastFocus = trigger;
+    titleEl.textContent = item.title;
+    descEl.textContent = item.description;
+    listEl.replaceChildren();
+    item.conditions.forEach((condition) => {
+      const li = document.createElement('li');
+      li.textContent = condition;
+      listEl.appendChild(li);
+    });
+    booking.dataset.specialty = item.title;
+    dialogRoot.hidden = false;
+    document.body.classList.add('treatment-modal-open');
+    dialog.focus();
+  }
+  document.querySelectorAll('[data-treatment]').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.preventDefault(); open(btn.dataset.treatment, btn); });
+  });
+  document.getElementById('closeTreatment').addEventListener('click', close);
+  document.getElementById('treatmentBack').addEventListener('click', close);
+  dialogRoot.querySelector('[data-close-treatment]').addEventListener('click', close);
+  booking.addEventListener('click', () => {
+    categorySelect.value = booking.dataset.specialty || '';
+    close();
+  });
+  document.addEventListener('keydown', e => {
+    if (dialogRoot.hidden) return;
+    if (e.key === 'Escape') { e.preventDefault(); close(); }
+    if (e.key === 'Tab') {
+      const items = Array.from(dialog.querySelectorAll('a[href], button:not([disabled]), input:not([disabled])'));
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && (document.activeElement===first || document.activeElement===dialog)) {e.preventDefault();last.focus();}
+      else if (!e.shiftKey && document.activeElement===last) {e.preventDefault();first.focus();}
+    }
+  });
+})();
+</script><script async="" src="https://checkout.razorpay.com/v1/checkout.js"></script><script defer="" src="assets/paid-booking.js"></script></body>
+</html>

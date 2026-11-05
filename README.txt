@@ -1,0 +1,1 @@
+Prajapati Homeopathic Clinic website with 30-minute paid online consultation booking integration scaffold. See SETUP_README.txt for security and launch steps. Live booking is intentionally disabled until configured.

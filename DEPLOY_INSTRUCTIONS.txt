@@ -1,0 +1,13 @@
+PHC REVIEW PAGE - NETLIFY 404 FIX
+
+IMPORTANT: Upload the complete extracted website folder, not index.html alone.
+
+1. Unzip PHC_Reviews_404_Fixed_Netlify.zip on your computer.
+2. Open the extracted PHC_Reviews_404_Fixed folder. Check you see index.html, reviews.html, assets folder, and _redirects.
+3. Log in to https://app.netlify.com/ and open your EXISTING PHC website project.
+4. Open Deploys. Drag the ENTIRE extracted folder (PHC_Reviews_404_Fixed) to the manual deploy area. Do not create a new site.
+5. When the deploy completes, check https://YOUR-SITE.netlify.app/reviews.html and click the Open Review Page button on the homepage.
+6. If you still see 404, hard refresh your browser (Ctrl+Shift+R) and check the latest published deploy lists reviews.html.
+
+Why 404 happened: the homepage points to reviews.html. A deployment containing only index.html does not publish reviews.html.
+Note: Google reviews need a working internet connection and correctly configured Elfsight widget.

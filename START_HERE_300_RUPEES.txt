@@ -1,0 +1,62 @@
+PRAJAPATI HOMEOPATHIC CLINIC — ONLINE CONSULTATION SETUP
+
+PRICES
+- Audio consultation: ₹300
+- Video consultation: ₹300
+- Razorpay order amount: 30000 paise for either type.
+- These amounts are enforced in Netlify server code (netlify/functions/_common.js).
+
+IMPORTANT: The package is prepared, NOT live. A Razorpay account alone is not enough to activate payment and live slot locking. Do not share secret keys in chat or paste them into HTML.
+
+1) RAZORPAY
+- Finish merchant verification / activation if required by Razorpay.
+- Open Razorpay Dashboard and use TEST MODE first.
+- Find your test Key ID and Key Secret (API Keys under account/settings, naming may vary).
+- Enable automatic capture in payment settings.
+
+2) SUPABASE
+- Create a Supabase project (or use one you own).
+- In SQL Editor, run setup/booking_database.sql once.
+- In your Supabase project settings/API, obtain the Project URL and server secret/service_role key.
+- Never expose the service_role key in HTML or public code.
+
+3) NETLIFY — EXISTING PHC PROJECT
+- Open your existing Netlify project > Project configuration > Environment variables.
+- Add these EXACT names with real values (scope must include Functions):
+  RAZORPAY_KEY_ID           = (TEST key ID initially)
+  RAZORPAY_KEY_SECRET       = (matching TEST secret)
+  RAZORPAY_WEBHOOK_SECRET   = (strong webhook secret set in Razorpay)
+  SUPABASE_URL             = (https://YOUR-PROJECT.supabase.co)
+  SUPABASE_SERVICE_ROLE_KEY = (Supabase server secret/service_role key)
+- Do not add CONSULTATION_FEE_PAISE; ₹300 is already set in server code.
+- Redeploy after adding variables.
+
+4) RAZORPAY WEBHOOK
+- In your Razorpay Dashboard, configure a webhook to:
+  https://YOUR-NETLIFY-ADDRESS/.netlify/functions/consult-webhook
+- Configure payment.captured and order.paid events.
+- Use the exact same webhook secret as the Netlify variable.
+
+5) DEPLOYMENT
+- This website requires Netlify Functions, not static file uploads alone.
+- Recommended: link a Git repository to your EXISTING Netlify project and deploy this full folder; or use Netlify CLI with Functions support.
+- Deploy index.html, reviews.html, assets/, netlify/functions/, netlify.toml, etc.
+- Check https://YOUR-NETLIFY-ADDRESS/.netlify/functions/consult-availability?date=YYYY-MM-DD
+  A configured site should respond with ready:true and feePaise:30000 for a valid date.
+
+6) TEST FIRST
+- Complete a test payment with Razorpay TEST MODE.
+- Check the same time slot is locked across video and audio and appears red after a verified captured payment.
+- Check that two simultaneous booking requests cannot both hold the slot.
+- Verify abandoned checkout, webhook, cancelled payment, and delayed capture handling.
+- Only after testing, replace TEST credentials with LIVE credentials on Netlify and redeploy.
+
+PAYMENT SAFETY
+- This starter retains a 15-minute hold. Delayed captured payments after a hold expires may require manual reconciliation/refund.
+- Review cancellation/refund policy, privacy notice, authorized staff access and clinic confirmation procedures before going live.
+- The clinic arranges the audio/video call; video meeting creation is not included.
+
+Official docs:
+https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/integration-steps/
+https://docs.netlify.com/build/functions/get-started/
+https://docs.netlify.com/build/functions/environment-variables/
