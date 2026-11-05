@@ -1,7 +1,7 @@
 const {json,configured,supa,safeDate,slotTimes,validSlot,istNow,fee} = require('./_common');
 exports.handler=async(event)=>{
  try{
-console.log('PHC MISSING VARIABLES:', ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','RAZORPAY_KEY_ID','RAZORPAY_KEY_SECRET'].filter(k => !process.env[k]));
+console.log('PHC CHECK:', event.queryStringParameters?.check, 'configured:', configured(), 'missing:', ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','RAZORPAY_KEY_ID','RAZORPAY_KEY_SECRET'].filter(k => !process.env[k]));
   if(event.httpMethod!=='GET')return json(405,{error:'Method not allowed'});
   if(!configured())return json(200,{ready:false,message:'Clinic online payment setup is pending. Slots shown after setup.',slots:[]});
   const date=event.queryStringParameters?.date;
