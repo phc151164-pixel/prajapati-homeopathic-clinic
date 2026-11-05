@@ -14,6 +14,7 @@ exports.handler=async(event)=>{
   await supa('rpc/phc_attach_order','POST',{p_id:holdId,p_order:order.id});
   return json(200,{orderId:order.id,bookingId:holdId,key:process.env.RAZORPAY_KEY_ID,amount:fee(),currency:'INR',name,contact:mobile,mode,date,time});
  }catch(e){
+console.error('PHC BOOKING ERROR:', 'code:', e.code || 'none', 'status:', e.status || 'none', 'message:', e.message);
   if(holdId)try{await supa('rpc/phc_cancel_held_slot','POST',{p_id:holdId})}catch{}
   return json(e.code==='23505'?409:400,{error:e.code==='23505'?'That slot is no longer available. Choose another green slot.':'Could not start booking. Please refresh and try again.'});
  }
