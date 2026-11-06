@@ -2,6 +2,7 @@ const {json,configured,supa,razorpay,validSlot,fee} = require('./_common');
 exports.handler=async(event)=>{
  if(event.httpMethod!=='POST')return json(405,{error:'Method not allowed'});
  if(!configured())return json(503,{error:'Online booking setup is incomplete.'});
+ if((event.body||'').length>4096)return json(413,{error:'Request too large'});
  let holdId, stage='input', orderCreated=false;
  try{
   let b;
@@ -17,7 +18,7 @@ exports.handler=async(event)=>{
 
   stage='razorpay_order';
   const order=await razorpay('orders','POST',{amount:fee(),currency:'INR',receipt:holdId.slice(0,32),notes:{booking_id:holdId}});
-  if(!order?.id)throw Object.assign(new Error('Payment order ID missing'),{provider:'razorpay'});
+  if(!/^order_[A-Za-z0-9]+$/.test(order?.id||'')||order.amount!==fee()||order.currency!=='INR')throw Object.assign(new Error('Payment order ID missing'),{provider:'razorpay'});
   orderCreated=true;
 
   stage='attach_order';
@@ -36,4 +37,10 @@ exports.handler=async(event)=>{
   if(stage==='attach_order')return json(503,{error:'Booking setup could not finish. Please contact the clinic; do not attempt payment yet.'});
   return json(503,{error:'Could not start booking. Please try later or contact the clinic.'});
  }
+};
+
+// Netlify platform rate limit: per visitor IP, before the function runs.
+exports.config = {
+  path: "/.netlify/functions/consult-create-order",
+  rateLimit: { action: "rate_limit", aggregateBy: ["ip", "domain"], windowSize: 60, windowLimit: 6 }
 };

@@ -19,3 +19,9 @@ exports.handler=async(event)=>{
  }
 
 };
+
+// Netlify platform rate limit: per visitor IP, before the function runs.
+exports.config = {
+  path: "/.netlify/functions/consult-availability",
+  rateLimit: { action: "rate_limit", aggregateBy: ["ip", "domain"], windowSize: 60, windowLimit: 90 }
+};

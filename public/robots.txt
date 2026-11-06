@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /doctor-calendar.html
+Disallow: /.netlify/functions/
+Sitemap: https://prajapatihomeopathicclinic.netlify.app/sitemap.xml

@@ -1,3 +1,4 @@
+-- HISTORICAL ONLY: DO NOT RUN ON EXISTING PRODUCTION. See PHC_REVIEW_AND_SETUP.md.
 -- Run in your own Supabase project's SQL editor.
 -- This table stores patient contact information. Keep access server-only.
 create extension if not exists pgcrypto;
@@ -40,7 +41,7 @@ begin
  if p_date=today_ist and p_time::time<=time_ist then raise exception 'Past time';end if;
  if p_mode not in('video','audio') or length(trim(p_name)) not between 2 and 80 or p_mobile !~ '^\d{10}$' or p_fee<1 then raise exception 'Invalid booking information';end if;
  -- Clear expired holds before attempting the unique-slot insert.
- update public.online_bookings set status='expired' where slot_date=p_date and slot_time=p_time and status='held' and held_until<=now();
+ update public.online_bookings set status='expired' where slot_date=p_date and slot_time=p_time and status='held' and razorpay_order_id is null and held_until<=now();
  insert into public.online_bookings(slot_date,slot_time,mode,patient_name,mobile,amount_paise)
  values(p_date,p_time,p_mode,trim(p_name),p_mobile,p_fee) returning id into booking_id;
  return booking_id;
@@ -83,3 +84,7 @@ grant execute on function public.phc_confirm_paid_slot(text,text,integer) to ser
 -- OPTIONAL: clinic administrator can view confirmed appointments from SQL Editor:
 -- select slot_date,slot_time,mode,patient_name,mobile,paid_at
 -- from public.online_bookings where status='paid' order by slot_date,slot_time;
+
+-- IMPORTANT: After installing this schema, also run PHC_SAFE_BOOKINGS_GUARD.sql.
+-- On an existing production project, do NOT rerun this older setup script;
+-- use only the new guard migration after reviewing the current live SQL.

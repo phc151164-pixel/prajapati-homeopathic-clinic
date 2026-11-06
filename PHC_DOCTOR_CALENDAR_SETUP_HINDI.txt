@@ -1,3 +1,5 @@
+CURRENT REVIEW: Read PHC_REVIEW_AND_SETUP.md first. Older instructions below are historical; do not activate payments or run production SQL. Keep PHC_LIVE_PAYMENTS_ENABLED=false. Test orders now require an isolated staging environment.
+
 PHC: Doctor Holiday Calendar + Payment Safety (6 November 2026)
 ===========================================================
 यह अपडेट पहले की वेबसाइट/डिज़ाइन/बुकिंग डेटा को बनाए रखता है।
