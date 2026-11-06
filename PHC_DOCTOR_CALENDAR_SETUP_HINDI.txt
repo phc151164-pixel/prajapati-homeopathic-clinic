@@ -1,0 +1,65 @@
+PHC: Doctor Holiday Calendar + Payment Safety (6 November 2026)
+===========================================================
+यह अपडेट पहले की वेबसाइट/डिज़ाइन/बुकिंग डेटा को बनाए रखता है।
+
+मुख्य सुविधाएँ:
+- पूरे दिन की Online Consultation बंद/खोलें।
+- किसी एक 30-minute Time Slot को बंद/खोलें।
+- यह बदलाव तुरंत Supabase पर होते हैं, हर बार GitHub/Netlify Deploy की आवश्यकता नहीं।
+- मरीज को बंद Slot के सामने “Doctor unavailable” दिखेगा।
+- नए Appointment Reserve करने की कोशिश Server-side SQL में भी रोकी जाती है।
+- पहले से Paid Bookings अपने-आप Cancel नहीं होतीं। Doctor को ऐसे मरीजों से संपर्क करना होगा।
+- Payment Order से जुड़ा Held Slot अपने-आप Expire नहीं होगा; इससे Payment देर से होने पर Double Booking से बचाव होता है। ऐसे Pending Orders की Manual Reconciliation आवश्यक हो सकती है।
+
+सही Setup क्रम (बहुत महत्वपूर्ण):
+1. Supabase Dashboard > PHC Online Booking > SQL Editor > New query:
+   setup/PHC_HOLIDAYS_AND_PAYMENT_SAFETY.sql पूरा Copy करके RUN करें।
+   यह पुरानी booking rows Delete नहीं करता। अगर Error आए तो Deploy न करें।
+2. Netlify Dashboard > Site > Project configuration > Environment variables में नया
+   PHC_ADMIN_TOKEN नाम का Secret Variable बनाएँ। Value कम से कम 32 characters की
+   Password Manager द्वारा Generated RANDOM secret हो। सरल अंदाज़े वाला password न रखें।
+   इसे ONLY Netlify Environment Variables में डालें, GitHub या इस चैट में नहीं।
+   Netlify का Project Production Context लागू हो।
+3. Live Safety Switch: इस ZIP में Live Razorpay Keys होने पर Booking
+   DEFAULT से OFF रहेगी। Production Deploy के समय इसे OFF ही रहने दें।
+   केवल सभी Tests, Webhook और Reconciliation जाँच पूरी होने के बाद Netlify
+   Environment Variables में PHC_LIVE_PAYMENTS_ENABLED = YES बनाकर
+   नए Deploy के बाद Live Booking चालू होगी। YES की जगह true/yes नहीं चलेगा।
+4. GitHub की मौजूद PHC Repository में यह ZIP की UPDATED files (root contents)
+   Upload/Commit करें। ZIP को ZIP रूप में Repository में न डालें।
+5. Netlify में नई Production Deployment Published देखें। अगर Environment Variable
+   बदलने के बाद नया deploy नहीं हुआ, तो एक Deploy करें।
+6. डॉक्टर का Private Calendar पेज:
+   https://prajapatihomeopathicclinic.netlify.app/doctor-calendar.html
+   इसमें PHC_ADMIN_TOKEN, Date डालकर Show Appointments करें।
+   फिर Close full day / Reopen full day / Close time / Open time।
+7. Public Website पर वही Date चुनकर Confirm करें कि बंद Slot Unavailable दिखता है।
+   बिना Token के phc-admin Function को 401 जवाब देना चाहिए।
+
+महत्वपूर्ण भुगतान सावधानियाँ:
+- Live Razorpay Keys पहले से सेट हों तब इस Migration/Deploy को सावधानी से करें।
+- Payment verification और Webhook के Test किए गए Flow को बिना जाँच न बदलें।
+- इस अपडेट में एक सुरक्षित Tradeoff है: Razorpay Order से जुड़ी pending booking
+  समय के बाद भी held रह सकती है। इसे तुरंत दूसरे मरीज को न दें। पहले Razorpay में
+  Payment Status जाँचें और जरूरत हो तो Refund/Patient Communication करें।
+- अगर Doctor छुट्टी लगाते समय उस दिन की Paid Booking मौजूद है, छुट्टी केवल नई
+  Booking रोकती है; पुरानी Booking मरीज से बात कर Reschedule/Refund करनी होगी।
+- SQL Editor या Dashboard से Paid Booking का status सीधे Cancel न करें।
+- सभी Payment/Slot Tests के बाद ही वास्तविक मरीजों को Booking भेजें।
+- Admin Token किसी के साथ साझा न करें। Web Browser को Shared Computer पर न छोड़ें।
+
+बाकी रिकॉर्ड जांचने के लिए (read only):
+SELECT slot_date, slot_time, status, razorpay_order_id, created_at
+FROM public.online_bookings
+WHERE status='held' ORDER BY created_at DESC LIMIT 30;
+
+Change notes:
+- setup/PHC_HOLIDAYS_AND_PAYMENT_SAFETY.sql: one-time database migration
+- netlify/functions/phc-admin.js: secured doctor calendar API
+- doctor-calendar.html: doctor holiday/time management page
+- consult-availability.js: Closed slots and safe paid/held visibility
+- consult-create-order.js: user-friendly closed-slot error
+- consult-webhook.js: log and retry response for paid-but-unconfirmed
+- assets/paid-booking.js + index.html: closed slot UI
+
+नोट: यह अपडेट असली Razorpay Live Transaction पर अभी Test नहीं हुआ है।
