@@ -30,6 +30,7 @@ exports.handler=async(event)=>{
   if(holdId && !orderCreated){
    try{await supa('rpc/phc_cancel_held_slot','POST',{p_id:holdId});}catch{}
   }
+  if(e.message==='Consultations are closed for this date or time')return json(409,{error:'The doctor is unavailable at this time. Please choose another slot.'});
   if(e.code==='23505')return json(409,{error:'That slot is no longer available. Please choose another green slot.'});
   if(e.status===401 && stage==='razorpay_order')return json(503,{error:'Payment gateway authentication failed. Please contact the clinic.'});
   if(stage==='attach_order')return json(503,{error:'Booking setup could not finish. Please contact the clinic; do not attempt payment yet.'});

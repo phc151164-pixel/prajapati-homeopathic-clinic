@@ -1,6 +1,7 @@
 const crypto = require('node:crypto');
 const json = (statusCode, obj) => ({statusCode,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':'*'},body:JSON.stringify(obj)});
-const configured = () => ['SUPABASE_URL','PHC_SUPABASE_SERVER_KEY','RAZORPAY_KEY_ID','RAZORPAY_KEY_SECRET'].every(k=>Boolean(process.env[k]?.trim()));
+const configured = () => ['SUPABASE_URL','PHC_SUPABASE_SERVER_KEY','RAZORPAY_KEY_ID','RAZORPAY_KEY_SECRET'].every(k=>Boolean(process.env[k]?.trim()))
+ && (!process.env.RAZORPAY_KEY_ID?.startsWith('rzp_live_') || process.env.PHC_LIVE_PAYMENTS_ENABLED==='YES');
 // Public booking availability also requires the database; payment keys are checked separately.
 const databaseConfigured = () => ['SUPABASE_URL','PHC_SUPABASE_SERVER_KEY'].every(k=>Boolean(process.env[k]?.trim()));
 const supa = async (path, method='GET', body) => {

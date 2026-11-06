@@ -17,7 +17,8 @@ exports.handler=async(event)=>{
      const {razorpay}=require('./_common');
      const verified=await razorpay('payments/'+encodeURIComponent(payment.id));
      if(verified.status==='captured' && verified.order_id===orderId && verified.amount===fee() && verified.currency==='INR'){
-      await supa('rpc/phc_confirm_paid_slot','POST',{p_order:orderId,p_payment:payment.id,p_amount:fee()});
+      const confirmed=await supa('rpc/phc_confirm_paid_slot','POST',{p_order:orderId,p_payment:payment.id,p_amount:fee()});
+      if(confirmed!==true){console.error('PHC WEBHOOK: captured payment requires manual reconciliation');return json(503,{error:'Payment captured but booking confirmation requires reconciliation'});}
      }
    }
   }
