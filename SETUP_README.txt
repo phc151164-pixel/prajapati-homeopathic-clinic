@@ -22,7 +22,7 @@ IMPORTANT SETUP (NOT COMPLETED IN THIS PACKAGE)
 3. In your Netlify project, under Project configuration > Environment variables,
    set the following for runtime FUNCTIONS:
      SUPABASE_URL = https://YOUR_PROJECT.supabase.co
-     SUPABASE_SERVICE_ROLE_KEY = your-secret-service-role-key
+     PHC_SUPABASE_SERVER_KEY = your-secret-service-role-key
      RAZORPAY_KEY_ID = your Razorpay test/live key ID
      RAZORPAY_KEY_SECRET = your Razorpay secret key
      RAZORPAY_WEBHOOK_SECRET = a NEW strong secret you configure in Razorpay

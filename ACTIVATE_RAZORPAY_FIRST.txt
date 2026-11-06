@@ -13,7 +13,7 @@ YOUR RAZORPAY ACCOUNT IS CREATED: NEXT STEPS
    RAZORPAY_KEY_SECRET         = corresponding secret (SERVER ONLY)
    RAZORPAY_WEBHOOK_SECRET     = independently generated webhook secret
    SUPABASE_URL               = your project's API URL
-   SUPABASE_SERVICE_ROLE_KEY  = secret server-side database key
+   PHC_SUPABASE_SERVER_KEY  = secret server-side database key
 
    NEVER put the secret values inside index.html, chats, screenshots,
    public GitHub repositories, or client-side JavaScript.

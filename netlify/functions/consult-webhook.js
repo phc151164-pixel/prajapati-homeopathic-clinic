@@ -13,9 +13,14 @@ exports.handler=async(event)=>{
    // order.paid contains both entities, payment.captured has payment only.
    const orderId=order?.id||payment?.order_id;
    if(orderId && payment?.status==='captured' && payment.amount===fee()){
-     await supa('rpc/phc_confirm_paid_slot','POST',{p_order:orderId,p_payment:payment.id,p_amount:fee()});
+     // Do not trust unsigned amount/order metadata alone; verify server-side via Razorpay API.
+     const {razorpay}=require('./_common');
+     const verified=await razorpay('payments/'+encodeURIComponent(payment.id));
+     if(verified.status==='captured' && verified.order_id===orderId && verified.amount===fee() && verified.currency==='INR'){
+      await supa('rpc/phc_confirm_paid_slot','POST',{p_order:orderId,p_payment:payment.id,p_amount:fee()});
+     }
    }
   }
   return json(200,{received:true});
- }catch(e){return json(500,{error:'Webhook processing failed; payment must be reconciled'})}
+ }catch(e){console.error('PHC WEBHOOK ERROR:', 'provider:',e.provider||'unknown','status:',e.status||'none','code:',e.code||'none');return json(500,{error:'Webhook processing failed; payment must be reconciled'})}
 };

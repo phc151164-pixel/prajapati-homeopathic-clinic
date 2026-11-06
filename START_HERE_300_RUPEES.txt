@@ -27,7 +27,7 @@ IMPORTANT: The package is prepared, NOT live. A Razorpay account alone is not en
   RAZORPAY_KEY_SECRET       = (matching TEST secret)
   RAZORPAY_WEBHOOK_SECRET   = (strong webhook secret set in Razorpay)
   SUPABASE_URL             = (https://YOUR-PROJECT.supabase.co)
-  SUPABASE_SERVICE_ROLE_KEY = (Supabase server secret/service_role key)
+  PHC_SUPABASE_SERVER_KEY = (Supabase server secret/service_role key)
 - Do not add CONSULTATION_FEE_PAISE; ₹300 is already set in server code.
 - Redeploy after adding variables.
 
