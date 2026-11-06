@@ -13,12 +13,22 @@ exports.handler=async(event)=>{
   const order=await razorpay('orders','POST',{amount:fee(),currency:'INR',receipt:holdId.slice(0,32),notes:{booking_id:holdId}});
   await supa('rpc/phc_attach_order','POST',{p_id:holdId,p_order:order.id});
   return json(200,{orderId:order.id,bookingId:holdId,key:process.env.RAZORPAY_KEY_ID,amount:fee(),currency:'INR',name,contact:mobile,mode,date,time});
- }catch(e){
-  console.error('PHC DATABASE ERROR:', 'status:', e.status || 'none', 'code:', e.code || 'none');
-  return json(500,{error:'Could not load live availability. Please try again.'});
-}
+  }catch(e){
+  console.error('PHC BOOKING ERROR:',
+    'code:', e.code || 'none',
+    'status:', e.status || 'none'
+  );
 
-  if(holdId)try{await supa('rpc/phc_cancel_held_slot','POST',{p_id:holdId})}catch{}
-  return json(e.code==='23505'?409:400,{error:e.code==='23505'?'That slot is no longer available. Choose another green slot.':'Could not start booking. Please refresh and try again.'});
+  if(holdId){
+    try{
+      await supa('rpc/phc_cancel_held_slot','POST',{p_id:holdId});
+    }catch{}
+  }
+
+  return json(e.code==='23505'?409:400,{
+    error:e.code==='23505'
+      ? 'That slot is no longer available. Choose another green slot.'
+      : 'Could not start booking. Please refresh and try again.'
+  });
  }
 };
