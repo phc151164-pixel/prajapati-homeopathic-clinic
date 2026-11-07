@@ -1,7 +1,13 @@
 const crypto = require('node:crypto');
-const json = (statusCode, obj) => ({statusCode,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':'*'},body:JSON.stringify(obj)});
-const configured = () => ['SUPABASE_URL','PHC_SUPABASE_SERVER_KEY','RAZORPAY_KEY_ID','RAZORPAY_KEY_SECRET'].every(k=>Boolean(process.env[k]?.trim()))
- && (!process.env.RAZORPAY_KEY_ID?.startsWith('rzp_live_') || process.env.PHC_LIVE_PAYMENTS_ENABLED==='YES');
+const json = (statusCode, obj) => ({statusCode,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'},body:JSON.stringify(obj)});
+// This switch only blocks NEW live orders. Existing captured payments still need verification.
+const paymentConfigured = () => ['SUPABASE_URL','PHC_SUPABASE_SERVER_KEY','RAZORPAY_KEY_ID','RAZORPAY_KEY_SECRET'].every(k=>Boolean(process.env[k]?.trim()))
+ && /^(rzp_live_|rzp_test_)/.test(process.env.RAZORPAY_KEY_ID||'');
+const configured = () => paymentConfigured() && (
+  (process.env.RAZORPAY_KEY_ID.startsWith('rzp_test_')
+    ? process.env.PHC_ENVIRONMENT === 'staging' && process.env.CONTEXT !== 'production'
+    : process.env.PHC_LIVE_PAYMENTS_ENABLED === 'YES')
+);
 // Public booking availability also requires the database; payment keys are checked separately.
 const databaseConfigured = () => ['SUPABASE_URL','PHC_SUPABASE_SERVER_KEY'].every(k=>Boolean(process.env[k]?.trim()));
 const supa = async (path, method='GET', body) => {
@@ -18,7 +24,13 @@ const razorpay=async(path,method='GET',body)=>{
   const res=await fetch('https://api.razorpay.com/v1/'+path,{method,headers:{Authorization:'Basic '+auth,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
   const data=await res.json();if(!res.ok){const err=new Error(data?.error?.description||'Payment gateway error');err.status=res.status;err.code=data?.error?.code;err.provider='razorpay';throw err;}return data;
 };
-const safeDate = d => /^\d{4}-\d{2}-\d{2}$/.test(d||'') && !Number.isNaN(new Date(d+'T12:00:00Z').getTime());
+const safeDate = d => {
+  if(typeof d!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(d))return false;
+  const year=Number(d.slice(0,4)),month=Number(d.slice(5,7)),day=Number(d.slice(8,10));
+  if(year<2000||year>2100||month<1||month>12||day<1||day>31)return false;
+  const parsed=new Date(Date.UTC(year,month-1,day));
+  return parsed.getUTCFullYear()===year&&parsed.getUTCMonth()===month-1&&parsed.getUTCDate()===day;
+};
 const slotTimes = d => {
   const day=new Date(d+'T12:00:00Z').getUTCDay(),ranges=day===0?[[660,840]]:[[660,840],[1020,1200]];
   return ranges.flatMap(([start,end])=>Array.from({length:(end-start)/30},(_,i)=>{const t=start+i*30;return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')}));
@@ -36,4 +48,4 @@ const validSlot=(d,t)=>{
 // Fixed clinic fee, charged identically for audio and video consultations.
 // Razorpay expects the amount in paise: 300 INR = 30000 paise.
 const fee=()=>30000;
-module.exports={json,configured,databaseConfigured,supa,razorpay,safeDate,slotTimes,istNow,validSlot,fee,crypto};
+module.exports={json,configured,paymentConfigured,databaseConfigured,supa,razorpay,safeDate,slotTimes,istNow,validSlot,fee,crypto};

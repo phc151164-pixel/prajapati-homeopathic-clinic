@@ -1,0 +1,7 @@
+/setup/* /404.html 404!
+/tests/* /404.html 404!
+/netlify/* /404.html 404!
+/.env /404.html 404!
+/.env.* /404.html 404!
+/reviews  /reviews.html  200
+/reviews/  /reviews.html  200

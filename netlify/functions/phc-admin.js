@@ -1,14 +1,9 @@
 const {json,supa,safeDate,slotTimes,istNow,crypto} = require('./_common');
-function authorized(event){
- const expected=(process.env.PHC_ADMIN_TOKEN||'').trim();
- if(expected.length<32)return false;
- const token=(event.headers?.authorization||event.headers?.Authorization||'').replace(/^Bearer\s+/i,'').trim();
- if(token.length!==expected.length)return false;
- return crypto.timingSafeEqual(Buffer.from(token),Buffer.from(expected));
-}
+const {authorized}=require('./_admin_auth');
 exports.handler=async(event)=>{
  if(!authorized(event))return json(401,{error:'Administrator access denied. Check the admin token.'});
  if(!['GET','POST'].includes(event.httpMethod))return json(405,{error:'Method not allowed'});
+ if((event.body||'').length>4096)return json(413,{error:'Request too large'});
  try{
   let date,body;
   if(event.httpMethod==='POST'){

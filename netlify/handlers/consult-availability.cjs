@@ -1,4 +1,4 @@
-const {json,configured,databaseConfigured,supa,safeDate,slotTimes,validSlot,fee} = require('./_common');
+const {json,configured,databaseConfigured,supa,safeDate,slotTimes,validSlot,fee} = require('../functions/_common');
 exports.handler=async(event)=>{
  try{
   if(event.httpMethod!=='GET')return json(405,{error:'Method not allowed'});

@@ -4,7 +4,7 @@
 <div class="panel"><label for="token">Doctor Admin Token (Private)</label><input id="token" type="password" autocomplete="off" placeholder="PHC_ADMIN_TOKEN"/><small>Token केवल इस पेज की memory में रहता है; browser में save नहीं होता। किसी से साझा न करें।</small><label for="date">तारीख</label><input id="date" type="date"/><br><button id="load">Show Appointments</button><p id="notice" role="status"></p></div>
 <div class="panel"><h2>Full-day Holiday</h2><p>एक दिन की सभी ऑनलाइन Consultations बंद करने के लिए:</p><button id="closeDay">Close full day</button><button class="secondary" id="openDay">Reopen full day</button><p class="note">पहले से Paid Booking को यह सुविधा Cancel नहीं करती। ऐसी Booking वाले मरीज से अलग संपर्क करना होगा।</p></div>
 <div class="panel"><h2>Individual Time Slots</h2><p>किसी समय के सामने Close / Open चुनें।</p><div id="slots" class="grid">पहले तारीख Load करें।</div></div>
-<p><a href="/">← Clinic Website</a></p></main>
+<div class="panel"><h2>Pending Payments — Review Only</h2><p>These appointments have a Razorpay order but payment is not yet confirmed. Keep them reserved until the payment is checked. Checking a fully paid order can confirm it, but will never release a slot.</p><button id="loadPending" class="secondary">Show Pending Payments</button><div id="pendingList"></div></div><p><a href="/">← Clinic Website</a></p></main>
 <script>
 (()=>{'use strict';const el=id=>document.getElementById(id),date=el('date'),slots=el('slots'),notice=el('notice');const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));date.value=`${p.year}-${p.month}-${p.day}`;date.min=date.value;
 function message(t,isError=false){notice.textContent=t;notice.className=isError?'err':'good';}
@@ -12,6 +12,30 @@ async function api(payload){const token=el('token').value.trim();if(token.length
 function show(data){slots.replaceChildren();const allDay=data.closures.some(c=>c.slot_time===null);const booked=new Map(data.bookings.map(b=>[b.time,b.status]));const blocked=new Set(data.closures.map(c=>c.slot_time));for(const t of data.slots){const closed=allDay||blocked.has(t),box=document.createElement('div');box.className='slot'+(closed?' blocked':'')+(booked.has(t)?' booked':'');const title=document.createElement('strong');title.textContent=t;const small=document.createElement('small');small.textContent=(closed?'Closed':'Open')+(booked.has(t)?' · Existing '+booked.get(t)+' booking':'');const btn=document.createElement('button');btn.textContent=blocked.has(t)?'Open time':'Close time';btn.className=blocked.has(t)?'secondary':'';if(allDay)btn.disabled=true;btn.addEventListener('click',()=>change(t,!blocked.has(t)));box.append(title,small,btn);slots.append(box);}}
 async function load(){try{message('Loading...');show(await api());message('Calendar loaded.');}catch(e){message(e.message,true);}}
 async function change(time,closed){if(closed&&!confirm('This will block NEW bookings only. Existing paid appointments remain booked. Continue?'))return;try{message('Saving...');show(await api({date:date.value,time,closed}));message('Saved. New bookings updated immediately.');}catch(e){message(e.message,true);}}
+async function pendingApi(payload){
+ const token=el('token').value.trim();if(token.length<32)throw Error('Enter the private Doctor Admin Token first.');
+ const isPost=Boolean(payload);
+ const res=await fetch('/.netlify/functions/phc-reconcile'+(isPost?'':'?date='+encodeURIComponent(date.value)),{method:isPost?'POST':'GET',headers:{Authorization:'Bearer '+token,...(isPost?{'Content-Type':'application/json'}:{})},body:isPost?JSON.stringify(payload):undefined,cache:'no-store'});
+ const data=await res.json();if(!res.ok)throw Error(data.error||'Unable to check payments.');return data;
+}
+async function loadPending(){
+ const panel=el('pendingList');panel.textContent='Checking...';
+ try{const data=await pendingApi();panel.replaceChildren();
+  if(!data.pending.length){panel.textContent='No pending Razorpay orders found for this date.';return;}
+  for(const item of data.pending){
+   const row=document.createElement('div');row.className='slot';
+   const label=document.createElement('strong');label.textContent=item.time+' — Pending payment';
+   const detail=document.createElement('small');detail.textContent='Order: '+item.orderId;
+   const btn=document.createElement('button');btn.textContent='Check payment safely';btn.className='secondary';
+   btn.addEventListener('click',async()=>{btn.disabled=true;detail.textContent='Checking the payment at Razorpay...';
+    try{const result=await pendingApi({bookingId:item.bookingId});detail.textContent=result.message||result.status;
+     if(result.status==='confirmed'||result.status==='already_confirmed'){await loadPending();await load();}
+    }catch(e){detail.textContent=e.message;}finally{btn.disabled=false;}});
+   row.append(label,detail,btn);panel.appendChild(row);
+  }
+ }catch(e){panel.textContent=e.message;}
+}
+el('loadPending').addEventListener('click',loadPending);
 el('load').addEventListener('click',load);el('closeDay').addEventListener('click',()=>change(null,true));el('openDay').addEventListener('click',()=>change(null,false));date.addEventListener('change',()=>{slots.textContent='Click Show Appointments to load this date.';message('');});
 })();
 </script></body></html>

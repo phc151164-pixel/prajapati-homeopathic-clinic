@@ -1,3 +1,5 @@
+CURRENT REVIEW: Read PHC_REVIEW_AND_SETUP.md first. Older instructions below are historical; do not activate payments or run production SQL. Keep PHC_LIVE_PAYMENTS_ENABLED=false. Test orders now require an isolated staging environment.
+
 PHC REVIEW PAGE - NETLIFY 404 FIX
 
 IMPORTANT: Upload the complete extracted website folder, not index.html alone.

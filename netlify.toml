@@ -1,5 +1,5 @@
 [build]
-  publish = "."
+  publish = "public"
   functions = "netlify/functions"
 
 [functions]
@@ -10,3 +10,13 @@
   [headers.values]
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/doctor-calendar.html"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    X-Robots-Tag = "noindex, nofollow"
+
