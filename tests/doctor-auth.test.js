@@ -91,3 +91,7 @@ test('recovery cannot authorize an unlisted account or send a cross-origin reset
  assert.equal((await handler(p)).statusCode,403);
  requests=[];const cross=post('recover',{email:'synthetic@example.test'});cross.headers.origin='https://attacker.test';assert.equal((await handler(cross)).statusCode,403);assert.equal(requests.length,0);
 });
+test('clinic receipt actions use verified actor and cannot bypass origin checks',async()=>{
+ setup();let r=await dashboard(post('clinic_receive_cash',{data:{id:'synthetic',cash_received:true},p_actor:'attacker'}));assert.equal(r.statusCode,200);const req=requests.find(x=>x.url.includes('phc_clinic_admin_write'));assert.equal(JSON.parse(req.opts.body).p_actor,userId);assert.equal(JSON.parse(req.opts.body).p_action,'receive_cash');
+ setup();const p=post('clinic_approve',{data:{}});p.headers.origin='https://attacker.test';r=await dashboard(p);assert.equal(r.statusCode,403);assert.equal(requests.some(x=>x.url.includes('phc_clinic_admin_write')),false);
+});

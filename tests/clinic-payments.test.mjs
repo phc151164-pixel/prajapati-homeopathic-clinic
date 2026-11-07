@@ -1,0 +1,51 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {PGlite} from '@electric-sql/pglite';
+import {pg_trgm} from '@electric-sql/pglite/contrib/pg_trgm';
+const sql=path=>readFileSync(new URL('../setup/'+path,import.meta.url),'utf8');
+const admin='11111111-1111-4111-8111-111111111111';
+test('doctor-approved clinic payments protect cash, online slots and private access',async t=>{
+ const db=await PGlite.create({extensions:{pg_trgm}});
+ try{
+ await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE SCHEMA extensions;`);
+ await db.exec(sql('booking_database.sql').replace('create extension if not exists pgcrypto;',''));
+ await db.exec(`CREATE TABLE public.phc_closures(slot_date date NOT NULL,slot_time text,reason text DEFAULT 'Doctor unavailable',created_at timestamptz DEFAULT now());CREATE UNIQUE INDEX phc_closures_unique_slot ON public.phc_closures(slot_date,(coalesce(slot_time,'ALL_DAY')));CREATE FUNCTION public.phc_change_closure(p_date date,p_time text,p_closed boolean,p_reason text DEFAULT 'Doctor unavailable') RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$;`);
+ await db.exec(sql('PHC_PRODUCTION_REVIEW_ONLY.sql'));
+ await db.exec(sql('PHC_DASHBOARD_V2_REVIEW_FIRST.sql'));
+ await db.exec(`INSERT INTO auth.users VALUES('${admin}');INSERT INTO public.phc_admin_accounts(user_id)VALUES('${admin}');`);
+ const before=(await db.query('SELECT config FROM public.phc_clinic_settings')).rows;
+ await db.exec(readFileSync(new URL('../supabase/migrations/20261107211757_pay_at_clinic_doctor_approval.sql',import.meta.url),'utf8'));
+ assert.deepEqual((await db.query('SELECT config FROM public.phc_clinic_settings')).rows,before);
+ const date=(await db.query(`SELECT ((now() AT TIME ZONE 'Asia/Kolkata')::date+2)::text d`)).rows[0].d;
+ const request=async(key,time='11:00')=>(await db.query('SELECT public.phc_request_clinic_booking($1,$2,$3,$4,$5,$6,$7) r',[key,date,time,'audio','Synthetic clinic','0000000000','new'])).rows[0].r;
+ const write=async(action,data)=>(await db.query('SELECT public.phc_clinic_admin_write($1,$2,$3) r',[admin,action,JSON.stringify(data)])).rows[0].r;
+ const key='22222222-2222-4222-8222-222222222222';
+ await assert.rejects(request(key));
+ await db.exec(`UPDATE public.phc_clinic_settings SET config=jsonb_set(config,'{payAtClinic}','true');`);
+ const req=await request(key);assert.equal(req.slotReserved,false);assert.equal(req.status,'requested');assert.equal((await request(key)).requestId,req.requestId);
+ await assert.rejects(request(key,'11:30'));
+ assert.equal((await db.query('SELECT count(*)::int n FROM public.phc_patients')).rows[0].n,0);
+ await assert.rejects(write('approve',{id:req.requestId,version:1,identity_confirmed:false}));
+ await assert.rejects(write('receive_cash',{id:req.requestId,amount_paise:30000,cash_received:true}));
+ await write('approve',{id:req.requestId,version:1,identity_confirmed:true});
+ assert.equal((await request(key)).slotReserved,true);
+ await assert.rejects(db.query(`SELECT public.phc_reserve_online_slot_v2($1,'11:00','audio','Synthetic','0000000000','new')`,[date]));
+ await assert.rejects(db.query(`INSERT INTO public.phc_closures(slot_date,slot_time)VALUES($1,'11:00')`,[date]));
+ await assert.rejects(db.query(`UPDATE public.phc_clinic_settings SET config=jsonb_set(config,'{slotMinutes}','15')`));
+ await assert.rejects(write('receive_cash',{id:req.requestId,amount_paise:1,cash_received:true}));
+ const receipt=await write('receive_cash',{id:req.requestId,amount_paise:30000,cash_received:true});assert.ok(receipt.receipt);
+ assert.equal((await write('receive_cash',{id:req.requestId,amount_paise:30000,cash_received:true})).alreadyRecorded,true);
+ await assert.rejects(write('cancel_unpaid',{id:req.requestId,version:2}));
+ await assert.rejects(db.query('UPDATE public.phc_cash_receipts SET amount_paise=1'));
+ await assert.rejects(db.query('DELETE FROM public.phc_cash_receipts'));
+ assert.equal((await db.query('SELECT count(*)::int n FROM public.online_bookings')).rows[0].n,0);
+ const read=(await db.query(`SELECT public.phc_dashboard_read($1,'calendar',$2) r`,[admin,JSON.stringify({from:date,to:date})])).rows[0].r;
+ assert.equal(read.items[0].status,'clinic_paid');assert.equal(read.items[0].reserved,true);
+ const unpaid=await request('33333333-3333-4333-8333-333333333333','11:30');await write('approve',{id:unpaid.requestId,version:1,identity_confirmed:true});await write('cancel_unpaid',{id:unpaid.requestId,version:2});
+ assert.equal((await db.query(`SELECT public.phc_clinic_slot_free($1,'11:30',30) f`,[date])).rows[0].f,true);
+ const held=(await db.query(`SELECT public.phc_reserve_online_slot_v2($1,'12:00','audio','Synthetic','0000000000','new') r`,[date])).rows[0].r;
+ await assert.rejects(request('44444444-4444-4444-8444-444444444444','12:00'));
+ for(const role of ['anon','authenticated']){await db.exec('SET ROLE '+role);await assert.rejects(db.query('SELECT * FROM public.phc_clinic_requests'));await assert.rejects(db.query(`SELECT public.phc_clinic_admin_read('${admin}',current_date,current_date,0)`));await db.exec('RESET ROLE');}
+ }finally{await db.close();}
+});
