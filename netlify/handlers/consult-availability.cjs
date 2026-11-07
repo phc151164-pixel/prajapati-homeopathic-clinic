@@ -1,4 +1,4 @@
-const {json,configured,databaseConfigured,supa,safeDate,slotTimes,validSlot,fee} = require('./_common');
+const {json,configured,databaseConfigured,supa,safeDate,slotTimes,validSlot,fee} = require('../functions/_common');
 exports.handler=async(event)=>{
  try{
   if(event.httpMethod!=='GET')return json(405,{error:'Method not allowed'});
@@ -18,10 +18,4 @@ exports.handler=async(event)=>{
    return json(500,{error:'Could not load live availability. Please try again.'});
  }
 
-};
-
-// Netlify platform rate limit: per visitor IP, before the function runs.
-exports.config = {
-  path: "/.netlify/functions/consult-availability",
-  rateLimit: { action: "rate_limit", aggregateBy: ["ip", "domain"], windowSize: 60, windowLimit: 90 }
 };

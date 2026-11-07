@@ -1,4 +1,4 @@
-const {json,configured,supa,razorpay,validSlot,fee} = require('./_common');
+const {json,configured,supa,razorpay,validSlot,fee} = require('../functions/_common');
 exports.handler=async(event)=>{
  if(event.httpMethod!=='POST')return json(405,{error:'Method not allowed'});
  if(!configured())return json(503,{error:'Online booking setup is incomplete.'});
@@ -37,10 +37,4 @@ exports.handler=async(event)=>{
   if(stage==='attach_order')return json(503,{error:'Booking setup could not finish. Please contact the clinic; do not attempt payment yet.'});
   return json(503,{error:'Could not start booking. Please try later or contact the clinic.'});
  }
-};
-
-// Netlify platform rate limit: per visitor IP, before the function runs.
-exports.config = {
-  path: "/.netlify/functions/consult-create-order",
-  rateLimit: { action: "rate_limit", aggregateBy: ["ip", "domain"], windowSize: 60, windowLimit: 6 }
 };
