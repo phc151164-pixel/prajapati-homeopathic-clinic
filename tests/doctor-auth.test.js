@@ -22,6 +22,7 @@ const post=(action,extra={})=>({httpMethod:'POST',headers:{origin,cookie:'__Host
 test.afterEach(()=>{global.fetch=originalFetch;for(const k of Object.keys(process.env))if(!(k in env))delete process.env[k];Object.assign(process.env,env);});
 test('login validates server-side allowlist and sets only secure HttpOnly session cookies',async()=>{
  setup();const r=await handler(post('login',{email:'synthetic@example.test',password:'synthetic-password'}));assert.equal(r.statusCode,200);
+ const loginRequest=requests.find(x=>x.url.includes('/auth/v1/token'));assert.equal(loginRequest.opts.headers.Authorization,undefined);
  assert.equal(r.body.includes('synthetic-access'),false);assert.equal(r.body.includes('synthetic-refresh'),false);
  assert.equal(r.multiValueHeaders['Set-Cookie'].length,2);for(const c of r.multiValueHeaders['Set-Cookie']){assert.match(c,/HttpOnly; Secure; SameSite=Strict/);assert.match(c,/Path=\//);assert.doesNotMatch(c,/Domain=/);}
 });

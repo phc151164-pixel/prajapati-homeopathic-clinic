@@ -13,7 +13,7 @@ async function auth(path,method='GET',body,token){
  if(base.protocol!=='https:'||base.pathname!=='/')throw Error('configuration');
  const key=process.env.PHC_SUPABASE_AUTH_KEY; // publishable or legacy anon key, kept on server
  if(!key)throw Error('configuration');
- const r=await fetch(base.origin+'/auth/v1/'+path,{method,headers:{apikey:key,Authorization:'Bearer '+(token||key),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(12000)});
+ const r=await fetch(base.origin+'/auth/v1/'+path,{method,headers:{apikey:key,...(token?{Authorization:'Bearer '+token}:{}),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(12000)});
  let data={};try{data=await r.json();}catch{}
  if(!r.ok)throw Object.assign(Error('Authentication failed'),{status:r.status});
  return data;
