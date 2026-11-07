@@ -65,3 +65,29 @@ test('origin protection rejects opaque, malformed and insecure request origins',
  setup();for(const value of ['null',origin+'/',origin+'/fake','not-a-url']){const p=post('login');p.headers.origin=value;assert.equal(sameOrigin(p),false);}
  const p=post('login');p.rawUrl='http://preview.example.test/api';p.headers.origin='http://preview.example.test';assert.equal(sameOrigin(p),false);
 });
+test('default-template recovery keeps PKCE verifier HttpOnly and sends only its S256 challenge',async()=>{
+ setup();const r=await handler(post('recover',{email:'synthetic@example.test'}));assert.equal(r.statusCode,200);
+ const req=requests.find(x=>x.url.includes('/auth/v1/recover?'));assert.ok(req);
+ const body=JSON.parse(req.opts.body),cookie=r.multiValueHeaders['Set-Cookie'][0];
+ const verifier=cookie.split(';')[0].split('=')[1];
+ assert.match(cookie,/__Host-phc_recovery=/);assert.match(cookie,/HttpOnly; Secure; SameSite=Strict; Max-Age=600/);
+ assert.equal(body.code_challenge,require('node:crypto').createHash('sha256').update(verifier).digest('base64url'));
+ assert.equal(body.code_challenge_method,'s256');assert.equal(r.body.includes(verifier),false);
+ assert.equal(new URL(req.url).searchParams.get('redirect_to'),origin+'/admin');
+});
+test('recovery code is exchanged server-side and admin-checked before secure session issuance',async()=>{
+ setup();const p=post('exchangeRecoveryCode',{code:'synthetic-recovery-code-123456789'});
+ p.headers.cookie+='; __Host-phc_recovery='+'v'.repeat(43);
+ const r=await handler(p);assert.equal(r.statusCode,200);
+ const req=requests.find(x=>x.url.includes('grant_type=pkce'));assert.deepEqual(JSON.parse(req.opts.body),{auth_code:'synthetic-recovery-code-123456789',code_verifier:'v'.repeat(43)});
+ assert.ok(r.multiValueHeaders['Set-Cookie'].some(c=>c.startsWith('__Host-phc_recovery=;')&&c.includes('Max-Age=0')));
+ assert.equal(r.body.includes('synthetic-access'),false);assert.equal(r.body.includes('synthetic-refresh'),false);
+});
+test('recovery code without same-browser verifier is rejected before contacting Supabase',async()=>{
+ setup();const r=await handler(post('exchangeRecoveryCode',{code:'synthetic-recovery-code-123456789'}));assert.equal(r.statusCode,400);assert.equal(requests.length,0);
+});
+test('recovery cannot authorize an unlisted account or send a cross-origin reset request',async()=>{
+ setup();allowed=false;const p=post('exchangeRecoveryCode',{code:'synthetic-recovery-code-123456789'});p.headers.cookie+='; __Host-phc_recovery='+'v'.repeat(43);
+ assert.equal((await handler(p)).statusCode,403);
+ requests=[];const cross=post('recover',{email:'synthetic@example.test'});cross.headers.origin='https://attacker.test';assert.equal((await handler(cross)).statusCode,403);assert.equal(requests.length,0);
+});

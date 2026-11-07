@@ -85,5 +85,18 @@ async function clinicSettings(){settings=await read('settings');const config=str
 async function saveSettings(config){try{await write('settings_save',{config,version:settings.version});await clinicSettings();message('Settings saved. New booking availability will use them.');}catch(e){message(e.message,true);}}
 async function account(){content.replaceChildren();const c=card('Account security');c.append(el('p','Only explicitly authorized clinic accounts can access this workspace. There is no public registration. Sessions use secure cookies; patient data is not stored in browser local storage.','help'),button('Change password',()=>passwordEditor()));const a=card('Recent audit activity'),r=await read('audit');table(a,['Time (Asia/Kolkata)','Action','Record reference'],(r.items||[]).slice(0,30).map(x=>[new Date(x.at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}),x.action,x.entity_id]));pager(a,(r.items||[]).length>30,()=>account().catch(e=>message(e.message,true)));}
 function passwordEditor(){const fields=[field('password','New password (at least 12 characters)','password'),field('confirm','Confirm new password','password')];fields.forEach(f=>{f.querySelector('input').minLength=12;f.querySelector('input').required=true;f.querySelector('input').autocomplete='new-password';});modal('Change password',fields,async data=>{if(data.password!==data.confirm)throw Error('Passwords do not match.');await api('doctor-auth',{action:'password',password:data.password},false);showLogin();message('Password changed. Sign in again.',false,'loginMessage');});}
-(async()=>{const u=new URL(location.href),hash=new URLSearchParams(location.hash.slice(1)).get('token_hash')||u.searchParams.get('token_hash');if(hash){history.replaceState(null,'','/admin');try{await api('doctor-auth',{action:'verifyRecovery',tokenHash:hash},false);passwordEditor();}catch(e){message(e.message,true,'loginMessage');}return;}try{await enter((await api('doctor-auth',undefined,false)).user);}catch(e){if(!e.message.includes('sign in'))message(e.message,true,'loginMessage');}})();
+(async()=>{
+ const u=new URL(location.href),fragment=new URLSearchParams(location.hash.slice(1));
+ const hash=fragment.get('token_hash')||u.searchParams.get('token_hash'),code=u.searchParams.get('code');
+ const providerError=fragment.has('error')||u.searchParams.has('error');
+ if(hash||code||providerError){
+  history.replaceState(null,'','/admin');
+  if(providerError){message('Recovery link expired or could not be verified. Request a new recovery email.',true,'loginMessage');return;}
+  try{await api('doctor-auth',code?{action:'exchangeRecoveryCode',code}:{action:'verifyRecovery',tokenHash:hash},false);passwordEditor();}
+  catch(error){message(error.message,true,'loginMessage');}
+  return;
+ }
+ try{await enter((await api('doctor-auth',undefined,false)).user);}
+ catch(error){if(!error.message.includes('sign in'))message(error.message,true,'loginMessage');}
+})();
 })();

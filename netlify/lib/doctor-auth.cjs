@@ -1,6 +1,7 @@
 'use strict';
 const {supa,json}=require('../functions/_common');
 const cookieNames=['__Host-phc_access','__Host-phc_refresh'];
+const recoveryCookieName='__Host-phc_recovery';
 function cookies(event){return Object.fromEntries(String(event.headers?.cookie||'').split(';').map(x=>{const i=x.indexOf('=');return i<0?[]:[x.slice(0,i).trim(),x.slice(i+1)];}).filter(x=>x.length===2));}
 function sameOrigin(event){
  const origin=event.headers?.origin;
@@ -36,4 +37,10 @@ function withSession(result,session){
  result.multiValueHeaders={'Set-Cookie':cookieNames.map((name,i)=>`${name}=${values[i]}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${session?(i===0?Math.min(session.expires_in,3600):28800):0}`)};
  return result;
 }
-module.exports={auth,member,identify,sameOrigin,cookies,withSession,cookieNames,json};
+function withRecoveryCookie(result,verifier){
+ result.multiValueHeaders=result.multiValueHeaders||{};
+ result.multiValueHeaders['Set-Cookie']=result.multiValueHeaders['Set-Cookie']||[];
+ result.multiValueHeaders['Set-Cookie'].push(`${recoveryCookieName}=${verifier||''}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${verifier?600:0}`);
+ return result;
+}
+module.exports={recoveryCookieName,withRecoveryCookie,auth,member,identify,sameOrigin,cookies,withSession,cookieNames,json};
