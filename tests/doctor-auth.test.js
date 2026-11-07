@@ -1,6 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const handler=require('../netlify/handlers/doctor-auth.cjs').handler;
 const dashboard=require('../netlify/handlers/doctor-dashboard.cjs').handler;
+const {sameOrigin}=require('../netlify/lib/doctor-auth.cjs');
 const {bookingAmount}=require('../netlify/lib/clinic-config.cjs');
 const userId='11111111-1111-4111-8111-111111111111',origin='https://preview.example.test';
 const env={...process.env},originalFetch=fetch;
@@ -18,7 +19,7 @@ function setup(){
   return {ok:true,status:200,json:async()=>data,text:async()=>JSON.stringify(data)};
  };
 }
-const post=(action,extra={})=>({httpMethod:'POST',headers:{origin,cookie:'__Host-phc_access=synthetic-access; __Host-phc_refresh=synthetic-refresh'},body:JSON.stringify({action,...extra})});
+const post=(action,extra={})=>({httpMethod:'POST',rawUrl:origin+'/.netlify/functions/doctor-auth',headers:{origin,cookie:'__Host-phc_access=synthetic-access; __Host-phc_refresh=synthetic-refresh'},body:JSON.stringify({action,...extra})});
 test.afterEach(()=>{global.fetch=originalFetch;for(const k of Object.keys(process.env))if(!(k in env))delete process.env[k];Object.assign(process.env,env);});
 test('login validates server-side allowlist and sets only secure HttpOnly session cookies',async()=>{
  setup();const r=await handler(post('login',{email:'synthetic@example.test',password:'synthetic-password'}));assert.equal(r.statusCode,200);
@@ -51,4 +52,16 @@ test('new dashboard deployment gate is closed by default',async()=>{
 test('payment verification reads the booking snapshot rather than new consultation fee',async()=>{
  setup();assert.equal(await bookingAmount('order_Synthetic'),25000);
  global.fetch=async()=>({ok:true,text:async()=>JSON.stringify([])});await assert.rejects(bookingAmount('order_Unknown'));
+});
+
+test('origin protection uses the actual request URL when deployment environment URL is absent or stale',()=>{
+ setup();delete process.env.DEPLOY_PRIME_URL;delete process.env.URL;
+ assert.equal(sameOrigin(post('login')),true);
+ process.env.DEPLOY_PRIME_URL='https://old-preview.example.test';assert.equal(sameOrigin(post('login')),true);
+ const p=post('login');p.headers.origin='https://attacker.test';p.headers['x-forwarded-host']='attacker.test';assert.equal(sameOrigin(p),false);
+ p.headers.origin=origin;delete p.rawUrl;assert.equal(sameOrigin(p),false);
+});
+test('origin protection rejects opaque, malformed and insecure request origins',()=>{
+ setup();for(const value of ['null',origin+'/',origin+'/fake','not-a-url']){const p=post('login');p.headers.origin=value;assert.equal(sameOrigin(p),false);}
+ const p=post('login');p.rawUrl='http://preview.example.test/api';p.headers.origin='http://preview.example.test';assert.equal(sameOrigin(p),false);
 });

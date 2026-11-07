@@ -22,6 +22,7 @@ const invoke = async (handler, request, bodyLimit) => {
   const url = new URL(request.url);
   const result = await handler({
     httpMethod:request.method,
+    rawUrl:request.url,
     headers:Object.fromEntries(request.headers),
     queryStringParameters:Object.fromEntries(url.searchParams),
     body, isBase64Encoded:false

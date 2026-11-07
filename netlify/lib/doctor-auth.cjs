@@ -4,9 +4,13 @@ const cookieNames=['__Host-phc_access','__Host-phc_refresh'];
 function cookies(event){return Object.fromEntries(String(event.headers?.cookie||'').split(';').map(x=>{const i=x.indexOf('=');return i<0?[]:[x.slice(0,i).trim(),x.slice(i+1)];}).filter(x=>x.length===2));}
 function sameOrigin(event){
  const origin=event.headers?.origin;
- const expected=process.env.CONTEXT==='deploy-preview'?process.env.DEPLOY_PRIME_URL:process.env.URL;
- if(!expected||!origin)return false;
- try{return new URL(expected).origin===origin;}catch{return false;}
+ // Use the platform Request URL, not build-only environment values or forwarded headers.
+ // Netlify's legacy handlers also provide rawUrl on their event.
+ if(!origin||typeof event.rawUrl!=='string')return false;
+ try{
+  const destination=new URL(event.rawUrl),source=new URL(origin);
+  return destination.protocol==='https:'&&source.origin===origin&&source.origin===destination.origin;
+ }catch{return false;}
 }
 async function auth(path,method='GET',body,token){
  const base=new URL(process.env.SUPABASE_URL);
