@@ -2,8 +2,8 @@
 const {supa}=require('../functions/_common');
 const EMAIL='phc151164@gmail.com',WHATSAPP='918103684642';
 // Destinations are owner-approved clinic contacts, never patient/browser controlled.
-function channels(env=process.env){
- if(env.PHC_BOOKING_ALERTS_ENABLED!=='true'||env.CONTEXT!=='production')return [];
+function channels(env=process.env,deployContext=require('./deploy-context.cjs').context){
+ if(env.PHC_BOOKING_ALERTS_ENABLED!=='true'||deployContext!=='production')return [];
  const ready=[];
  if(env.PHC_EMAIL_ALERTS_ENABLED==='true'&&env.RESEND_API_KEY&&env.PHC_ALERT_EMAIL_FROM)ready.push('email');
  if(env.PHC_WHATSAPP_ALERTS_ENABLED==='true'&&env.WHATSAPP_ACCESS_TOKEN&&/^\d+$/.test(env.WHATSAPP_PHONE_NUMBER_ID||'')&&/^v\d+\.\d+$/.test(env.WHATSAPP_API_VERSION||'')&&/^[a-z0-9_]+$/.test(env.WHATSAPP_ALERT_TEMPLATE||'')&&/^[a-z]{2}(_[A-Z]{2})?$/.test(env.WHATSAPP_TEMPLATE_LANGUAGE||''))ready.push('whatsapp');
@@ -32,8 +32,8 @@ async function deliver(job,env=process.env,send=fetch){
   return {result:'rejected'};
  }catch{return {result:job.channel==='email'?'retry':'ambiguous'};}
 }
-async function dispatch(env=process.env,db=supa,send=fetch){
- const ready=channels(env);if(!ready.length)return {processed:0,configured:false};
+async function dispatch(env=process.env,db=supa,send=fetch,deployContext){
+ const ready=channels(env,deployContext);if(!ready.length)return {processed:0,configured:false};
  const jobs=await db('rpc/phc_claim_booking_alerts','POST',{p_channels:ready});
  const results=await Promise.all(jobs.map(async job=>{const outcome=await deliver(job,env,send);await db('rpc/phc_finish_booking_alert','POST',{p_id:job.id,p_lease:job.lease,p_result:outcome.result,p_provider:outcome.provider||null});return outcome.result;}));
  return {processed:results.length,accepted:results.filter(x=>x==='accepted').length,configured:true};

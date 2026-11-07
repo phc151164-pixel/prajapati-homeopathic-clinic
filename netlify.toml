@@ -1,4 +1,5 @@
 [build]
+  command = "node scripts/stamp-deploy-context.cjs"
   publish = "public"
   functions = "netlify/functions"
 
