@@ -29,6 +29,8 @@ exports.handler=async(event)=>{
   if(matches.length!==1)return json(503,{error:'Payment requires reconciliation'});
   const confirmed=await supa('rpc/phc_confirm_paid_slot','POST',{p_order:orderId,p_payment:matches[0].id,p_amount:fee()});
   if(confirmed!==true){console.error('PHC WEBHOOK: valid paid order not matched to a booking');return json(503,{error:'Payment requires clinic reconciliation'});}
+  // No patient data, payment identifiers, signatures or secrets in success logs.
+  console.info('PHC_WEBHOOK_CONFIRMED', JSON.stringify({event:webhook.event,status:200}));
   return json(200,{received:true});
  }catch(e){console.error('PHC WEBHOOK ERROR:',e.provider||'unknown',e.status||'none',e.code||'none');return json(503,{error:'Temporary payment verification problem'});}
 };
