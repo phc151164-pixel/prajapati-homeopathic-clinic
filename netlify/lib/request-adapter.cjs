@@ -26,6 +26,8 @@ const invoke = async (handler, request, bodyLimit) => {
     queryStringParameters:Object.fromEntries(url.searchParams),
     body, isBase64Encoded:false
   });
-  return new Response(result.body, {status:result.statusCode, headers:result.headers});
+  const headers=new Headers(result.headers);
+  for(const [key,values] of Object.entries(result.multiValueHeaders||{})) for(const value of values) headers.append(key,value);
+  return new Response(result.body, {status:result.statusCode, headers});
 };
 module.exports = {invoke};

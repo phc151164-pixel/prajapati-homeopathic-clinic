@@ -1,3 +1,4 @@
+const {bookingAmount}=require('../lib/clinic-config.cjs');
 const {json,supa,razorpay,crypto,fee,paymentConfigured} = require('./_common');
 // Always process authentic payments even if creation of NEW live orders is switched off.
 exports.handler=async(event)=>{
@@ -17,17 +18,18 @@ exports.handler=async(event)=>{
   if(fromOrder&&fromPayment&&fromOrder!==fromPayment)return json(400,{error:'Webhook order mismatch'});
   const orderId=fromOrder||fromPayment;
   if(typeof orderId!=='string'||!/^order_[A-Za-z0-9]+$/.test(orderId))return json(400,{error:'Invalid order reference'});
+  const amount=await bookingAmount(orderId);
   const [order,collection]=await Promise.all([
    razorpay('orders/'+encodeURIComponent(orderId)),
    razorpay('orders/'+encodeURIComponent(orderId)+'/payments')
   ]);
-  if(order.id!==orderId||order.status!=='paid'||order.amount!==fee()||order.amount_paid!==fee()||order.currency!=='INR'){
+  if(order.id!==orderId||order.status!=='paid'||order.amount!==amount||order.amount_paid!==amount||order.currency!=='INR'){
    // Retry later: a capture webhook may arrive before the whole order is marked paid.
    return json(503,{error:'Payment not fully settled yet'});
   }
-  const matches=Array.isArray(collection?.items)?collection.items.filter(p=>p?.order_id===orderId&&p?.status==='captured'&&p?.amount===fee()&&p?.currency==='INR'&&/^pay_[A-Za-z0-9]+$/.test(p.id||'')):[];
+  const matches=Array.isArray(collection?.items)?collection.items.filter(p=>p?.order_id===orderId&&p?.status==='captured'&&p?.amount===amount&&p?.currency==='INR'&&/^pay_[A-Za-z0-9]+$/.test(p.id||'')):[];
   if(matches.length!==1)return json(503,{error:'Payment requires reconciliation'});
-  const confirmed=await supa('rpc/phc_confirm_paid_slot','POST',{p_order:orderId,p_payment:matches[0].id,p_amount:fee()});
+  const confirmed=await supa('rpc/phc_confirm_paid_slot','POST',{p_order:orderId,p_payment:matches[0].id,p_amount:amount});
   if(confirmed!==true){console.error('PHC WEBHOOK: valid paid order not matched to a booking');return json(503,{error:'Payment requires clinic reconciliation'});}
   // No patient data, payment identifiers, signatures or secrets in success logs.
   console.info('PHC_WEBHOOK_CONFIRMED', JSON.stringify({event:webhook.event,status:200}));
