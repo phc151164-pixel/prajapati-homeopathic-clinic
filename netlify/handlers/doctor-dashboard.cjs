@@ -17,6 +17,7 @@ exports.handler=async event=>{
    return json(200,{result});
   }
   const q=event.queryStringParameters||{},page=Math.max(0,Math.min(100000,Number.parseInt(q.page,10)||0));
+  if(q.section==='alerts')return json(200,await supa('rpc/phc_read_booking_alerts','POST',{p_actor:user.id,p_page:page}));
   if(q.section==='clinic_requests'){if(!safeDate(q.from)||!safeDate(q.to))return json(400,{error:'Select a date range'});return json(200,await supa('rpc/phc_clinic_admin_read','POST',{p_actor:user.id,p_from:q.from,p_to:q.to,p_page:page}));}
   const result=await supa('rpc/phc_dashboard_read','POST',{p_actor:user.id,p_section:q.section||'overview',p_filter:{search:String(q.search||'').slice(0,100),from:safeDate(q.from)?q.from:null,to:safeDate(q.to)?q.to:null,status:q.status||'',kind:q.kind||'',patient_id:uuid(q.patientId)?q.patientId:null,page,filter_visits:q.filterVisits==='true'}});
   return json(200,result);

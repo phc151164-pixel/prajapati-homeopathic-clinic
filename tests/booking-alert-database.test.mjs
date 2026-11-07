@@ -1,0 +1,51 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {PGlite} from '@electric-sql/pglite';
+import {pg_trgm} from '@electric-sql/pglite/contrib/pg_trgm';
+const sql=path=>readFileSync(new URL('../setup/'+path,import.meta.url),'utf8');
+const admin='11111111-1111-4111-8111-111111111111';
+test('durable notification queue preserves booking state and protects retries',async t=>{
+ const db=await PGlite.create({extensions:{pg_trgm}});
+ try{
+ await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE SCHEMA extensions;`);
+ await db.exec(sql('booking_database.sql').replace('create extension if not exists pgcrypto;',''));
+ await db.exec(`CREATE TABLE public.phc_closures(slot_date date NOT NULL,slot_time text,reason text DEFAULT 'Doctor unavailable',created_at timestamptz DEFAULT now());CREATE UNIQUE INDEX phc_closures_unique_slot ON public.phc_closures(slot_date,(coalesce(slot_time,'ALL_DAY')));CREATE FUNCTION public.phc_change_closure(p_date date,p_time text,p_closed boolean,p_reason text DEFAULT 'Doctor unavailable') RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$;`);
+ await db.exec(sql('PHC_PRODUCTION_REVIEW_ONLY.sql'));
+ await db.exec(sql('PHC_DASHBOARD_V2_REVIEW_FIRST.sql'));
+ await db.exec(`INSERT INTO auth.users VALUES('${admin}');INSERT INTO public.phc_admin_accounts(user_id)VALUES('${admin}');`);
+ await db.exec(readFileSync(new URL('../supabase/migrations/20261107211757_pay_at_clinic_doctor_approval.sql',import.meta.url),'utf8'));
+ const before=(await db.query('SELECT config FROM public.phc_clinic_settings')).rows;
+ await db.exec(readFileSync(new URL('../supabase/migrations/20261107221809_booking_alert_outbox.sql',import.meta.url),'utf8'));
+ assert.deepEqual((await db.query('SELECT config FROM public.phc_clinic_settings')).rows,before);
+ assert.equal((await db.query('SELECT count(*)::int n FROM public.phc_booking_alerts')).rows[0].n,0);
+ const date=(await db.query(`SELECT ((now() AT TIME ZONE 'Asia/Kolkata')::date+2)::text d`)).rows[0].d;
+ const held=(await db.query(`SELECT public.phc_reserve_online_slot_v2($1,'11:00','audio','Synthetic alert','0000000000','new') r`,[date])).rows[0].r;
+ assert.equal((await db.query('SELECT count(*)::int n FROM public.phc_booking_alerts')).rows[0].n,0);
+ await db.query(`SELECT public.phc_attach_order($1,'order_AlertTest')`,[held.id]);
+ await db.query(`SELECT public.phc_confirm_paid_slot('order_AlertTest','pay_AlertTest',30000)`);
+ await db.query(`SELECT public.phc_confirm_paid_slot('order_AlertTest','pay_AlertTest',30000)`);
+ assert.equal((await db.query('SELECT count(*)::int n FROM public.phc_booking_alerts')).rows[0].n,2);
+ const claim=async channel=>(await db.query('SELECT * FROM public.phc_claim_booking_alerts($1)',[[channel]])).rows;
+ const email=(await claim('email'))[0];assert.equal(email.payload.name,'Synthetic alert');assert.equal((await claim('email')).length,0);
+ assert.equal((await db.query(`SELECT public.phc_finish_booking_alert($1,gen_random_uuid(),'accepted','fake') ok`,[email.id])).rows[0].ok,false);
+ await db.query(`SELECT public.phc_finish_booking_alert($1,$2,'retry',NULL)`,[email.id,email.lease]);
+ await db.exec(`UPDATE public.phc_booking_alerts SET next_attempt_at=now()-interval '1 second' WHERE channel='email'`);
+ const again=(await claim('email'))[0];assert.equal(again.id,email.id);assert.notEqual(again.lease,email.lease);
+ await db.query(`SELECT public.phc_finish_booking_alert($1,$2,'accepted','email_synthetic')`,[again.id,again.lease]);assert.equal((await claim('email')).length,0);
+ const wa=(await claim('whatsapp'))[0];await db.exec(`UPDATE public.phc_booking_alerts SET lease_until=now()-interval '1 second' WHERE channel='whatsapp'`);assert.equal((await claim('whatsapp')).length,0);assert.equal((await db.query(`SELECT state FROM public.phc_booking_alerts WHERE id=$1`,[wa.id])).rows[0].state,'review');
+ await db.exec(`UPDATE public.phc_clinic_settings SET config=jsonb_set(config,'{payAtClinic}','true')`);
+ const req=(await db.query(`SELECT public.phc_request_clinic_booking(gen_random_uuid(),$1,'11:30','audio','Synthetic clinic','0000000000','new') r`,[date])).rows[0].r;
+ assert.equal((await db.query('SELECT count(*)::int n FROM public.phc_booking_alerts')).rows[0].n,2);
+ await db.query(`SELECT public.phc_clinic_admin_write($1,'approve',$2)`,[admin,JSON.stringify({id:req.requestId,version:1,identity_confirmed:true})]);
+ assert.equal((await db.query('SELECT count(*)::int n FROM public.phc_booking_alerts')).rows[0].n,4);
+ const clinic=(await db.query(`SELECT * FROM public.phc_booking_alerts WHERE source='clinic_confirmed' LIMIT 1`)).rows[0];assert.equal(clinic.payload.payment,'Pay at Clinic - payment due');
+ await db.query(`SELECT public.phc_clinic_admin_write($1,'cancel_unpaid',$2)`,[admin,JSON.stringify({id:req.requestId,version:2})]);
+ assert.equal((await claim('whatsapp')).length,0);
+ await db.query(`UPDATE public.phc_booking_alerts SET state='pending',first_attempt_at=now()-interval '24 hours',next_attempt_at=now() WHERE id=$1`,[email.id]);
+ assert.equal((await claim('email')).length,0);
+ assert.equal((await db.query(`SELECT last_code FROM public.phc_booking_alerts WHERE id=$1`,[email.id])).rows[0].last_code,'retry_window_expired');
+ for(const role of ['anon','authenticated']){await db.exec('SET ROLE '+role);await assert.rejects(db.query('SELECT * FROM public.phc_booking_alerts'));await assert.rejects(claim('email'));await db.exec('RESET ROLE');}
+ const read=(await db.query('SELECT public.phc_read_booking_alerts($1,0) r',[admin])).rows[0].r;assert.equal(read.items.length,4);assert.equal(JSON.stringify(read).includes('Synthetic alert'),false);
+ }finally{await db.close();}
+});
