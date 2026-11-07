@@ -203,7 +203,8 @@ BEGIN
  SELECT * INTO STRICT booking_record FROM public.online_bookings WHERE id=(p_data->>'booking_id')::uuid FOR UPDATE;
  IF EXISTS(SELECT 1 FROM public.phc_visits WHERE booking_id=booking_record.id) THEN RAISE EXCEPTION 'PHC_IDENTITY_REVIEW';END IF;
  IF p_data->>'identity_confirmed' IS DISTINCT FROM 'true' THEN RAISE EXCEPTION 'Confirm patient identity first';END IF;
- INSERT INTO public.phc_visits(patient_id,booking_id,visit_date,visit_time,kind,mode) VALUES((p_data->>'patient_id')::uuid,booking_record.id,booking_record.slot_date,booking_record.slot_time,booking_record.consultation_kind,booking_record.mode) RETURNING id INTO entity;
+ SELECT id INTO STRICT target_patient FROM public.phc_patients WHERE 'PHC-'||lpad(patient_code::text,6,'0')=upper(p_data->>'patient_code') AND merged_into IS NULL;
+ INSERT INTO public.phc_visits(patient_id,booking_id,visit_date,visit_time,kind,mode) VALUES(target_patient,booking_record.id,booking_record.slot_date,booking_record.slot_time,booking_record.consultation_kind,booking_record.mode) RETURNING id INTO entity;
  ELSIF p_action='visit_status' THEN
  entity:=(p_data->>'id')::uuid;
  SELECT * INTO STRICT v FROM public.phc_visits WHERE id=entity FOR UPDATE;

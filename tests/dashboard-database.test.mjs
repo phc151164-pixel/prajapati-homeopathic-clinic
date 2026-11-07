@@ -82,6 +82,14 @@ test('dashboard migration and clinical operations preserve payment and access pr
  const cfg=await read('settings');await assert.rejects(write('settings_save',{version:cfg.version,config:{...cfg.config,newFeePaise:null}}));
  const v=await write('visit_save',{patient_id:p.id,date:'2099-01-01',time:'11:00',kind:'followup',mode:'walkin'});await assert.rejects(write('visit_status',{id:v.id,version:1,state:'completed'}));
  });
+ await t.test('legacy booking links through verified permanent Patient ID without editing payment',async()=>{
+ const legacy=(await db.query("SELECT id FROM public.online_bookings WHERE razorpay_order_id='order_Baseline'")).rows[0];
+ const target=await read('patient',{patient_id:p.id});
+ await assert.rejects(write('link_booking',{booking_id:legacy.id,patient_code:target.patient.patient_id,identity_confirmed:false}));
+ await write('link_booking',{booking_id:legacy.id,patient_code:target.patient.patient_id,identity_confirmed:true});
+ assert.equal((await db.query('SELECT status,amount_paise FROM public.online_bookings WHERE id=$1',[legacy.id])).rows[0].amount_paise,30000);
+ assert.equal((await db.query('SELECT count(*)::integer n FROM public.phc_visits WHERE booking_id=$1',[legacy.id])).rows[0].n,1);
+ });
  await t.test('audit entries exclude confidential notes and patient mobile',async()=>{
  const rows=(await db.query('SELECT * FROM public.phc_audit_log')).rows;assert.ok(rows.length>0);assert.equal(JSON.stringify(rows).includes('Private note'),false);assert.equal(JSON.stringify(rows).includes('0000000000'),false);
  });
