@@ -1,6 +1,6 @@
 # Clinic booking notifications
 
-Status: delivery infrastructure prepared, provider credentials and recipient delivery tests still required. Do not tell the owner alerts are active until a test reaches both destinations.
+Status: owner has saved Production email credentials/flags. Email rollout and a synthetic inbox test are next. WhatsApp credentials and approval are still required. Do not tell the owner alerts are active until a test reaches both destinations.
 
 Authorized destinations: clinic email `phc151164@gmail.com` and WhatsApp recipient `+91 8103684642`. These are server-controlled; no public request chooses a notification recipient. Notification contents: patient name/mobile, date/time in IST, consultation type/mode, saved fee, payment status and booking reference. No clinical notes, symptoms, passwords, admin tokens or gateway secrets are sent.
 
@@ -31,5 +31,7 @@ Proposed template name: `phc_booking_alert`; language `en_US`; eight ordered BOD
 Meta decides approval and category. This text is a proposal, not an approved template. The clinic owner requested receipt of alerts on this number. Do not use that consent for patient marketing or sending to patients. Set `PHC_WHATSAPP_ALERTS_ENABLED=true` only after template approval and a synthetic recipient test. Missing WhatsApp config must not block email.
 
 ## Release
+
+Email and WhatsApp can be released independently; missing WhatsApp setup never blocks email. The owner can queue an idempotent, rate-limited synthetic email from Booking notifications → Send setup test email. No real booking/payment is created.
 
 Apply to PHC Safety Test first; verify RLS/no public execution and rollback-only test payment→queue idempotency. Owner configures provider credentials privately. Verify a synthetic email and template notification, then deploy only after reviewed approval. No historical patient data is sent automatically. Existing payment keys, live switch, fees, bookings and confirmations must remain unchanged.

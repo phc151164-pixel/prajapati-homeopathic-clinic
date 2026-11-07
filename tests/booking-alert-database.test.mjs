@@ -15,8 +15,9 @@ test('durable notification queue preserves booking state and protects retries',a
  await db.exec(sql('PHC_DASHBOARD_V2_REVIEW_FIRST.sql'));
  await db.exec(`INSERT INTO auth.users VALUES('${admin}');INSERT INTO public.phc_admin_accounts(user_id)VALUES('${admin}');`);
  await db.exec(readFileSync(new URL('../supabase/migrations/20261107211757_pay_at_clinic_doctor_approval.sql',import.meta.url),'utf8'));
- const before=(await db.query('SELECT config FROM public.phc_clinic_settings')).rows;
  await db.exec(readFileSync(new URL('../supabase/migrations/20261107221809_booking_alert_outbox.sql',import.meta.url),'utf8'));
+ await db.exec(readFileSync(new URL('../supabase/migrations/20261107223438_booking_alert_email_setup_test.sql',import.meta.url),'utf8'));
+ const before=(await db.query('SELECT config FROM public.phc_clinic_settings')).rows;
  assert.deepEqual((await db.query('SELECT config FROM public.phc_clinic_settings')).rows,before);
  assert.equal((await db.query('SELECT count(*)::int n FROM public.phc_booking_alerts')).rows[0].n,0);
  const date=(await db.query(`SELECT ((now() AT TIME ZONE 'Asia/Kolkata')::date+2)::text d`)).rows[0].d;
@@ -46,6 +47,10 @@ test('durable notification queue preserves booking state and protects retries',a
  assert.equal((await claim('email')).length,0);
  assert.equal((await db.query(`SELECT last_code FROM public.phc_booking_alerts WHERE id=$1`,[email.id])).rows[0].last_code,'retry_window_expired');
  for(const role of ['anon','authenticated']){await db.exec('SET ROLE '+role);await assert.rejects(db.query('SELECT * FROM public.phc_booking_alerts'));await assert.rejects(claim('email'));await db.exec('RESET ROLE');}
- const read=(await db.query('SELECT public.phc_read_booking_alerts($1,0) r',[admin])).rows[0].r;assert.equal(read.items.length,4);assert.equal(JSON.stringify(read).includes('Synthetic alert'),false);
+ const testKey='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+ const testId=(await db.query('SELECT public.phc_queue_alert_email_test($1,$2) id',[admin,testKey])).rows[0].id;
+ assert.equal((await db.query('SELECT public.phc_queue_alert_email_test($1,$2) id',[admin,testKey])).rows[0].id,testId);
+ await assert.rejects(db.query('SELECT public.phc_queue_alert_email_test($1,gen_random_uuid())',[admin]));
+ const read=(await db.query('SELECT public.phc_read_booking_alerts($1,0) r',[admin])).rows[0].r;assert.equal(read.items.length,5);assert.equal(JSON.stringify(read).includes('Synthetic alert'),false);
  }finally{await db.close();}
 });
