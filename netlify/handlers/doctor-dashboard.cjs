@@ -11,12 +11,14 @@ exports.handler=async event=>{
  try{
   if(event.httpMethod==='POST'){
    let b;try{b=JSON.parse(event.body||'{}');}catch{return json(400,{error:'Invalid request'});}
+   if(b.action==='alert_email_test'){if(!require('../lib/booking-alerts.cjs').channels().includes('email'))return json(409,{error:'Email alerts are not configured on this deployment.'});if(!uuid(b.data?.requestKey))return json(400,{error:'Invalid test reference'});const id=await supa('rpc/phc_queue_alert_email_test','POST',{p_actor:user.id,p_key:b.data.requestKey});return json(200,{result:{id}});}
    if(['clinic_approve','clinic_decline','clinic_cancel_unpaid','clinic_receive_cash'].includes(b.action)){const result=await supa('rpc/phc_clinic_admin_write','POST',{p_actor:user.id,p_action:b.action.slice(7),p_data:b.data||{}});return json(200,{result});}
    if(!['patient_save','patient_merge','visit_save','link_booking','visit_status','settings_save','closure'].includes(b.action))return json(400,{error:'Unknown action'});
    const result=await supa('rpc/phc_dashboard_write','POST',{p_actor:user.id,p_action:b.action,p_data:b.data||{}});
    return json(200,{result});
   }
   const q=event.queryStringParameters||{},page=Math.max(0,Math.min(100000,Number.parseInt(q.page,10)||0));
+  if(q.section==='alerts')return json(200,await supa('rpc/phc_read_booking_alerts','POST',{p_actor:user.id,p_page:page}));
   if(q.section==='clinic_requests'){if(!safeDate(q.from)||!safeDate(q.to))return json(400,{error:'Select a date range'});return json(200,await supa('rpc/phc_clinic_admin_read','POST',{p_actor:user.id,p_from:q.from,p_to:q.to,p_page:page}));}
   const result=await supa('rpc/phc_dashboard_read','POST',{p_actor:user.id,p_section:q.section||'overview',p_filter:{search:String(q.search||'').slice(0,100),from:safeDate(q.from)?q.from:null,to:safeDate(q.to)?q.to:null,status:q.status||'',kind:q.kind||'',patient_id:uuid(q.patientId)?q.patientId:null,page,filter_visits:q.filterVisits==='true'}});
   return json(200,result);
