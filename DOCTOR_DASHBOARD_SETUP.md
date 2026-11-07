@@ -27,10 +27,12 @@ This branch extends the existing Netlify site; PR #1 was already merged at fbb9e
 
 ## Required owner steps: PHC Safety Test only
 
+Staging migration is already applied; see verified installation below. Start at account setup (step 4); do not rerun steps 2–3.
+
 1. Keep `PHC_LIVE_PAYMENTS_ENABLED=false` everywhere. Do not edit production variables.
 2. Save a restorable staging database backup before applying SQL. At minimum export existing rows and definitions, but CSV exports alone are not a complete backup. Supabase CLI `db dump`/PostgreSQL tooling can provide schema/data; a successful restore must be verified separately.
 3. Review and run `setup/PHC_DASHBOARD_V2_REVIEW_FIRST.sql` in **PHC Safety Test**, not PHC Online Booking. It is transactional and intentionally not silently rerunnable. If any precondition differs, stop and inspect.
-   New tables: `phc_admin_accounts`, `phc_clinic_settings`, `phc_patients`, `phc_visits`, `phc_audit_log`. Adds `consultation_kind` and `slot_minutes` to existing bookings with legacy defaults. Adds RPCs/indexes; replaces only confirmation and protection functions, preserving their server-only access. Existing financial fields and booking rows are not rewritten or removed.
+   New tables: `phc_admin_accounts`, `phc_clinic_settings`, `phc_patients`, `phc_visits`, `phc_audit_log`. Adds `consultation_kind` and `slot_minutes` to existing bookings with legacy defaults. Adds RPCs/indexes; replaces confirmation and protection functions, preserving their server-only access. Widens the audited phc_closures_time_format CHECK from :00/:30 to any valid minute so configurable slot durations can be blocked safely. Existing financial fields and booking rows are not rewritten or removed.
    Prerequisite: pg_trgm must be installed in the `extensions` schema; inspect an existing different placement first. This migration must never relocate an installed extension blindly.
 4. In staging Supabase Authentication, disable new public sign-ups. Add the doctor's email user through the owner dashboard and set a private password. Do not paste passwords or tokens into chat.
 5. Copy that specific Auth user's UUID into the following allowlist statement, review the project, then run it:
@@ -80,3 +82,11 @@ Fallback: keep `PHC_DASHBOARD_ENABLED` unset/false before migration. Once new fe
 7. Pending payments → choose date → Check payment safely. The checker never releases unpaid orders.
 8. Payment settings can pause online booking; cannot activate live payments. Pay at Clinic remains unavailable.
 9. Security & account → password change and recent audit activity.
+
+## Verified staging installation, 7 November 2026
+
+After owner approval, a private application-table backup was saved and its fresh restore verified in isolated PGlite PostgreSQL: 8 booking rows restored with a matching database hash and booking guard. This is not a full Supabase/Auth/Storage/project backup.
+
+Migration `phc_doctor_dashboard_v2_staging` was applied only to PHC Safety Test. All 8 existing booking records and closure records retain matching pre/post hashes. Five dashboard tables exist with RLS enabled, and public/authenticated table and PHC RPC access checks are false. Public schedule RPC returns the legacy 30-minute schedule and INR 300 fees. No production SQL or payment activation occurred. There are zero active admin accounts; Auth account creation, Auth settings, two Netlify Deploy Preview runtime variables and signed-in acceptance tests remain pending.
+
+**Do not rerun the V2 schema script on PHC Safety Test.** It is already installed. Production still requires its separate backup, approval and migration workflow.

@@ -10,7 +10,7 @@ test('dashboard migration and clinical operations preserve payment and access pr
  try{
  await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE service_role;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE SCHEMA extensions;`);
  await db.exec(sql('booking_database.sql').replace('create extension if not exists pgcrypto;',''));
- await db.exec(`CREATE TABLE public.phc_closures(slot_date date NOT NULL,slot_time text,reason text DEFAULT 'Doctor unavailable',created_at timestamptz DEFAULT now());CREATE UNIQUE INDEX phc_closures_unique_slot ON public.phc_closures(slot_date,(coalesce(slot_time,'ALL_DAY')));`);
+ await db.exec(`CREATE TABLE public.phc_closures(slot_date date NOT NULL,slot_time text CONSTRAINT phc_closures_time_format CHECK(slot_time IS NULL OR slot_time ~ '^([01][0-9]|2[0-3]):(00|30)$'),reason text DEFAULT 'Doctor unavailable',created_at timestamptz DEFAULT now());CREATE UNIQUE INDEX phc_closures_unique_slot ON public.phc_closures(slot_date,(coalesce(slot_time,'ALL_DAY')));`);
  await db.exec(`CREATE FUNCTION public.phc_change_closure(p_date date,p_time text,p_closed boolean,p_reason text DEFAULT 'Doctor unavailable') RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$;`);
  // The production-reviewed guard is installed before V2, matching deployment prerequisites.
  await db.exec(sql('PHC_PRODUCTION_REVIEW_ONLY.sql'));

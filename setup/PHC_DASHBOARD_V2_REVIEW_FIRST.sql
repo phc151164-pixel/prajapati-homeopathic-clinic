@@ -9,6 +9,11 @@ DO $$ BEGIN
  OR to_regclass('public.one_live_online_booking_per_slot') IS NULL THEN
  RAISE EXCEPTION 'Install and verify the reviewed booking protections first'; END IF;
 END $$;
+-- The audited legacy constraint allowed only :00/:30. Keep format validation
+-- while allowing the configured duration to generate other minute offsets.
+ALTER TABLE public.phc_closures DROP CONSTRAINT IF EXISTS phc_closures_time_format;
+ALTER TABLE public.phc_closures ADD CONSTRAINT phc_closures_time_format
+ CHECK(slot_time IS NULL OR slot_time ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$');
 CREATE TABLE public.phc_admin_accounts (
  user_id uuid PRIMARY KEY REFERENCES auth.users(id), active boolean NOT NULL DEFAULT true,
  created_at timestamptz NOT NULL DEFAULT now()
