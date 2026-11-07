@@ -1,3 +1,5 @@
+/admin /admin.html 200
+/admin/ /admin.html 200
 /setup/* /404.html 404!
 /tests/* /404.html 404!
 /netlify/* /404.html 404!

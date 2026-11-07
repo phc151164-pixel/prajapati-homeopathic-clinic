@@ -6,7 +6,7 @@ import createOrder from '../netlify/functions/consult-create-order.mjs';
 test('adapter preserves JSON body, method, headers, query and response', async()=>{
  const request=new Request('https://example.invalid/api?date=2026-11-10',{method:'POST',headers:{'Content-Type':'application/json','X-Test':'present'},body:'{"name":"Test"}'});
  const response=await adapter.invoke(async event=>{
-  assert.equal(event.httpMethod,'POST');assert.equal(event.headers['x-test'],'present');
+  assert.equal(event.rawUrl,request.url);assert.equal(event.httpMethod,'POST');assert.equal(event.headers['x-test'],'present');
   assert.equal(event.queryStringParameters.date,'2026-11-10');assert.deepEqual(JSON.parse(event.body),{name:'Test'});
   return {statusCode:409,headers:{'Content-Type':'application/json','Cache-Control':'no-store'},body:'{"error":"occupied"}'};
  },request,4096);

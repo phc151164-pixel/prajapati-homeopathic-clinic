@@ -1,8 +1,11 @@
 // Doctor-only reconciliation of existing Razorpay orders. Never releases an unpaid slot.
 const {json,supa,razorpay,fee,paymentConfigured,safeDate} = require('./_common');
 const {authorized} = require('./_admin_auth');
+const {identify,sameOrigin}=require('../lib/doctor-auth.cjs');
 exports.handler=async(event)=>{
- if(!authorized(event))return json(401,{error:'Administrator access denied'});
+ const dashboardMode=process.env.PHC_DASHBOARD_ENABLED==='true';
+ const permitted=dashboardMode?Boolean(await identify(event))&&(event.httpMethod==='GET'||sameOrigin(event)):authorized(event);
+ if(!permitted)return json(401,{error:'Administrator access denied'});
  if(!['GET','POST'].includes(event.httpMethod))return json(405,{error:'Method not allowed'});
  if(!paymentConfigured())return json(503,{error:'Payment verification is not configured'});
  if((event.body||'').length>2048)return json(413,{error:'Request too large'});
@@ -20,12 +23,13 @@ exports.handler=async(event)=>{
   if(rows.length!==1)return json(404,{error:'Booking not found'});
   if(rows[0].status==='paid')return json(200,{status:'already_confirmed'});
   if(rows[0].status!=='held'||!/^order_[A-Za-z0-9]+$/.test(rows[0].razorpay_order_id||''))return json(409,{error:'Booking is not an active payment hold'});
-  const orderId=rows[0].razorpay_order_id;
+  const orderId=rows[0].razorpay_order_id,amount=rows[0].amount_paise;
+  if(!Number.isSafeInteger(amount)||amount<1)return json(409,{error:"Invalid booking amount; keep slot reserved."});
   const [order,collection]=await Promise.all([razorpay('orders/'+encodeURIComponent(orderId)),razorpay('orders/'+encodeURIComponent(orderId)+'/payments')]);
-  if(order.id!==orderId||order.status!=='paid'||order.amount!==fee()||order.amount_paid!==fee()||order.currency!=='INR'||rows[0].amount_paise!==fee())return json(200,{status:'not_confirmed',message:'No fully paid order verified. Keep this slot reserved until a safe resolution.'});
-  const matches=Array.isArray(collection?.items)?collection.items.filter(p=>p.order_id===orderId&&p.status==='captured'&&p.amount===fee()&&p.currency==='INR'&&/^pay_[A-Za-z0-9]+$/.test(p.id||'')):[];
+  if(order.id!==orderId||order.status!=='paid'||order.amount!==amount||order.amount_paid!==amount||order.currency!=='INR'||rows[0].amount_paise!==amount)return json(200,{status:'not_confirmed',message:'No fully paid order verified. Keep this slot reserved until a safe resolution.'});
+  const matches=Array.isArray(collection?.items)?collection.items.filter(p=>p.order_id===orderId&&p.status==='captured'&&p.amount===amount&&p.currency==='INR'&&/^pay_[A-Za-z0-9]+$/.test(p.id||'')):[];
   if(matches.length!==1)return json(200,{status:'needs_review',message:'Captured payment needs manual review. Do not reopen the slot.'});
-  const confirmed=await supa('rpc/phc_confirm_paid_slot','POST',{p_order:orderId,p_payment:matches[0].id,p_amount:fee()});
+  const confirmed=await supa('rpc/phc_confirm_paid_slot','POST',{p_order:orderId,p_payment:matches[0].id,p_amount:amount});
   return confirmed===true?json(200,{status:'confirmed',message:'Payment confirmed and appointment booked.'}):json(200,{status:'needs_review',message:'Payment captured but booking not updated. Contact clinic support.'});
  }catch(e){console.error('PHC RECONCILE ERROR:',e.provider||'unknown',e.status||'none',e.code||'none');return json(503,{error:'Could not complete this check. No booking was released.'});}
 };

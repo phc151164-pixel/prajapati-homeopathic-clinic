@@ -2,11 +2,13 @@
 const form=document.getElementById('paidConsultForm');if(!form)return;
 const $=id=>document.getElementById(id),date=$('paidDate'),slotBox=$('paidSlots'),book=$('paidBookButton'),status=$('paidStatus'),fee=$('paidFee'),paymentMethods=$('paidPaymentMethods');
 let chosen='',availability=null,refreshing=false,paymentInProgress=false;
+const kindLabel=document.createElement('label');kindLabel.textContent='Consultation type';const kind=document.createElement('select');kind.id='paidKind';for(const [value,text]of [['new','New patient'],['followup','Follow-up']]){const o=document.createElement('option');o.value=value;o.textContent=text;kind.append(o);}kindLabel.append(kind);form.prepend(kindLabel);
+const showFee=()=>{if(availability?.ready)fee.textContent='Online consultation fee: ₹'+((kind.value==='followup'?availability.followupFeePaise:availability.feePaise)/100).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});};kind.addEventListener('change',showFee);
 const indiaNow=()=>{const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return `${p.year}-${p.month}-${p.day}`;};
 const format=t=>{const [h,m]=t.split(':').map(Number);return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;};
 const note=(txt,error=false)=>{status.textContent=txt;status.style.color=error?'#a33232':'#456e52';};
 const localSlots=(d)=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(d||''))return [];const day=new Date(d+'T12:00:00+05:30').getDay();const periods=day===0?[[660,840]]:[[660,840],[1020,1200]];return periods.flatMap(([start,end])=>Array.from({length:(end-start)/30},(_,i)=>{const n=start+i*30;return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');}));};
-const renderUnverified=(message)=>{const now=new Date(),istTime=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(now);slotBox.replaceChildren();for(const t of localSlots(date.value)){const b=document.createElement('button');b.type='button';b.className='paid-slot unverified';b.disabled=true;b.setAttribute('aria-label',format(t)+'—live availability not verified');const label=document.createElement('span');label.textContent=format(t);const small=document.createElement('small');small.textContent=date.value<indiaNow()||(date.value===indiaNow()&&t<=istTime)?'Past':'Not verified';b.append(label,small);slotBox.appendChild(b);}fee.textContent='Audio ₹300 · Video ₹300';note(message);};
+const renderUnverified=(message)=>{const now=new Date(),istTime=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(now);slotBox.replaceChildren();for(const t of (availability?.ready?availability.slots.map(x=>x.time):localSlots(date.value))){const b=document.createElement('button');b.type='button';b.className='paid-slot unverified';b.disabled=true;b.setAttribute('aria-label',format(t)+'—live availability not verified');const label=document.createElement('span');label.textContent=format(t);const small=document.createElement('small');small.textContent=date.value<indiaNow()||(date.value===indiaNow()&&t<=istTime)?'Past':'Not verified';b.append(label,small);slotBox.appendChild(b);}if(availability?.ready)showFee();else fee.textContent='Consultation fee available after live availability loads';note(message);};
 date.min=indiaNow();date.value=indiaNow();
 async function loadSlots(){
  chosen='';book.disabled=true;if(paymentMethods)paymentMethods.hidden=true;availability=null;slotBox.innerHTML='<p class="paid-msg">Loading slots…</p>';
@@ -17,7 +19,7 @@ async function loadSlots(){
   availability=data;
   if(!data.ready){renderUnverified('Scheduled consultation times are shown for information only. Booking and payment will be enabled after secure setup. Please contact the clinic on WhatsApp.');return;}
   if(!data.paymentsEnabled){renderUnverified('Online payment is temporarily OFF for safety checks. Please contact the clinic on WhatsApp.');return;}
-  fee.textContent='Online consultation fee: ₹'+(data.feePaise/100).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+  showFee();
   slotBox.replaceChildren();
   for(const item of data.slots){const button=document.createElement('button');button.type='button';button.className='paid-slot '+(item.status==='free'?'':item.status);button.dataset.time=item.time;button.disabled=item.status!=='free';
    const top=document.createElement('span');top.textContent=format(item.time);const bottom=document.createElement('small');bottom.textContent=({free:'Available',held:'Payment in progress',booked:'Booked',past:'Unavailable'})[item.status]||'Unavailable';button.append(top,bottom);
@@ -27,7 +29,7 @@ async function loadSlots(){
   if(!data.slots.length)slotBox.textContent='No slots for this date.';
  }catch(err){renderUnverified('Live booking is not available on this deployment. Times are shown for reference, not confirmed availability. Contact the clinic on WhatsApp.');}
 }
-function formatEnd(t){const [h,m]=t.split(':').map(Number);const total=h*60+m+30;return format(String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0'));}
+function formatEnd(t){const [h,m]=t.split(':').map(Number);const total=h*60+m+(availability?.slotMinutes||30);return format(String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0'));}
 async function confirmPayment(response){
   paymentInProgress=false;
   try{const res=await fetch('/.netlify/functions/consult-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:response.razorpay_order_id,paymentId:response.razorpay_payment_id,signature:response.razorpay_signature})});const result=await res.json();
@@ -41,7 +43,7 @@ form.addEventListener('submit',async(e)=>{
  if(!window.Razorpay){note('Payment gateway is still loading. Please try again.',true);return;}
  refreshing=true;book.disabled=true;note('Holding your time slot securely…');
  try{
-  const res=await fetch('/.netlify/functions/consult-create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:date.value,time:chosen,mode:$('paidMode').value,name,mobile})});const data=await res.json();if(!res.ok)throw Error(data.error||'Booking failed');
+  const res=await fetch('/.netlify/functions/consult-create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:date.value,time:chosen,mode:$('paidMode').value,name,mobile,kind:kind.value})});const data=await res.json();if(!res.ok)throw Error(data.error||'Booking failed');
   paymentInProgress=true;
   const options={key:data.key,amount:data.amount,currency:'INR',name:'Prajapati Homeopathic Clinic',description:(data.mode==='video'?'Video':'Audio')+' consultation · '+data.date+' '+data.time,order_id:data.orderId,prefill:{name,contact:mobile},theme:{color:'#087344'},handler:confirmPayment,modal:{ondismiss:()=>{paymentInProgress=false;note('Payment window closed. Your time may remain reserved until payment is checked. If money was deducted, do not pay again; contact the clinic.');loadSlots();}}};
   new Razorpay(options).open();note('Complete payment in the secure Razorpay checkout.');

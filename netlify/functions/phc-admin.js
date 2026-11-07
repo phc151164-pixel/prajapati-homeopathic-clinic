@@ -1,6 +1,7 @@
 const {json,supa,safeDate,slotTimes,istNow,crypto} = require('./_common');
 const {authorized}=require('./_admin_auth');
 exports.handler=async(event)=>{
+ if(process.env.PHC_DASHBOARD_ENABLED==='true')return json(410,{error:'Use the authenticated Doctor Dashboard calendar.'});
  if(!authorized(event))return json(401,{error:'Administrator access denied. Check the admin token.'});
  if(!['GET','POST'].includes(event.httpMethod))return json(405,{error:'Method not allowed'});
  if((event.body||'').length>4096)return json(413,{error:'Request too large'});
