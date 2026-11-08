@@ -322,7 +322,7 @@ body>main{position:relative;z-index:1}
 @media(max-width:820px){.paid-grid{grid-template-columns:1fr}}
 @media(max-width:500px){.paid-panel{padding:16px}.paid-fields{grid-template-columns:1fr}.paid-slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style><style>.paid-slot.closed{background:#fff0e8!important;color:#853f20!important;border-color:#e9bba7!important;cursor:not-allowed}.paid-slot.closed small{color:#853f20}</style><link rel="stylesheet" href="/assets/mobile-layout.css"><link rel="stylesheet" href="/assets/site-experience.css"><script defer src="/assets/site-experience.js"></script></head>
-<body class="site-home">
+<body class="site-home"><div class="home-video-watermark" aria-hidden="true"><video id="homeWatermarkVideo" autoplay loop muted playsinline disablepictureinpicture preload="none" poster="/assets/homeopathy-watermark-poster.webp" tabindex="-1"><source data-src="/assets/homeopathy-watermark-loop.mp4" type="video/mp4"></video></div>
 <header class="header">
 <div class="container nav site-header-row">
 <a class="brand" href="#home">
@@ -339,12 +339,11 @@ body>main{position:relative;z-index:1}
 <a href="#reviews">Reviews</a>
 <a href="#contact">Contact</a>
 <a class="btn btn-primary" href="#appointment">Book Appointment</a>
-<a href="/admin">Doctor sign in</a></nav></div></details>
+<a href="/admin">Doctor sign in</a></nav><button type="button" class="watermark-toggle" aria-pressed="false">Pause background animation</button></div></details>
 </div>
 <div aria-label="Important emergency medical notice" class="phc-emergency-banner" role="note"><span class="phc-emergency-moving">For emergency symptoms, pregnancy complications, severe infections, heart or neurological emergencies, seek appropriate urgent medical care. Homeopathy should not delay proven treatment</span></div></header>
 <div class="page-scroll-track" role="progressbar" aria-label="Page scroll progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="page-scroll-fill"></span></div><main>
-<section class="hero" id="home"><video aria-hidden="true" autoplay="" class="hero-video" loop="" muted="" playsinline="" poster="assets/phc-wellness-poster.webp" preload="metadata"><source src="assets/phc-wellness-loop.mp4" type="video/mp4"/></video><div aria-hidden="true" class="hero-video-tint"></div>
-<div class="container hero-grid">
+<section class="hero" id="home"><div class="container hero-grid">
 <aside class="hero-side"><div class="doctor-profile"><div class="doctor-visual"><img alt="Dr. Umesh Prajapati" class="doctor-cutout" loading="eager" src="assets/doctor-portrait.webp"/></div><div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><a class="btn btn-primary" href="#appointment">Book a Consultation →</a></div></div></aside>
 <div class="hero-content">
 <span class="badge">Dr. Umesh Prajapati · B.H.M.S.</span>
