@@ -13,3 +13,20 @@ aside{width:230px;position:fixed;inset:0 auto 0 0;background:#fff;border-right:1
 .pending-result{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;margin:12px 0 0}
 .pending-result:empty{display:none}
 .pending-entry>button{max-width:100%;white-space:normal}
+
+/* Narrow phone screens: allow controls and patient details to wrap. */
+.aside-brand,.profile-title,.split>*,header>*,.card,.form-grid>*,.toolbar label{min-width:0}
+.avatar{flex-shrink:0}
+.card,.login-card,dialog{overflow-wrap:anywhere}
+@media(max-width:720px){
+  header,.split,.profile-title,.session-row{flex-wrap:wrap}
+  .session-row input{flex:1 1 105px;width:auto;min-width:0}
+  .session-row button{flex:0 1 auto}
+  .toolbar label,.toolbar label.search{min-width:0;flex:1 1 140px}
+  input,select,textarea{min-width:0;max-width:100%;font-size:16px}
+  .login-wrap{padding:16px;min-height:100svh}
+  .login-card{padding:24px 20px}
+  .login-card h1{font-size:27px}
+  dialog{padding:20px 16px;max-height:90dvh}
+  .profile-title{gap:12px}
+}
