@@ -8,6 +8,7 @@ exports.handler=async(event)=>{
  try{
   let b;
   try{b=JSON.parse(event.body||'{}');}catch{return json(400,{error:'Invalid booking information.'});}
+  if(b.whatsappConsent!==undefined&&typeof b.whatsappConsent!=='boolean')return json(400,{error:'Select a valid WhatsApp preference.'});
   const date=b.date,time=b.time,mode=b.mode,name=String(b.name||'').trim(),mobile=String(b.mobile||'').trim();
   if(!future(date,time)||!['video','audio'].includes(mode)||!/^[0-9]{10}$/.test(mobile)||name.length<2||name.length>80)
    return json(400,{error:'Please provide a valid future slot, name and mobile number.'});
@@ -16,7 +17,7 @@ exports.handler=async(event)=>{
   if(!['new','followup'].includes(kind)||!config.slots.includes(time)||!config.onlineEnabled)return json(400,{error:'Choose a valid consultation type and available slot.'});
   amount=kind==='followup'?config.followupFeePaise:config.newFeePaise;
   stage='reserve';
-  const held=enabled()?await supa('rpc/phc_reserve_online_slot_v2','POST',{p_date:date,p_time:time,p_mode:mode,p_name:name,p_mobile:mobile,p_kind:kind}):await supa('rpc/phc_reserve_online_slot','POST',{p_date:date,p_time:time,p_mode:mode,p_name:name,p_mobile:mobile,p_fee:fee()});
+  const held=enabled()?await supa('rpc/phc_reserve_online_slot_v3','POST',{p_date:date,p_time:time,p_mode:mode,p_name:name,p_mobile:mobile,p_kind:kind,p_whatsapp:b.whatsappConsent===true}):await supa('rpc/phc_reserve_online_slot','POST',{p_date:date,p_time:time,p_mode:mode,p_name:name,p_mobile:mobile,p_fee:fee()});
   holdId=enabled()?held?.id:typeof held==='string'?held:held?.[0]?.phc_reserve_online_slot;
   if(enabled())amount=held?.amount_paise;
   if(!Number.isSafeInteger(amount)||amount<1)throw Error('Invalid authoritative amount');
