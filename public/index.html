@@ -881,14 +881,14 @@ Please confirm whether this appointment is available.`;
   const categorySelect = document.getElementById('specialty');
   let lastFocus = null;
   let closeTimer = null;
-  function close() {
+  function close(restoreFocus = true) {
     if (dialogRoot.hidden) return;
     clearTimeout(closeTimer);
     const finish = () => {
       dialogRoot.hidden = true;
       dialogRoot.classList.remove('is-closing');
       document.body.classList.remove('treatment-modal-open');
-      if (lastFocus && lastFocus.isConnected) lastFocus.focus();
+      if (restoreFocus && lastFocus && lastFocus.isConnected) lastFocus.focus({preventScroll:true});
     };
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) finish();
     else { dialogRoot.classList.add('is-closing'); closeTimer = setTimeout(finish, 140); }
@@ -920,7 +920,7 @@ Please confirm whether this appointment is available.`;
   dialogRoot.querySelector('[data-close-treatment]').addEventListener('click', close);
   booking.addEventListener('click', () => {
     categorySelect.value = booking.dataset.specialty || '';
-    close();
+    close(false);
   });
   document.addEventListener('keydown', e => {
     if (dialogRoot.hidden) return;
