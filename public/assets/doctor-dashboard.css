@@ -30,3 +30,16 @@ aside{width:230px;position:fixed;inset:0 auto 0 0;background:#fff;border-right:1
   dialog{padding:20px 16px;max-height:90dvh}
   .profile-title{gap:12px}
 }
+
+/* Home Screen app presentation, including iPhone notch/home indicator space. */
+.install-guide{font-size:12px;line-height:1.6;margin:14px 0;color:var(--muted)}
+.install-guide summary{cursor:pointer;color:var(--green);font-weight:600}
+.install-guide p{margin:8px 0}
+.aside-footer .install-guide{margin:0;flex-basis:100%}
+@media(max-width:720px){.aside-footer{flex-wrap:wrap}}
+@media(display-mode:standalone){
+ .install-guide{display:none}
+ .login-wrap{padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom));padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+ aside{padding-top:max(24px,env(safe-area-inset-top));padding-left:max(15px,env(safe-area-inset-left))}
+ main{padding-right:max(14px,env(safe-area-inset-right));padding-bottom:max(24px,env(safe-area-inset-bottom))}
+}

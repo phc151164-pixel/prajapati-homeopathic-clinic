@@ -1,0 +1,26 @@
+{
+  "id": "/admin",
+  "name": "Prajapati Homeopathic Clinic \u2014 Doctor",
+  "short_name": "PHC Doctor",
+  "description": "Doctor sign-in and clinic dashboard for Prajapati Homeopathic Clinic. Internet connection required.",
+  "lang": "en",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "background_color": "#f2f6f2",
+  "theme_color": "#086846",
+  "icons": [
+    {
+      "src": "/assets/phc-app-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/phc-app-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
