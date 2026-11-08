@@ -11,3 +11,18 @@ document.querySelectorAll('.site-menu').forEach(menu=>{
 const track=document.querySelector('.page-scroll-track'),fill=track?.querySelector('.page-scroll-fill');
 if(track&&fill){let scheduled=false;const update=()=>{scheduled=false;const max=document.documentElement.scrollHeight-window.innerHeight;const value=max>0?Math.min(100,Math.max(0,window.scrollY/max*100)):0;fill.style.transform='scaleX('+(value/100)+')';track.setAttribute('aria-valuenow',String(Math.round(value)));};const schedule=()=>{if(!scheduled){scheduled=true;requestAnimationFrame(update);}};window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule);window.addEventListener('load',schedule);window.addEventListener('pageshow',schedule);if(typeof ResizeObserver==='function')new ResizeObserver(schedule).observe(document.body);update();}
 })();
+
+(()=>{'use strict';
+const video=document.getElementById('homeWatermarkVideo');if(!video)return;
+const toggle=document.querySelector('.watermark-toggle'),motion=window.matchMedia('(prefers-reduced-motion: reduce)');let pausedByUser=false,loaded=false;
+const conserveData=()=>Boolean(navigator.connection&&navigator.connection.saveData);
+function sync(){const staticOnly=motion.matches||conserveData();if(toggle){toggle.disabled=staticOnly;toggle.setAttribute('aria-pressed',String(pausedByUser||staticOnly));toggle.textContent=staticOnly?'Background animation off':pausedByUser?'Play background animation':'Pause background animation';}
+ if(staticOnly||pausedByUser||document.hidden){video.pause();return;}
+ if(!loaded){const source=video.querySelector('source');source.src=source.dataset.src;video.load();loaded=true;}
+ const play=video.play();if(play&&play.catch)play.catch(()=>{/* Poster stays visible if iPhone autoplay is unavailable. */});
+}
+if(toggle)toggle.addEventListener('click',()=>{pausedByUser=!pausedByUser;sync();});
+if(motion.addEventListener)motion.addEventListener('change',sync);else motion.addListener(sync);
+if(navigator.connection&&navigator.connection.addEventListener)navigator.connection.addEventListener('change',sync);
+document.addEventListener('visibilitychange',sync);sync();
+})();
