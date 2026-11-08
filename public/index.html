@@ -321,10 +321,10 @@ body>main{position:relative;z-index:1}
 .paid-hours p{margin:7px 0 0}.paid-warning{color:#7d362a;font-size:.88rem}
 @media(max-width:820px){.paid-grid{grid-template-columns:1fr}}
 @media(max-width:500px){.paid-panel{padding:16px}.paid-fields{grid-template-columns:1fr}.paid-slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
-</style><style>.paid-slot.closed{background:#fff0e8!important;color:#853f20!important;border-color:#e9bba7!important;cursor:not-allowed}.paid-slot.closed small{color:#853f20}</style><link rel="stylesheet" href="/assets/mobile-layout.css"></head>
-<body>
+</style><style>.paid-slot.closed{background:#fff0e8!important;color:#853f20!important;border-color:#e9bba7!important;cursor:not-allowed}.paid-slot.closed small{color:#853f20}</style><link rel="stylesheet" href="/assets/mobile-layout.css"><link rel="stylesheet" href="/assets/site-experience.css"><script defer src="/assets/site-experience.js"></script></head>
+<body class="site-home">
 <header class="header">
-<div class="container nav">
+<div class="container nav site-header-row">
 <a class="brand" href="#home">
 <img alt="PHC logo" src="assets/phc-logo.webp"/>
 <div class="brand-text">
@@ -332,20 +332,21 @@ body>main{position:relative;z-index:1}
 <p>Your Health, Our Responsibility</p>
 </div>
 </a>
-<nav class="nav-links">
+<details class="site-menu"><summary aria-label="Open website menu" title="Website menu"><span aria-hidden="true">⋮</span></summary><div class="site-menu-panel"><nav class="nav-links">
 <a href="#home">Home</a>
 <a href="#treatments">Treatments</a>
 <a href="#appointment">Appointment</a><a href="#online-consultation">Online Consultation</a>
 <a href="#reviews">Reviews</a>
 <a href="#contact">Contact</a>
 <a class="btn btn-primary" href="#appointment">Book Appointment</a>
-</nav>
+<a href="/admin">Doctor sign in</a></nav></div></details>
 </div>
 <div aria-label="Important emergency medical notice" class="phc-emergency-banner" role="note"><span class="phc-emergency-moving">For emergency symptoms, pregnancy complications, severe infections, heart or neurological emergencies, seek appropriate urgent medical care. Homeopathy should not delay proven treatment</span></div></header>
-<main>
+<div class="page-scroll-track" role="progressbar" aria-label="Page scroll progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="page-scroll-fill"></span></div><main>
 <section class="hero" id="home"><video aria-hidden="true" autoplay="" class="hero-video" loop="" muted="" playsinline="" poster="assets/phc-wellness-poster.webp" preload="metadata"><source src="assets/phc-wellness-loop.mp4" type="video/mp4"/></video><div aria-hidden="true" class="hero-video-tint"></div>
 <div class="container hero-grid">
-<div>
+<aside class="hero-side"><div class="doctor-profile"><div class="doctor-visual"><img alt="Dr. Umesh Prajapati" class="doctor-cutout" loading="eager" src="assets/doctor-portrait.webp"/></div><div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><a class="btn btn-primary" href="#appointment">Book a Consultation →</a></div></div></aside>
+<div class="hero-content">
 <span class="badge">Dr. Umesh Prajapati · B.H.M.S.</span>
 <h2>Personalised Consultations. A Caring Clinic Experience.</h2>
 <p>Welcome to Prajapati Homeopathic Clinic, Ratlam. Meet Dr. Umesh Prajapati, explore all 12 health categories, and request your preferred appointment time.</p>
@@ -361,7 +362,7 @@ body>main{position:relative;z-index:1}
 <div class="quick-box"><strong>Sunday</strong>11 AM – 2 PM</div>
 </div>
 </div>
-<aside class="hero-side"><div class="doctor-profile"><div class="doctor-visual"><img alt="Dr. Umesh Prajapati" class="doctor-cutout" loading="eager" src="assets/doctor-portrait.webp"/></div><div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><a class="btn btn-primary" href="#appointment">Book a Consultation →</a></div></div></aside>
+
 </div>
 </section>
 <section class="section" id="treatments">
@@ -879,14 +880,24 @@ Please confirm whether this appointment is available.`;
   const booking = document.getElementById('treatmentBook');
   const categorySelect = document.getElementById('specialty');
   let lastFocus = null;
+  let closeTimer = null;
   function close() {
-    dialogRoot.hidden = true;
-    document.body.classList.remove('treatment-modal-open');
-    if (lastFocus && lastFocus.isConnected) lastFocus.focus();
+    if (dialogRoot.hidden) return;
+    clearTimeout(closeTimer);
+    const finish = () => {
+      dialogRoot.hidden = true;
+      dialogRoot.classList.remove('is-closing');
+      document.body.classList.remove('treatment-modal-open');
+      if (lastFocus && lastFocus.isConnected) lastFocus.focus();
+    };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) finish();
+    else { dialogRoot.classList.add('is-closing'); closeTimer = setTimeout(finish, 140); }
   }
   function open(slug, trigger) {
     const item = treatmentData[slug];
     if (!item) return;
+    clearTimeout(closeTimer);
+    dialogRoot.classList.remove('is-closing');
     lastFocus = trigger;
     titleEl.textContent = item.title;
     descEl.textContent = item.description;
