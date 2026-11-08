@@ -35,6 +35,9 @@ async function collect(readPage,filter,onProgress=()=>{}){const rows=[],seen=new
  }
  throw Error('Too many records for one export. Narrow the search filters.');
 }
-function download(patients,filename){const blob=new Blob([workbook(patients)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
-const api={workbook,collect,download};if(typeof module==='object'&&module.exports)module.exports=api;else root.PHCPatientExport=api;
+let activeUrl=null;
+function clear(){if(activeUrl){URL.revokeObjectURL(activeUrl);activeUrl=null;}}
+function download(patients,filename,parent){clear();const blob=new Blob([workbook(patients)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});activeUrl=URL.createObjectURL(blob);const a=document.createElement('a');a.href=activeUrl;a.download=filename;a.textContent='Save Excel file ('+patients.length+' patients)';a.className='link-button';parent.replaceChildren(a);return a;}
+
+const api={workbook,collect,download,clear};if(typeof module==='object'&&module.exports)module.exports=api;else root.PHCPatientExport=api;
 })(typeof window==='object'?window:globalThis);
