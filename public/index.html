@@ -630,30 +630,20 @@ body>main{position:relative;z-index:1}
 <section aria-labelledby="reviewsHeading" class="section" id="reviews">
 <div class="container">
 <div class="section-head">
-<div><h2 id="reviewsHeading">Patient Reviews &amp; Feedback</h2></div>
+<div><h2 id="reviewsHeading">Patient Reviews</h2></div>
 <a class="btn btn-outline" href="./reviews.html">Open Review Page</a>
 </div>
 <div class="google-review-feed">
 <div class="live-google-review-body" data-google-reviews-feed=""><div class="phc-direct-google-reviews"><h3>Patient Reviews on Google</h3><p>Read genuine patient reviews or share your feedback on our Google Maps listing.</p></div></div>
 <div class="google-review-actions"><a class="btn btn-primary" href="https://www.google.com/maps/place/Dr+Umesh+Prajapati/@23.3459452,75.0371519,17z/data=!3m1!4b1!4m6!3m5!1s0x3963ff004a6ae321:0x770e5e9e1d7e2551!8m2!3d23.3459452!4d75.0397268!16s%2Fg%2F11z53d6jnt?entry=ttu" rel="noopener noreferrer" target="_blank">Read or Write a Google Review ↗</a></div>
 </div>
-<div class="reviews-grid">
+<div class="reviews-grid" style="grid-template-columns:minmax(0,1fr)">
 <article class="review-panel">
 <h3>Review PHC on Google</h3>
 <p>Open our Google Maps listing to view existing public reviews or leave your own experience. Google may ask you to sign in.</p>
 <a class="btn btn-primary" href="https://www.google.com/maps/place/Dr+Umesh+Prajapati/@23.3459452,75.0371519,17z/data=!3m1!4b1!4m6!3m5!1s0x3963ff004a6ae321:0x770e5e9e1d7e2551!8m2!3d23.3459452!4d75.0397268!16s%2Fg%2F11z53d6jnt?entry=ttu&amp;g_ep=EgoyMDI2MTAyOC4wIKXMDSoASAFQAw%3D%3D" rel="noopener noreferrer" target="_blank">Open Google Reviews ↗</a>
 </article>
-<article class="review-panel">
-<h3>Send private feedback</h3>
-<form class="review-form" id="reviewForm">
-<div><label for="reviewName">Your name (optional)</label><input autocomplete="name" id="reviewName" maxlength="80" placeholder="Name" type="text"/></div>
-<div><label for="reviewRating">Your experience</label><select id="reviewRating" required=""><option value="">Select a rating</option><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Average</option><option value="2">2 — Below expectations</option><option value="1">1 — Poor</option></select></div>
-<div><label for="reviewText">Your feedback</label><textarea id="reviewText" maxlength="1200" placeholder="Share feedback about your clinic visit. Please avoid including medical or sensitive personal information." required=""></textarea></div>
-<button class="btn btn-primary" type="submit">Send via WhatsApp</button>
-<small>Submitting opens WhatsApp with a prepared message. Press Send there to share it. Your feedback is not posted publicly.</small>
-<p aria-live="polite" class="review-message" id="reviewMessage" role="status"></p>
-</form>
-</article>
+
 </div>
 </div>
 </section>
@@ -836,25 +826,7 @@ Please confirm whether this appointment is available.`;
   window.open(url, '_blank', 'noopener,noreferrer');
 });
 </script>
-<script>
-(function(){
-  const form=document.getElementById('reviewForm');
-  if(!form) return;
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    const name=document.getElementById('reviewName').value.trim() || 'Anonymous visitor';
-    const rating=document.getElementById('reviewRating').value;
-    const feedback=document.getElementById('reviewText').value.trim();
-    const status=document.getElementById('reviewMessage');
-    if(!rating || !feedback){status.textContent='Please select a rating and enter feedback.';return;}
-    const msg='Private clinic feedback for Prajapati Homeopathic Clinic\nName: '+name+'\nRating: '+rating+'/5\nFeedback: '+feedback+'\n\nThis is feedback only, not a public review.';
-    const url='https://wa.me/918103684642?text='+encodeURIComponent(msg);
-    const link=document.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Open WhatsApp to send your feedback';
-    status.replaceChildren(document.createTextNode('Please send the prepared message in WhatsApp. '),link);
-    window.open(url,'_blank','noopener,noreferrer');
-  });
-})();
-</script>
+
 <div class="treatment-overlay" hidden="" id="treatmentDialog" role="presentation">
 <div class="treatment-backdrop" data-close-treatment="true"></div>
 <section aria-describedby="treatmentDescription" aria-labelledby="treatmentTitle" aria-modal="true" class="treatment-dialog" role="dialog" tabindex="-1">
