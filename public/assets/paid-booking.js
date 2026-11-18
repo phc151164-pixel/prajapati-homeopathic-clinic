@@ -43,6 +43,73 @@ async function confirmPayment(response){
   }catch{note('Payment may have been received, but confirmation is delayed. Contact the clinic and do not pay again.',true)}
   await loadSlots();
 }
+const otpEndpoint = '/.netlify/functions/consult-mobile-otp';
+const mobileInput = $('paidMobile');
+let otpRequired = false;
+let verifiedMobile = '';
+let mobileProof = '';
+let challenge = '';
+let otpBusy = false;
+
+const otpField = document.createElement('div');
+otpField.hidden = true;
+otpField.innerHTML = '<button type="button" class="btn btn-outline">Send OTP</button> <label hidden>SMS code <input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8"></label> <button type="button" class="btn btn-outline" hidden>Verify OTP</button>';
+mobileInput.parentElement.append(otpField);
+const [sendOtp, codeLabel, verifyOtp] = otpField.children;
+const codeInput = codeLabel.querySelector('input');
+
+function resetOtp() {
+  verifiedMobile = mobileProof = challenge = codeInput.value = '';
+  codeLabel.hidden = verifyOtp.hidden = true;
+  sendOtp.textContent = 'Send OTP';
+}
+mobileInput.addEventListener('input', resetOtp);
+fetch(otpEndpoint).then(response => response.json()).then(config => {
+  otpRequired = config.required === true;
+  otpField.hidden = !otpRequired;
+}).catch(() => {});
+
+async function runOtp(action) {
+  if (otpBusy) return;
+  const mobile = mobileInput.value.trim();
+  if (!/^[6-9][0-9]{9}$/.test(mobile)) {
+    note('Enter a valid 10-digit Indian mobile number.', true);
+    return;
+  }
+  if (action === 'send') resetOtp();
+  otpBusy = true;
+  mobileInput.readOnly = sendOtp.disabled = verifyOtp.disabled = true;
+  try {
+    const response = await fetch(otpEndpoint, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action, mobile, challenge, code: codeInput.value.trim()})
+    });
+    const data = await response.json();
+    if (!response.ok) throw Error(data.error || 'Please try again shortly.');
+    if (action === 'send') {
+      challenge = data.challenge;
+      codeLabel.hidden = verifyOtp.hidden = false;
+      sendOtp.textContent = 'Resend OTP';
+      codeInput.focus();
+      note('Enter the code sent to your mobile.');
+    } else {
+      verifiedMobile = mobile;
+      mobileProof = data.proof;
+      codeLabel.hidden = verifyOtp.hidden = true;
+      codeInput.value = '';
+      note('Mobile number verified. You can continue to payment.');
+    }
+  } catch (error) {
+    note(error.message, true);
+  } finally {
+    otpBusy = false;
+    mobileInput.readOnly = sendOtp.disabled = verifyOtp.disabled = false;
+  }
+}
+sendOtp.addEventListener('click', () => runOtp('send'));
+verifyOtp.addEventListener('click', () => runOtp('verify'));
+
 form.addEventListener('submit',async(e)=>{
  e.preventDefault();if(refreshing||!chosen||!availability?.ready||(method.value==='clinic'?availability.payAtClinicEnabled!==true:availability.paymentsEnabled!==true))return;
  const name=$('paidName').value.trim(),mobile=$('paidMobile').value.trim();if(name.length<2||!/^[0-9]{10}$/.test(mobile)){note('Enter patient name and a valid 10-digit phone number.',true);return;}
@@ -53,10 +120,13 @@ form.addEventListener('submit',async(e)=>{
   try{const res=await fetch('/.netlify/functions/consult-clinic-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,requestKey:clinicAttempt.key})});const data=await res.json();if(!res.ok)throw Error(data.error||'Request failed');await loadSlots();requestSummary.textContent=data.slotReserved?'The doctor has approved this request. Cash payment is still due.':'Request received. Your slot is NOT reserved yet. Contact the clinic for doctor approval. Reference: '+data.requestId;note('Clinic request acknowledged. See the request reference below.');}
   catch(error){note(error.message,true);book.disabled=false;}finally{refreshing=false;}return;
  }
+ if(otpRequired && (otpBusy || verifiedMobile !== mobile || !mobileProof)){
+  note('Verify your mobile number before continuing to payment.',true);return;
+ }
  if(!window.Razorpay){note('Payment gateway is still loading. Please try again.',true);return;}
  refreshing=true;book.disabled=true;note('Holding your time slot securely…');
  try{
-  const res=await fetch('/.netlify/functions/consult-create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:date.value,time:chosen,mode:$('paidMode').value,name,mobile,kind:kind.value})});const data=await res.json();if(!res.ok)throw Error(data.error||'Booking failed');
+  const res=await fetch('/.netlify/functions/consult-create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:date.value,time:chosen,mode:$('paidMode').value,name,mobile,mobileProof,kind:kind.value})});const data=await res.json();if(!res.ok)throw Error(data.error||'Booking failed');
   paymentInProgress=true;
   const options={key:data.key,amount:data.amount,currency:'INR',name:'Prajapati Homeopathic Clinic',description:(data.mode==='video'?'Video':'Audio')+' consultation · '+data.date+' '+data.time,order_id:data.orderId,prefill:{name,contact:mobile},theme:{color:'#087344'},handler:confirmPayment,modal:{ondismiss:()=>{paymentInProgress=false;note('Payment window closed. Your time may remain reserved until payment is checked. If money was deducted, do not pay again; contact the clinic.');loadSlots();}}};
   new Razorpay(options).open();note('Complete payment in the secure Razorpay checkout.');
