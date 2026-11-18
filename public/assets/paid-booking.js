@@ -51,13 +51,26 @@ registrationField.innerHTML = '<p>Enter the registration number the clinic gave 
 choiceRow.after(registrationField);
 const registrationInput = registrationField.querySelector('input');
 
+let recoveringRegistration = false;
+const recoveryButton = document.createElement('button');
+recoveryButton.type = 'button';
+recoveryButton.className = 'btn btn-outline';
+recoveryButton.textContent = 'Forgot registration number?';
+const recoveryHelp = document.createElement('p');
+recoveryHelp.textContent = 'Enter your registered mobile number below, then tap Send OTP.';
+recoveryHelp.hidden = true;
+const recoveryResults = document.createElement('div');
+recoveryResults.setAttribute('aria-live', 'polite');
+registrationField.append(recoveryButton, recoveryHelp, recoveryResults);
+
 function updateBookingFields() {
   const followup = kind.value === 'followup' && method.value !== 'clinic';
   registrationField.hidden = !followup;
   registrationInput.required = followup;
   nameInput.closest('label').style.display = followup ? 'none' : '';
   nameInput.disabled = followup;
-  otpField.hidden = followup || !otpRequired;
+  otpField.hidden = followup ? !recoveringRegistration : !otpRequired;
+  recoveryHelp.hidden = !followup || !recoveringRegistration;
 }
 let otpRequired = false;
 let verifiedMobile = '';
@@ -73,6 +86,7 @@ const [sendOtp, codeLabel, verifyOtp] = otpField.children;
 const codeInput = codeLabel.querySelector('input');
 
 function resetOtp() {
+  recoveryResults.replaceChildren();
   verifiedMobile = mobileProof = challenge = codeInput.value = '';
   codeLabel.hidden = verifyOtp.hidden = true;
   sendOtp.textContent = 'Send OTP';
@@ -83,6 +97,43 @@ fetch(otpEndpoint).then(response => response.json()).then(config => {
   updateBookingFields();
 }).catch(() => {});
 
+async function recoverRegistration(mobile) {
+  const response = await fetch(otpEndpoint, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'recover-registration', mobile, proof: mobileProof})
+  });
+  const data = await response.json();
+  if (!response.ok) throw Error(data.error || 'Could not recover your registration number.');
+  const message = document.createElement('p');
+  recoveryResults.replaceChildren(message);
+  if (data.registrations.length === 0) {
+    message.textContent = 'No registration was found for this mobile number. Please contact the clinic.';
+  } else if (data.registrations.length === 1) {
+    registrationInput.value = data.registrations[0];
+    message.textContent = 'Registration number filled in. Select your appointment and continue to payment.';
+  } else {
+    message.textContent = 'This mobile number has more than one registration. Select your registration number or ask the clinic which one to use.';
+    for (const registration of data.registrations) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn btn-outline';
+      button.textContent = registration;
+      button.addEventListener('click', () => { registrationInput.value = registration; });
+      recoveryResults.append(button);
+    }
+  }
+}
+
+recoveryButton.addEventListener('click', () => {
+  if (otpBusy) return;
+  recoveringRegistration = !recoveringRegistration;
+  resetOtp();
+  recoveryButton.textContent = recoveringRegistration ? 'Cancel recovery' : 'Forgot registration number?';
+  updateBookingFields();
+  if (recoveringRegistration) mobileInput.focus();
+});
+
 async function runOtp(action) {
   if (otpBusy) return;
   const mobile = mobileInput.value.trim();
@@ -91,7 +142,9 @@ async function runOtp(action) {
     return;
   }
   if (action === 'send') resetOtp();
+  const recovery = recoveringRegistration && kind.value === 'followup' && method.value !== 'clinic';
   otpBusy = true;
+  kind.disabled = method.disabled = recoveryButton.disabled = true;
   mobileInput.readOnly = sendOtp.disabled = verifyOtp.disabled = true;
   try {
     const response = await fetch(otpEndpoint, {
@@ -112,12 +165,18 @@ async function runOtp(action) {
       mobileProof = data.proof;
       codeLabel.hidden = verifyOtp.hidden = true;
       codeInput.value = '';
-      note('Mobile number verified. You can continue to payment.');
+      if (recovery) {
+        await recoverRegistration(mobile);
+        note('Mobile number verified.');
+      } else {
+        note('Mobile number verified. You can continue to payment.');
+      }
     }
   } catch (error) {
     note(error.message, true);
   } finally {
     otpBusy = false;
+    kind.disabled = method.disabled = recoveryButton.disabled = false;
     mobileInput.readOnly = sendOtp.disabled = verifyOtp.disabled = false;
   }
 }
@@ -128,7 +187,7 @@ kind.addEventListener('change', updateBookingFields);
 method.addEventListener('change', updateBookingFields);
 updateBookingFields();
 form.addEventListener('submit',async(e)=>{
- e.preventDefault();if(refreshing||!chosen||!availability?.ready||(method.value==='clinic'?availability.payAtClinicEnabled!==true:availability.paymentsEnabled!==true))return;
+ e.preventDefault();if(otpBusy||refreshing||!chosen||!availability?.ready||(method.value==='clinic'?availability.payAtClinicEnabled!==true:availability.paymentsEnabled!==true))return;
  const followup = kind.value === 'followup' && method.value !== 'clinic';
  const registration = registrationInput.value.trim().toUpperCase();
  const name=nameInput.value.trim(),mobile=mobileInput.value.trim();if((!followup && name.length<2)||!/^[0-9]{10}$/.test(mobile)){note('Enter patient name and a valid 10-digit phone number.',true);return;}
