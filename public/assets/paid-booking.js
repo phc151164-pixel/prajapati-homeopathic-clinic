@@ -45,6 +45,20 @@ async function confirmPayment(response){
 }
 const otpEndpoint = '/.netlify/functions/consult-mobile-otp';
 const mobileInput = $('paidMobile');
+const nameInput = $('paidName');
+const registrationField = document.createElement('div');
+registrationField.innerHTML = '<p>Enter the registration number the clinic gave you and the same mobile number you registered with. Choose a slot and continue to payment. No OTP is needed.</p><label for="paidRegistration">Registration number</label><input id="paidRegistration" type="text" placeholder="PHC-000001" maxlength="10" autocomplete="off">';
+choiceRow.after(registrationField);
+const registrationInput = registrationField.querySelector('input');
+
+function updateBookingFields() {
+  const followup = kind.value === 'followup' && method.value !== 'clinic';
+  registrationField.hidden = !followup;
+  registrationInput.required = followup;
+  nameInput.closest('label').style.display = followup ? 'none' : '';
+  nameInput.disabled = followup;
+  otpField.hidden = followup || !otpRequired;
+}
 let otpRequired = false;
 let verifiedMobile = '';
 let mobileProof = '';
@@ -66,7 +80,7 @@ function resetOtp() {
 mobileInput.addEventListener('input', resetOtp);
 fetch(otpEndpoint).then(response => response.json()).then(config => {
   otpRequired = config.required === true;
-  otpField.hidden = !otpRequired;
+  updateBookingFields();
 }).catch(() => {});
 
 async function runOtp(action) {
@@ -110,9 +124,14 @@ async function runOtp(action) {
 sendOtp.addEventListener('click', () => runOtp('send'));
 verifyOtp.addEventListener('click', () => runOtp('verify'));
 
+kind.addEventListener('change', updateBookingFields);
+method.addEventListener('change', updateBookingFields);
+updateBookingFields();
 form.addEventListener('submit',async(e)=>{
  e.preventDefault();if(refreshing||!chosen||!availability?.ready||(method.value==='clinic'?availability.payAtClinicEnabled!==true:availability.paymentsEnabled!==true))return;
- const name=$('paidName').value.trim(),mobile=$('paidMobile').value.trim();if(name.length<2||!/^[0-9]{10}$/.test(mobile)){note('Enter patient name and a valid 10-digit phone number.',true);return;}
+ const followup = kind.value === 'followup' && method.value !== 'clinic';
+ const registration = registrationInput.value.trim().toUpperCase();
+ const name=nameInput.value.trim(),mobile=mobileInput.value.trim();if((!followup && name.length<2)||!/^[0-9]{10}$/.test(mobile)){note('Enter patient name and a valid 10-digit phone number.',true);return;}
  if(method.value==='clinic'){
   const payload={date:date.value,time:chosen,mode:$('paidMode').value,name,mobile,kind:kind.value};const fingerprint=JSON.stringify(payload);
   if(clinicAttempt?.fingerprint!==fingerprint)clinicAttempt={fingerprint,key:crypto.randomUUID()};
@@ -120,15 +139,15 @@ form.addEventListener('submit',async(e)=>{
   try{const res=await fetch('/.netlify/functions/consult-clinic-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,requestKey:clinicAttempt.key})});const data=await res.json();if(!res.ok)throw Error(data.error||'Request failed');await loadSlots();requestSummary.textContent=data.slotReserved?'The doctor has approved this request. Cash payment is still due.':'Request received. Your slot is NOT reserved yet. Contact the clinic for doctor approval. Reference: '+data.requestId;note('Clinic request acknowledged. See the request reference below.');}
   catch(error){note(error.message,true);book.disabled=false;}finally{refreshing=false;}return;
  }
- if(otpRequired && (otpBusy || verifiedMobile !== mobile || !mobileProof)){
+ if(!followup && otpRequired && (otpBusy || verifiedMobile !== mobile || !mobileProof)){
   note('Verify your mobile number before continuing to payment.',true);return;
  }
  if(!window.Razorpay){note('Payment gateway is still loading. Please try again.',true);return;}
  refreshing=true;book.disabled=true;note('Holding your time slot securely…');
  try{
-  const res=await fetch('/.netlify/functions/consult-create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:date.value,time:chosen,mode:$('paidMode').value,name,mobile,mobileProof,kind:kind.value})});const data=await res.json();if(!res.ok)throw Error(data.error||'Booking failed');
+  const res=await fetch('/.netlify/functions/consult-create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:date.value,time:chosen,mode:$('paidMode').value,name,mobile,mobileProof,registration,kind:kind.value})});const data=await res.json();if(!res.ok)throw Error(data.error||'Booking failed');
   paymentInProgress=true;
-  const options={key:data.key,amount:data.amount,currency:'INR',name:'Prajapati Homeopathic Clinic',description:(data.mode==='video'?'Video':'Audio')+' consultation · '+data.date+' '+data.time,order_id:data.orderId,prefill:{name,contact:mobile},theme:{color:'#087344'},handler:confirmPayment,modal:{ondismiss:()=>{paymentInProgress=false;note('Payment window closed. Your time may remain reserved until payment is checked. If money was deducted, do not pay again; contact the clinic.');loadSlots();}}};
+  const options={key:data.key,amount:data.amount,currency:'INR',name:'Prajapati Homeopathic Clinic',description:(data.mode==='video'?'Video':'Audio')+' consultation · '+data.date+' '+data.time,order_id:data.orderId,prefill:{name:followup?'':name,contact:'+91'+mobile},theme:{color:'#087344'},handler:confirmPayment,modal:{ondismiss:()=>{paymentInProgress=false;note('Payment window closed. Your time may remain reserved until payment is checked. If money was deducted, do not pay again; contact the clinic.');loadSlots();}}};
   new Razorpay(options).open();note('Complete payment in the secure Razorpay checkout.');
  }catch(err){note(err.message,true);await loadSlots()}finally{refreshing=false}
 });
