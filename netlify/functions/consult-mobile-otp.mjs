@@ -4,11 +4,33 @@ import common from './_common.js';
 
 const {json, supa} = common;
 
+async function fast2sms(send, mobile, code) {
+  const body = send
+    ? {mobile, otp_id: process.env.FAST2SMS_OTP_ID.trim(), otp_expiry: 5, otp_length: 6}
+    : {mobile, otp: code};
+  const response = await fetch('https://www.fast2sms.com/dev/otp/' + (send ? 'send' : 'verify'), {
+    method: 'POST',
+    headers: {Authorization: process.env.FAST2SMS_API_KEY.trim(), 'Content-Type': 'application/json'},
+    body: JSON.stringify(body),
+    redirect: 'error',
+    signal: AbortSignal.timeout(8000)
+  });
+  const result = await response.json();
+  if (response.ok && result.return === true && result.status_code === 200) {
+    return send ? json(200, {challenge: otp.sign('challenge', mobile)}) :
+      json(200, {proof: otp.sign('verified', mobile)});
+  }
+  if (!send && [400, 404].includes(response.status)) {
+    return json(400, {error: 'OTP could not be verified. Check the code or request a new one.'});
+  }
+  throw new Error('OTP provider rejected request');
+}
+
 async function handler(event) {
   if (event.httpMethod === 'GET') return json(200, {required: otp.enabled()});
   if (event.httpMethod !== 'POST') return json(405, {error: 'Method not allowed.'});
   const authToken = process.env.MESSAGE_CENTRAL_AUTH_TOKEN;
-  if (!otp.enabled() || !authToken) return json(503, {error: 'Mobile verification is unavailable.'});
+  if (!otp.enabled() || (!authToken && !otp.fastConfigured())) return json(503, {error: 'Mobile verification is unavailable.'});
 
   let input;
   try { input = JSON.parse(event.body); } catch { return json(400, {error: 'Invalid request.'}); }
@@ -44,6 +66,7 @@ async function handler(event) {
   const params = send ? {countryCode: '91', flowType: 'SMS', mobileNumber: mobile} :
     {verificationId: pending.id, code};
   try {
+    if (otp.fastConfigured()) return await fast2sms(send, mobile, code);
     const response = await fetch('https://cpaas.messagecentral.com/verification/v3/' + path + '?' + new URLSearchParams(params), {
       method: send ? 'POST' : 'GET',
       headers: {authToken},
