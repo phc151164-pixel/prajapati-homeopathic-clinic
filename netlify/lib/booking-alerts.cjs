@@ -1,6 +1,6 @@
 'use strict';
 const {supa}=require('../functions/_common');
-const EMAIL='phc151164@gmail.com',WHATSAPP='918103684642';
+const EMAIL='phc151164@gmail.com',WHATSAPP='918962540212';
 // Destinations are owner-approved clinic contacts, never patient/browser controlled.
 function channels(env=process.env,deployContext=require('./deploy-context.cjs').context){
  if(env.PHC_BOOKING_ALERTS_ENABLED!=='true'||deployContext!=='production')return [];
