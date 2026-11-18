@@ -2,7 +2,7 @@ import adapter from '../lib/request-adapter.cjs';
 import otp from '../lib/booking-otp.cjs';
 import common from './_common.js';
 
-const {json} = common;
+const {json, supa} = common;
 
 async function handler(event) {
   if (event.httpMethod === 'GET') return json(200, {required: otp.enabled()});
@@ -12,9 +12,26 @@ async function handler(event) {
 
   let input;
   try { input = JSON.parse(event.body); } catch { return json(400, {error: 'Invalid request.'}); }
-  const {action, mobile, challenge, code} = input || {};
+  const {action, mobile, challenge, code, proof} = input || {};
   if (typeof mobile !== 'string' || !/^[6-9][0-9]{9}$/.test(mobile)) {
     return json(400, {error: 'Enter a valid 10-digit Indian mobile number.'});
+  }
+
+  if (action === 'recover-registration') {
+    if (!otp.read(proof, 'verified', mobile)) {
+      return json(403, {error: 'Verify your registered mobile number first.'});
+    }
+    try {
+      const query = new URLSearchParams({
+        select: 'patient_code', mobile: 'eq.' + mobile, merged_into: 'is.null',
+        order: 'patient_code.asc', limit: '50'
+      });
+      const patients = await supa('phc_patients?' + query);
+      return json(200, {registrations: patients.map(patient =>
+        'PHC-' + String(patient.patient_code).padStart(6, '0'))});
+    } catch {
+      return json(503, {error: 'Could not find your registration number right now. Try again or contact the clinic.'});
+    }
   }
 
   const send = action === 'send';
