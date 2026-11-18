@@ -1,3 +1,4 @@
+const bookingOtp = require('../lib/booking-otp.cjs');
 const {enabled,schedule,future}=require('../lib/clinic-config.cjs');
 const {json,configured,supa,razorpay,validSlot,fee} = require('../functions/_common');
 exports.handler=async(event)=>{
@@ -11,6 +12,10 @@ exports.handler=async(event)=>{
   const date=b.date,time=b.time,mode=b.mode,name=String(b.name||'').trim(),mobile=String(b.mobile||'').trim();
   if(!future(date,time)||!['video','audio'].includes(mode)||!/^[0-9]{10}$/.test(mobile)||name.length<2||name.length>80)
    return json(400,{error:'Please provide a valid future slot, name and mobile number.'});
+
+  if (bookingOtp.enabled() && !bookingOtp.read(b.mobileProof, 'verified', mobile)) {
+   return json(403, {error: 'Verify your mobile number before continuing to payment.'});
+  }
 
   const config=await schedule(date),kind=b.kind||'new';
   if(!['new','followup'].includes(kind)||!config.slots.includes(time)||!config.onlineEnabled)return json(400,{error:'Choose a valid consultation type and available slot.'});
