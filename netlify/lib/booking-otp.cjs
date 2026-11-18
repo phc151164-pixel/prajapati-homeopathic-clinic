@@ -1,10 +1,12 @@
 const {createHmac, timingSafeEqual} = require('node:crypto');
 
+const fastConfigured = () => Boolean(process.env.FAST2SMS_API_KEY?.trim() && process.env.FAST2SMS_OTP_ID?.trim());
+const signingKey = () => fastConfigured() ? process.env.FAST2SMS_API_KEY.trim() : process.env.MESSAGE_CENTRAL_AUTH_TOKEN;
 const enabled = () => process.env.PHC_BOOKING_OTP_REQUIRED === 'true' ||
-  (require('./deploy-context.cjs').context === 'deploy-preview' && Boolean(process.env.MESSAGE_CENTRAL_AUTH_TOKEN));
+  (require('./deploy-context.cjs').context === 'deploy-preview' && Boolean(signingKey()));
 
 function digest(value) {
-  return createHmac('sha256', process.env.MESSAGE_CENTRAL_AUTH_TOKEN)
+  return createHmac('sha256', signingKey())
     .update('phc-booking-otp-v1:' + value).digest('base64url');
 }
 
@@ -14,7 +16,7 @@ function sign(purpose, mobile, id = '') {
 }
 
 function read(token, purpose, mobile) {
-  if (!process.env.MESSAGE_CENTRAL_AUTH_TOKEN || typeof token !== 'string') return null;
+  if (!signingKey() || typeof token !== 'string') return null;
   const parts = token.split('.');
   if (parts.length !== 2) return null;
   const [value, signature] = parts;
@@ -29,4 +31,4 @@ function read(token, purpose, mobile) {
   }
 }
 
-module.exports = {enabled, sign, read};
+module.exports = {enabled, fastConfigured, sign, read};
