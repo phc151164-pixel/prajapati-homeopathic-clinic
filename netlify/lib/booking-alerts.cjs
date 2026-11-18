@@ -19,7 +19,7 @@ function request(job,env=process.env){
  const v=details(job.payload);
  if(job.channel==='email')return {url:'https://api.resend.com/emails',options:{method:'POST',headers:{Authorization:'Bearer '+env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':'phc-booking-alert/'+job.id},body:JSON.stringify({from:env.PHC_ALERT_EMAIL_FROM,to:[EMAIL],subject:'PHC: confirmed appointment · '+job.payload.date+' '+job.payload.time,text:'New confirmed appointment\n\n'+['Patient','Mobile','Date','Time','Consultation','Amount','Payment','Booking reference'].map((label,i)=>label+': '+v[i]).join('\n')+'\n\nDoctor dashboard: https://prajapatihomeopathicclinic.netlify.app/admin'})}};
  if(job.channel!=='whatsapp')throw Error('Invalid channel');
- return {url:`https://graph.facebook.com/${env.WHATSAPP_API_VERSION}/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`,options:{method:'POST',headers:{Authorization:'Bearer '+env.WHATSAPP_ACCESS_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to:WHATSAPP,type:'template',template:{name:env.WHATSAPP_ALERT_TEMPLATE,language:{code:env.WHATSAPP_TEMPLATE_LANGUAGE},components:[{type:'body',parameters:v.map(text=>({type:'text',text}))}]}})}};
+ return {url:`https://graph.facebook.com/${env.WHATSAPP_API_VERSION}/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`,options:{method:'POST',headers:{Authorization:'Bearer '+env.WHATSAPP_ACCESS_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to:WHATSAPP,type:'template',template:{name:env.WHATSAPP_ALERT_TEMPLATE,language:{code:env.WHATSAPP_TEMPLATE_LANGUAGE},components:[{type:'body',parameters:[...v,job.payload.registrationNumber||'Not assigned'].map(text=>({type:'text',text}))}]}})}};
 }
 async function deliver(job,env=process.env,send=fetch){
  let req;try{req=request(job,env);}catch{return {result:'rejected'};}
@@ -32,10 +32,21 @@ async function deliver(job,env=process.env,send=fetch){
   return {result:'rejected'};
  }catch{return {result:job.channel==='email'?'retry':'ambiguous'};}
 }
+async function addRegistrationNumber(job,db){
+ if(job.channel!=='whatsapp'||!['online_paid','clinic_confirmed'].includes(job.source))return job;
+ details(job.payload);
+ const reference=job.source==='online_paid'?'booking_id':'clinic_request_id';
+ const visits=await db('phc_visits?select=phc_patients!phc_visits_patient_id_fkey(patient_code)&'+reference+'=eq.'+job.payload.bookingId,'GET');
+ const code=visits[0]?.phc_patients?.patient_code;
+ const registrationNumber=/^\d{1,6}$/.test(String(code))?'PHC-'+String(code).padStart(6,'0'):null;
+ return {...job,payload:{...job.payload,registrationNumber}};
+}
 async function dispatch(env=process.env,db=supa,send=fetch,deployContext){
  const ready=channels(env,deployContext);if(!ready.length)return {processed:0,configured:false};
  const jobs=await db('rpc/phc_claim_booking_alerts','POST',{p_channels:ready});
- const results=await Promise.all(jobs.map(async job=>{const outcome=await deliver(job,env,send);await db('rpc/phc_finish_booking_alert','POST',{p_id:job.id,p_lease:job.lease,p_result:outcome.result,p_provider:outcome.provider||null});return outcome.result;}));
+ const results=await Promise.all(jobs.map(async job=>{let enriched;
+  try{enriched=await addRegistrationNumber(job,db);}catch{await db('rpc/phc_finish_booking_alert','POST',{p_id:job.id,p_lease:job.lease,p_result:'retry',p_provider:null});return 'retry';}
+  const outcome=await deliver(enriched,env,send);await db('rpc/phc_finish_booking_alert','POST',{p_id:job.id,p_lease:job.lease,p_result:outcome.result,p_provider:outcome.provider||null});return outcome.result;}));
  return {processed:results.length,accepted:results.filter(x=>x==='accepted').length,configured:true};
 }
 module.exports={channels,details,request,deliver,dispatch};
