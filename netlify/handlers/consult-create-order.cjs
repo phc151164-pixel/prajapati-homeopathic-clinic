@@ -38,6 +38,11 @@ exports.handler=async(event)=>{
   if(!Number.isSafeInteger(amount)||amount<1)throw Error('Invalid authoritative amount');
   if(!holdId)throw Object.assign(new Error('Reservation did not return an ID'),{provider:'supabase'});
 
+  if(b.whatsappUpdates===true){
+   await supa('online_bookings?id=eq.'+encodeURIComponent(holdId)+'&status=eq.held','PATCH',{
+    whatsapp_updates_opt_in:true,whatsapp_opt_in_at:new Date().toISOString(),whatsapp_consent_version:'booking-whatsapp-v1'
+   });
+  }
   stage='razorpay_order';
   const order=await razorpay('orders','POST',{amount,currency:'INR',receipt:holdId.slice(0,32),notes:{booking_id:holdId}});
   if(!/^order_[A-Za-z0-9]+$/.test(order?.id||'')||order.amount!==amount||order.currency!=='INR')throw Object.assign(new Error('Payment order ID missing'),{provider:'razorpay'});
