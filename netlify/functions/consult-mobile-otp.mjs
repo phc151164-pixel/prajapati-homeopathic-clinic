@@ -5,10 +5,13 @@ import common from './_common.js';
 const {json, supa} = common;
 
 async function handler(event) {
-  if (event.httpMethod === 'GET') return json(200, {required: otp.enabled()});
+  if (event.httpMethod === 'GET') return json(200, {required: otp.enabled(), channel: otp.whatsapp() ? 'whatsapp' : 'sms'});
   if (event.httpMethod !== 'POST') return json(405, {error: 'Method not allowed.'});
   const authToken = process.env.MESSAGE_CENTRAL_AUTH_TOKEN;
-  if (!otp.enabled() || !authToken) return json(503, {error: 'Mobile verification is unavailable.'});
+  const whatsapp = otp.whatsapp();
+  const apiKey = process.env.FAST2SMS_API_KEY;
+  const otpId = process.env.FAST2SMS_BOOKING_OTP_ID;
+  if (!otp.enabled() || (whatsapp ? !apiKey || !otpId : !authToken)) return json(503, {error: 'Mobile verification is unavailable.'});
 
   let input;
   try { input = JSON.parse(event.body); } catch { return json(400, {error: 'Invalid request.'}); }
@@ -37,7 +40,32 @@ async function handler(event) {
   const send = action === 'send';
   const pending = send ? null : otp.read(challenge, 'challenge', mobile);
   if (!send && (action !== 'verify' || !pending || typeof code !== 'string' || !/^[0-9]{4,8}$/.test(code))) {
-    return json(400, {error: 'Enter the OTP from your latest SMS, or request a new one.'});
+    return json(400, {error: 'Enter the latest verification code, or request a new one.'});
+  }
+
+  if (whatsapp) {
+    try {
+      const response = await fetch('https://www.fast2sms.com/dev/otp/' + (send ? 'send' : 'verify'), {
+        method: 'POST',
+        headers: {Authorization: apiKey, 'Content-Type': 'application/json', Accept: 'application/json'},
+        body: JSON.stringify(send ? {mobile, otp_id: otpId, otp_expiry: 5, otp_length: 6} : {mobile, otp: code}),
+        redirect: 'error',
+        signal: AbortSignal.timeout(8000)
+      });
+      const result = await response.json();
+      if (response.ok && result?.return === true && Number(result.status_code) === 200) {
+        return json(200, send ? {challenge: otp.sign('challenge', mobile)} : {proof: otp.sign('verified', mobile)});
+      }
+      if (response.status === 429 || Number(result?.status_code) === 429) {
+        return json(429, {error: 'Too many OTP requests. Wait before trying again.'});
+      }
+      if (!send && [400, 404].includes(Number(result?.status_code ?? response.status))) {
+        return json(400, {error: 'OTP could not be verified. Check the code or request a new one.'});
+      }
+    } catch {
+      // Provider errors must not log codes or credentials.
+    }
+    return json(503, {error: 'WhatsApp verification is temporarily unavailable. Please try again.'});
   }
 
   const path = send ? 'send' : 'validateOtp';
