@@ -8,6 +8,7 @@ function channels(env=process.env,deployContext=require('./deploy-context.cjs').
  if(env.PHC_EMAIL_ALERTS_ENABLED==='true'&&env.RESEND_API_KEY&&env.PHC_ALERT_EMAIL_FROM)ready.push('email');
  const fast2smsReady=env.FAST2SMS_API_KEY&&/^\d+$/.test(env.FAST2SMS_PHONE_NUMBER_ID||'');
  if(env.PHC_WHATSAPP_ALERTS_ENABLED==='true'&&(fast2smsReady||env.WHATSAPP_ACCESS_TOKEN&&/^\d+$/.test(env.WHATSAPP_PHONE_NUMBER_ID||'')&&/^v\d+\.\d+$/.test(env.WHATSAPP_API_VERSION||'')&&/^[a-z0-9_]+$/.test(env.WHATSAPP_ALERT_TEMPLATE||'')&&/^[a-z]{2}(_[A-Z]{2})?$/.test(env.WHATSAPP_TEMPLATE_LANGUAGE||'')))ready.push('whatsapp');
+ if(env.PHC_PATIENT_WHATSAPP_ENABLED==='true'&&fast2smsReady)ready.push('patient_whatsapp');
  return ready;
 }
 function details(p){
@@ -18,9 +19,12 @@ function details(p){
 function request(job,env=process.env){
  if(job.source==='setup_test'){if(job.channel!=='email')throw Error('Invalid test channel');return {url:'https://api.resend.com/emails',options:{method:'POST',headers:{Authorization:'Bearer '+env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':'phc-booking-alert/'+job.id},body:JSON.stringify({from:env.PHC_ALERT_EMAIL_FROM,to:[EMAIL],subject:'PHC: booking notification setup test',text:'This is a test of Prajapati Homeopathic Clinic booking email notifications. No real appointment or payment was created. Future confirmed booking alerts will include patient name/mobile, slot, consultation type and payment status. Doctor dashboard: https://prajapatihomeopathicclinic.netlify.app/admin'})}};}
  const v=details(job.payload);
- if(job.channel==='whatsapp'&&env.FAST2SMS_API_KEY&&/^\d+$/.test(env.FAST2SMS_PHONE_NUMBER_ID||'')){
-  const values=[...v,job.payload.registrationNumber||'Not assigned'].map(value=>value.replace(/\|/g,' '));
-  const query=new URLSearchParams({message_id:'45849',phone_number_id:env.FAST2SMS_PHONE_NUMBER_ID,numbers:WHATSAPP.slice(2),variables_values:values.join('|')});
+ const patient=job.channel==='patient_whatsapp';
+ if((job.channel==='whatsapp'||patient)&&env.FAST2SMS_API_KEY&&/^\d+$/.test(env.FAST2SMS_PHONE_NUMBER_ID||'')){
+  const registrationNumber=job.payload.registrationNumber;
+  if(patient&&(job.payload.consentVersion!=='booking-whatsapp-v1'||!/^PHC-\d{6}$/.test(registrationNumber||'')||job.payload.mobile==='8103684642'))throw Error('Invalid patient confirmation');
+  const values=patient?[v[0],v[2],v[3],registrationNumber]:[...v,registrationNumber||'Not assigned'];
+  const query=new URLSearchParams({message_id:patient?'45848':'45849',phone_number_id:env.FAST2SMS_PHONE_NUMBER_ID,numbers:patient?job.payload.mobile:WHATSAPP.slice(2),variables_values:values.map(value=>value.replace(/\|/g,' ')).join('|')});
   return {url:'https://www.fast2sms.com/dev/whatsapp?'+query,options:{method:'GET',headers:{Authorization:env.FAST2SMS_API_KEY}},provider:'fast2sms'};
  }
  if(job.channel==='email')return {url:'https://api.resend.com/emails',options:{method:'POST',headers:{Authorization:'Bearer '+env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':'phc-booking-alert/'+job.id},body:JSON.stringify({from:env.PHC_ALERT_EMAIL_FROM,to:[EMAIL],subject:'PHC: confirmed appointment · '+job.payload.date+' '+job.payload.time,text:'New confirmed appointment\n\n'+['Patient','Mobile','Date','Time','Consultation','Amount','Payment','Booking reference'].map((label,i)=>label+': '+v[i]).join('\n')+'\n\nDoctor dashboard: https://prajapatihomeopathicclinic.netlify.app/admin'})}};
@@ -39,7 +43,7 @@ async function deliver(job,env=process.env,send=fetch){
  }catch{return {result:job.channel==='email'?'retry':'ambiguous'};}
 }
 async function addRegistrationNumber(job,db){
- if(job.channel!=='whatsapp'||!['online_paid','clinic_confirmed'].includes(job.source))return job;
+ if(!['whatsapp','patient_whatsapp'].includes(job.channel)||!['online_paid','clinic_confirmed'].includes(job.source))return job;
  details(job.payload);
  const reference=job.source==='online_paid'?'booking_id':'clinic_request_id';
  const visits=await db('phc_visits?select=phc_patients!phc_visits_patient_id_fkey(patient_code)&'+reference+'=eq.'+job.payload.bookingId,'GET');
