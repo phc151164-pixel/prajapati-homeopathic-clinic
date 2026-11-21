@@ -3,9 +3,12 @@ const {createHmac, timingSafeEqual} = require('node:crypto');
 const enabled = () => process.env.PHC_BOOKING_OTP_REQUIRED === 'true' ||
   (require('./deploy-context.cjs').context === 'deploy-preview' && Boolean(process.env.MESSAGE_CENTRAL_AUTH_TOKEN));
 
+const whatsapp = () => process.env.PHC_BOOKING_OTP_PROVIDER === 'fast2sms';
+const signingKey = () => whatsapp() ? process.env.FAST2SMS_API_KEY : process.env.MESSAGE_CENTRAL_AUTH_TOKEN;
+
 function digest(value) {
-  return createHmac('sha256', process.env.MESSAGE_CENTRAL_AUTH_TOKEN)
-    .update('phc-booking-otp-v1:' + value).digest('base64url');
+  return createHmac('sha256', signingKey())
+    .update((whatsapp() ? 'phc-booking-whatsapp-otp-v1:' : 'phc-booking-otp-v1:') + value).digest('base64url');
 }
 
 function sign(purpose, mobile, id = '') {
@@ -14,7 +17,7 @@ function sign(purpose, mobile, id = '') {
 }
 
 function read(token, purpose, mobile) {
-  if (!process.env.MESSAGE_CENTRAL_AUTH_TOKEN || typeof token !== 'string') return null;
+  if (!signingKey() || typeof token !== 'string') return null;
   const parts = token.split('.');
   if (parts.length !== 2) return null;
   const [value, signature] = parts;
@@ -29,4 +32,4 @@ function read(token, purpose, mobile) {
   }
 }
 
-module.exports = {enabled, sign, read};
+module.exports = {enabled, whatsapp, sign, read};
