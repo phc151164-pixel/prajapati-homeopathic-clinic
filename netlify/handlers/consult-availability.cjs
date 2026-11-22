@@ -7,8 +7,13 @@ exports.handler=async(event)=>{
   const date=event.queryStringParameters?.date;
   if(!safeDate(date))return json(400,{error:'Select a valid date'});
   const config=await schedule(date),times=config.slots;
+  const bookingFields='online_bookings?select=slot_time,status,held_until,razorpay_order_id';
+  const bookingFilter='&slot_date=eq.'+encodeURIComponent(date)+'&status=in.(held,paid)';
   const [rows,closures]=await Promise.all([
-   supa('online_bookings?select=slot_time,status,held_until,razorpay_order_id,checkout_deadline&slot_date=eq.'+encodeURIComponent(date)+'&status=in.(held,paid)'),
+   supa(bookingFields+',checkout_deadline'+bookingFilter).catch(error=>{
+    if(error.code!=='42703')throw error;
+    return supa(bookingFields+bookingFilter);
+   }),
    supa('phc_closures?select=slot_time&slot_date=eq.'+encodeURIComponent(date))
   ]);
   const now=Date.now();const occupied=new Map(rows.filter(b=>b.status==='paid'||(b.status==='held'&&(b.checkout_deadline ? Date.parse(b.checkout_deadline)>now : Boolean(b.razorpay_order_id)||Date.parse(b.held_until)>now))).map(b=>[b.slot_time,b.status]));
