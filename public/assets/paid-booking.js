@@ -233,6 +233,37 @@ form.addEventListener('submit',async(e)=>{
   new Razorpay(options).open();note('Complete payment in the secure Razorpay checkout.');
  }catch(err){note(err.message,true);await loadSlots()}finally{refreshing=false}
 });
+let nextField = null;
+let nextFieldGlow = null;
+function updateNextFieldGlow() {
+  const mobile = mobileInput.value.trim();
+  const followup = kind.value === 'followup' && method.value !== 'clinic';
+  const needsOtp = followup ? recoveringRegistration : method.value === 'online' && otpRequired;
+  let target = null;
+  if (availability?.ready && !refreshing && !otpBusy && !paymentInProgress) {
+    if (!date.value) target = date;
+    else if (!chosen) target = slotBox.querySelector('button:not(:disabled)') ? slotBox : null;
+    else if (!followup && nameInput.value.trim().length < 2) target = nameInput;
+    else if (!/^[0-9]{10}$/.test(mobile)) target = mobileInput;
+    else if (needsOtp && (verifiedMobile !== mobile || !mobileProof)) {
+      target = codeLabel.hidden ? sendOtp : codeInput.value.trim().length < 4 ? codeInput : verifyOtp;
+    } else if (followup && !registrationInput.value.trim()) target = registrationInput;
+    else if (!book.disabled) target = book;
+  } else if (!date.value && !refreshing) target = date;
+  if (target === nextField) return;
+  nextFieldGlow?.cancel();
+  nextField = target;
+  nextFieldGlow = target?.animate?.(
+    [{boxShadow: '0 0 0 2px rgba(8, 115, 68, 0.24), 0 0 12px rgba(8, 115, 68, 0.15)'}],
+    {duration: 150, fill: 'forwards'}
+  );
+}
+form.addEventListener('input', updateNextFieldGlow);
+form.addEventListener('change', updateNextFieldGlow);
+new MutationObserver(updateNextFieldGlow).observe(form, {
+  subtree: true, childList: true, attributes: true, attributeFilter: ['disabled', 'hidden', 'class', 'readonly']
+});
+updateNextFieldGlow();
 date.addEventListener('change',loadSlots);
 loadSlots();
 setInterval(()=>{if(document.visibilityState==='visible'&&!refreshing&&!chosen&&!paymentInProgress){loadSlots()}},60000);
