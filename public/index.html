@@ -224,13 +224,19 @@ body.treatment-modal-open{overflow:hidden}
 .doctor-profile{display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff;width:100%;}
 .doctor-portrait-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:clamp(4px,1vw,14px);width:100%;max-width:740px}
 .doctor-portrait-row .doctor-visual{width:100%;min-width:0}
-.doctor-typewriter{margin:0;font:700 clamp(.66rem,1.25vw,1.1rem)/1.4 ui-monospace,monospace;text-align:left;white-space:nowrap}
-.doctor-typewriter-green{color:#087344;--letters:10}
-.doctor-typewriter-blue{color:#175ba3;--letters:12}
-.doctor-typewriter span{display:block;clip-path:inset(0 100% 0 0);animation:doctor-typewriter 5s steps(var(--letters),end) infinite}
-.doctor-typewriter-blue span{animation-delay:.25s}
-@keyframes doctor-typewriter{0%{clip-path:inset(0 100% 0 0)}38%,76%{clip-path:inset(0 0 0 0)}100%{clip-path:inset(0 100% 0 0)}}
-@media(prefers-reduced-motion:reduce){.doctor-typewriter span{animation:none;clip-path:none}}
+.doctor-typewriter{margin:0;font:800 clamp(.72rem,1.65vw,1.55rem)/1.25 Arial,sans-serif;text-align:center;min-width:0}
+.doctor-typewriter-green{color:#087344;--letters:10;--word-width:5.8em}
+.doctor-typewriter-blue{color:#174a81;--letters:12;--word-width:6.6em}
+.doctor-typewriter span{display:inline-block;text-align:left;vertical-align:bottom;white-space:nowrap;overflow:hidden;box-sizing:content-box;border-right:2px solid currentColor;width:0;animation:doctor-typewriter 5s infinite,doctor-cursor .75s step-end infinite}
+@keyframes doctor-typewriter{0%{width:0;animation-timing-function:steps(var(--letters),end)}35%,70%{width:var(--word-width)}70%{animation-timing-function:steps(var(--letters),end)}95%,100%{width:0}}
+@keyframes doctor-cursor{50%{border-color:transparent}}
+@media(prefers-reduced-motion:reduce){.doctor-typewriter span{animation:none;width:auto;border:0}}
+.doctor-portrait-row{grid-template-columns:1fr minmax(0,2.4fr) 1fr}
+@media(max-width:540px){
+  .doctor-portrait-row{grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr)}
+  .doctor-typewriter{font-size:clamp(.62rem,2.5vw,.84rem)}
+}
+
 .doctor-visual{width:min(100%,440px);min-height:380px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;background:#fff;border:0;border-radius:0}
 .doctor-cutout{display:block;width:100%;height:475px;max-height:61vw;min-height:315px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 12px 12px rgba(2,62,33,.05));}
 .doctor-below{padding:12px 14px 18px;max-width:520px;background:#fff}
