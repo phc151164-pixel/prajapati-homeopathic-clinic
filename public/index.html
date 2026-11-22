@@ -222,21 +222,16 @@ body.treatment-modal-open{overflow:hidden}
 .hero-side{border:0!important;box-shadow:none!important;background:#fff!important;color:var(--text)!important;padding:0!important;border-radius:0!important;overflow:visible!important}
 .hero-side:before,.hero-side:after{display:none!important}
 .doctor-profile{display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff;width:100%;}
-.doctor-portrait-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:clamp(4px,1vw,14px);width:100%;max-width:740px}
+.doctor-portrait-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:clamp(4px,1vw,14px);width:100%;max-width:900px;container-type:inline-size}
 .doctor-portrait-row .doctor-visual{width:100%;min-width:0}
-.doctor-typewriter{margin:0;font:800 clamp(.72rem,1.65vw,1.55rem)/1.25 Arial,sans-serif;text-align:center;min-width:0}
-.doctor-typewriter-green{color:#087344;--letters:10;--word-width:5.8em}
-.doctor-typewriter-blue{color:#174a81;--letters:12;--word-width:6.6em}
-.doctor-typewriter span{display:inline-block;text-align:left;vertical-align:bottom;white-space:nowrap;overflow:hidden;box-sizing:content-box;border-right:2px solid currentColor;width:0;animation:doctor-typewriter 5s infinite,doctor-cursor .75s step-end infinite}
-@keyframes doctor-typewriter{0%{width:0;animation-timing-function:steps(var(--letters),end)}35%,70%{width:var(--word-width)}70%{animation-timing-function:steps(var(--letters),end)}95%,100%{width:0}}
-@keyframes doctor-cursor{50%{border-color:transparent}}
-@media(prefers-reduced-motion:reduce){.doctor-typewriter span{animation:none;width:auto;border:0}}
-.doctor-portrait-row{grid-template-columns:auto minmax(0,1fr) auto}
-.doctor-typewriter{width:calc(var(--word-width) + 2px)}
-@media(max-width:540px){
-  .doctor-typewriter{font-size:clamp(.62rem,2.5vw,.84rem)}
-}
-
+.doctor-typewriter{display:grid;margin:0;text-align:left;white-space:nowrap;font:800 clamp(1rem,4.8vw,2.6rem)/1.15 Arial,sans-serif;font-size:clamp(.95rem,5cqw,2.6rem);letter-spacing:-.045em}
+.doctor-typewriter-green{color:#087344}
+.doctor-typewriter-blue{color:#174a81}
+.doctor-typewriter::before,.doctor-typewriter span{grid-area:1/1}
+.doctor-typewriter::before{content:attr(data-word);visibility:hidden;padding-right:.18em}
+.doctor-typewriter span::after{content:'';display:inline-block;height:.88em;width:.075em;margin-left:.1em;background:#174a81;vertical-align:-.035em;animation:doctor-cursor .85s step-end infinite}
+@keyframes doctor-cursor{50%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.doctor-typewriter span::after{display:none}}
 .doctor-visual{width:min(100%,440px);min-height:380px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;background:#fff;border:0;border-radius:0}
 .doctor-cutout{display:block;width:100%;height:475px;max-height:61vw;min-height:315px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 12px 12px rgba(2,62,33,.05));}
 .doctor-below{padding:12px 14px 18px;max-width:520px;background:#fff}
@@ -389,10 +384,41 @@ body>main{position:relative;z-index:1}
 <section class="hero" id="home"><video aria-hidden="true" autoplay="" class="hero-video" loop="" muted="" playsinline="" poster="assets/phc-wellness-poster.webp" preload="metadata"><source src="assets/phc-wellness-loop.mp4" type="video/mp4"/></video><div aria-hidden="true" class="hero-video-tint"></div>
 <div class="container hero-grid">
 <aside class="hero-side"><div class="doctor-profile"><div class="doctor-portrait-row">
-<p class="doctor-typewriter doctor-typewriter-green"><span>Homeopathy</span></p>
+<p class="doctor-typewriter doctor-typewriter-green" data-word="Homeopathy" aria-label="Homeopathy"><span aria-hidden="true">Homeopathy</span></p>
 <div class="doctor-visual"><img alt="Dr. Umesh Prajapati" class="doctor-cutout" loading="eager" src="assets/doctor-portrait.webp"/></div>
-<p class="doctor-typewriter doctor-typewriter-blue"><span>Consultation</span></p>
-</div><div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><a class="btn btn-primary" href="#online-consultation">Book a Consultation →</a></div></div></aside>
+<p class="doctor-typewriter doctor-typewriter-blue" data-word="Consultation" aria-label="Consultation"><span aria-hidden="true">Consultation</span></p>
+</div>
+<script>
+(() => {
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (reducedMotion.matches) return;
+  document.querySelectorAll('.doctor-typewriter').forEach((label, index) => {
+    const word = label.dataset.word;
+    const text = label.querySelector('span');
+    let length = 0;
+    let deleting = false;
+    function typeNextLetter() {
+      if (reducedMotion.matches) {
+        text.textContent = word;
+        return;
+      }
+      text.textContent = word.slice(0, length);
+      if (!deleting && length === word.length) {
+        deleting = true;
+        setTimeout(typeNextLetter, 1500);
+      } else if (deleting && length === 0) {
+        deleting = false;
+        setTimeout(() => { length = 1; typeNextLetter(); }, 350);
+      } else {
+        length += deleting ? -1 : 1;
+        setTimeout(typeNextLetter, deleting ? 55 : 110);
+      }
+    }
+    text.textContent = '';
+    setTimeout(typeNextLetter, 150 + index * 220);
+  });
+})();
+</script><div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><a class="btn btn-primary" href="#online-consultation">Book a Consultation →</a></div></div></aside>
 <div class="hero-content">
 <span class="badge">Dr. Umesh Prajapati · B.H.M.S.</span>
 <h2>Personalised Consultations. A Caring Clinic Experience.</h2>
