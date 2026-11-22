@@ -1,3 +1,4 @@
+const {refundExpiredCheckout} = require('../lib/checkout-refund.cjs');
 const {bookingAmount}=require('../lib/clinic-config.cjs');
 const {json,supa,razorpay,crypto,fee,paymentConfigured} = require('./_common');
 // Always process authentic payments even if creation of NEW live orders is switched off.
@@ -30,6 +31,7 @@ exports.handler=async(event)=>{
   const matches=Array.isArray(collection?.items)?collection.items.filter(p=>p?.order_id===orderId&&p?.status==='captured'&&p?.amount===amount&&p?.currency==='INR'&&/^pay_[A-Za-z0-9]+$/.test(p.id||'')):[];
   if(matches.length!==1)return json(503,{error:'Payment requires reconciliation'});
   const confirmed=await supa('rpc/phc_confirm_paid_slot','POST',{p_order:orderId,p_payment:matches[0].id,p_amount:amount});
+  if(confirmed!==true&&await refundExpiredCheckout(orderId,matches[0].id,amount))return json(200,{received:true,refundRequested:true});
   if(confirmed!==true){console.error('PHC WEBHOOK: valid paid order not matched to a booking');return json(503,{error:'Payment requires clinic reconciliation'});}
   // No patient data, payment identifiers, signatures or secrets in success logs.
   console.info('PHC_WEBHOOK_CONFIRMED', JSON.stringify({event:webhook.event,status:200}));
