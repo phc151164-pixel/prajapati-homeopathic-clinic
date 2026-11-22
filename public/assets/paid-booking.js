@@ -82,12 +82,18 @@ const otpField = document.createElement('div');
 otpField.hidden = true;
 otpField.innerHTML = '<button type="button" class="btn btn-outline">Send OTP</button> <label hidden>Verification code <input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8"></label> <button type="button" class="btn btn-outline" hidden>Verify OTP</button>';
 mobileInput.parentElement.append(otpField);
-const whatsappConsent = document.createElement('input');
-whatsappConsent.type = 'checkbox';
-const whatsappConsentLabel = document.createElement('label');
-whatsappConsentLabel.append(whatsappConsent, ' Send my appointment confirmation on WhatsApp to this mobile number.');
-mobileInput.closest('label').after(whatsappConsentLabel);
-mobileInput.addEventListener('input', () => { whatsappConsent.checked = false; });
+const mobileLabel = mobileInput.closest('label');
+const nameLabel = nameInput.closest('label');
+const contactFields = document.createElement('div');
+contactFields.className = 'paid-fields';
+contactFields.style.gridTemplateColumns = 'minmax(0, 1fr)';
+nameLabel.before(contactFields);
+const notice = document.createElement('p');
+notice.className = 'paid-msg';
+notice.textContent = 'Your appointment confirmation will be sent on WhatsApp to this mobile number.';
+contactFields.append(nameLabel, mobileLabel, notice);
+
+
 const [sendOtp, codeLabel, verifyOtp] = otpField.children;
 const whatsappOtpHeading = document.createElement('p');
 whatsappOtpHeading.hidden = true;
@@ -184,6 +190,9 @@ async function runOtp(action) {
         note('Mobile number verified.');
       } else {
         note('Mobile number verified. You can continue to payment.');
+        const nextStep = chosen && !book.disabled ? book : chosen ? method : slotBox;
+        nextStep.scrollIntoView({block: 'center'});
+        if (nextStep !== slotBox) nextStep.focus({preventScroll: true});
       }
     }
   } catch (error) {
@@ -206,7 +215,7 @@ form.addEventListener('submit',async(e)=>{
  const registration = registrationInput.value.trim().toUpperCase();
  const name=nameInput.value.trim(),mobile=mobileInput.value.trim();if((!followup && name.length<2)||!/^[0-9]{10}$/.test(mobile)){note('Enter patient name and a valid 10-digit phone number.',true);return;}
  if(method.value==='clinic'){
-  const payload={date:date.value,time:chosen,mode:$('paidMode').value,name,mobile,kind:kind.value,whatsappUpdates:whatsappConsent.checked};const fingerprint=JSON.stringify(payload);
+  const payload={date:date.value,time:chosen,mode:$('paidMode').value,name,mobile,kind:kind.value,whatsappUpdates:true};const fingerprint=JSON.stringify(payload);
   if(clinicAttempt?.fingerprint!==fingerprint)clinicAttempt={fingerprint,key:crypto.randomUUID()};
   refreshing=true;book.disabled=true;note('Sending appointment request…');
   try{const res=await fetch('/.netlify/functions/consult-clinic-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,requestKey:clinicAttempt.key})});const data=await res.json();if(!res.ok)throw Error(data.error||'Request failed');await loadSlots();requestSummary.textContent=data.slotReserved?'The doctor has approved this request. Cash payment is still due.':'Request received. Your slot is NOT reserved yet. Contact the clinic for doctor approval. Reference: '+data.requestId;note('Clinic request acknowledged. See the request reference below.');}
@@ -218,7 +227,7 @@ form.addEventListener('submit',async(e)=>{
  if(!window.Razorpay){note('Payment gateway is still loading. Please try again.',true);return;}
  refreshing=true;book.disabled=true;note('Holding your time slot securely…');
  try{
-  const res=await fetch('/.netlify/functions/consult-create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:date.value,time:chosen,mode:$('paidMode').value,name,mobile,mobileProof,registration,kind:kind.value,whatsappUpdates:whatsappConsent.checked})});const data=await res.json();if(!res.ok)throw Error(data.error||'Booking failed');
+  const res=await fetch('/.netlify/functions/consult-create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:date.value,time:chosen,mode:$('paidMode').value,name,mobile,mobileProof,registration,kind:kind.value,whatsappUpdates:true})});const data=await res.json();if(!res.ok)throw Error(data.error||'Booking failed');
   paymentInProgress=true;
   const options={key:data.key,amount:data.amount,currency:'INR',name:'Prajapati Homeopathic Clinic',description:(data.mode==='video'?'Video':'Audio')+' consultation · '+data.date+' '+data.time,order_id:data.orderId,prefill:{name:followup?'':name,contact:'+91'+mobile},theme:{color:'#087344'},handler:confirmPayment,modal:{ondismiss:()=>{paymentInProgress=false;note('Payment window closed. Your time may remain reserved until payment is checked. If money was deducted, do not pay again; contact the clinic.');loadSlots();}}};
   new Razorpay(options).open();note('Complete payment in the secure Razorpay checkout.');
