@@ -222,18 +222,22 @@ body.treatment-modal-open{overflow:hidden}
 .hero-side{border:0!important;box-shadow:none!important;background:#fff!important;color:var(--text)!important;padding:0!important;border-radius:0!important;overflow:visible!important}
 .hero-side:before,.hero-side:after{display:none!important}
 .doctor-profile{display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff;width:100%;}
-.doctor-portrait-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:clamp(4px,1vw,14px);width:100%;max-width:900px;container-type:inline-size}
+.doctor-portrait-row{display:grid;grid-template-columns:minmax(0,1fr) min(440px,46%) minmax(0,1fr);align-items:center;gap:clamp(12px,2vw,28px);width:100%;max-width:1100px}
 .doctor-portrait-row .doctor-visual{width:100%;min-width:0}
-.hero .doctor-typewriter{display:grid;margin:0;text-align:left;white-space:nowrap;font:800 clamp(1rem,4.8vw,2.6rem)/1.15 Arial,sans-serif;font-size:clamp(1rem,6cqw,3rem);letter-spacing:-.045em}
-.hero .doctor-typewriter-green{color:#087344}
-.hero .doctor-typewriter-blue{color:#1759a5}
+.hero .doctor-tagline,.hero .doctor-typewriter{margin:0;font:800 clamp(1.5rem,3.3vw,3.25rem)/1.12 Arial,sans-serif;letter-spacing:-.045em}
+.hero .doctor-tagline{color:#1759a5;text-align:right}
+.hero .doctor-typewriter{color:#087344;text-align:left;display:grid;overflow-wrap:anywhere}
 .doctor-typewriter::before,.doctor-typewriter span{grid-area:1/1}
-.doctor-typewriter::before{content:attr(data-word);visibility:hidden;padding-right:.18em}
-.doctor-typewriter span::after{content:'';display:inline-block;height:.88em;width:.075em;margin-left:.1em;background:#174a81;vertical-align:-.035em;animation:doctor-cursor .85s step-end infinite}
+.doctor-typewriter::before{content:'Prajapati Homeopathic Clinic';visibility:hidden}
+.doctor-typewriter.is-typing span::after{content:'';display:inline-block;height:.88em;width:.075em;margin-left:.1em;background:#1759a5;vertical-align:-.035em;animation:doctor-cursor .85s step-end infinite}
 @keyframes doctor-cursor{50%{opacity:0}}
-.doctor-typewriter:not(.is-typing) span::after{display:none}
-.doctor-typewriter-play{display:none;margin:6px auto 0}
+.doctor-typewriter-play{display:none}
 @media(prefers-reduced-motion:reduce){.doctor-typewriter-play:not([hidden]){display:inline-flex}}
+@media(max-width:960px){
+  .doctor-portrait-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .doctor-portrait-row .doctor-visual{grid-row:1;grid-column:1/-1;width:min(100%,440px);justify-self:center}
+  .hero .doctor-tagline,.hero .doctor-typewriter{font-size:clamp(1.15rem,4.4vw,2.25rem)}
+}
 .doctor-visual{width:min(100%,440px);min-height:380px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;background:#fff;border:0;border-radius:0}
 .doctor-cutout{display:block;width:100%;height:475px;max-height:61vw;min-height:315px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 12px 12px rgba(2,62,33,.05));}
 .doctor-below{padding:12px 14px 18px;max-width:520px;background:#fff}
@@ -386,42 +390,46 @@ body>main{position:relative;z-index:1}
 <section class="hero" id="home"><video aria-hidden="true" autoplay="" class="hero-video" loop="" muted="" playsinline="" poster="assets/phc-wellness-poster.webp" preload="metadata"><source src="assets/phc-wellness-loop.mp4" type="video/mp4"/></video><div aria-hidden="true" class="hero-video-tint"></div>
 <div class="container hero-grid">
 <aside class="hero-side"><div class="doctor-profile"><div class="doctor-portrait-row">
-<p class="doctor-typewriter doctor-typewriter-green" data-word="Homeopathy" aria-label="Homeopathy"><span aria-hidden="true">Homeopathy</span></p>
+<p class="doctor-tagline">Personalised Homeopathic Care</p>
 <div class="doctor-visual"><img alt="Dr. Umesh Prajapati" class="doctor-cutout" loading="eager" src="assets/doctor-portrait.webp"/></div>
-<p class="doctor-typewriter doctor-typewriter-blue" data-word="Consultation" aria-label="Consultation"><span aria-hidden="true">Consultation</span></p>
+<p class="doctor-typewriter" aria-label="Gentle Healing, Pure Remedies, Prajapati Homeopathic Clinic, Ratlam"><span aria-hidden="true">Gentle Healing</span></p>
 </div>
 <button class="btn btn-light doctor-typewriter-play" type="button">Play text animation</button>
 <script>
 (() => {
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const label = document.querySelector('.doctor-typewriter');
+  const text = label.querySelector('span');
   const play = document.querySelector('.doctor-typewriter-play');
-  function startTyping() {
-    play?.setAttribute('hidden', '');
-    document.querySelectorAll('.doctor-typewriter').forEach((label, index) => {
-    const word = label.dataset.word;
-    const text = label.querySelector('span');
-    let length = 0;
-    let deleting = false;
-    function typeNextLetter() {
-      text.textContent = word.slice(0, length);
-      if (!deleting && length === word.length) {
-        deleting = true;
-        setTimeout(typeNextLetter, 1500);
-      } else if (deleting && length === 0) {
-        deleting = false;
-        setTimeout(() => { length = 1; typeNextLetter(); }, 350);
-      } else {
-        length += deleting ? -1 : 1;
-        setTimeout(typeNextLetter, deleting ? 55 : 110);
-      }
+  const phrases = ['Gentle Healing', 'Pure Remedies', 'Prajapati Homeopathic Clinic', 'Ratlam'];
+  let index = 0;
+  let length = 0;
+  let deleting = false;
+
+  function typeNextLetter() {
+    const phrase = phrases[index];
+    text.textContent = phrase.slice(0, length);
+    if (!deleting && length === phrase.length) {
+      deleting = true;
+      setTimeout(typeNextLetter, 1500);
+    } else if (deleting && length === 0) {
+      deleting = false;
+      index = (index + 1) % phrases.length;
+      setTimeout(typeNextLetter, 300);
+    } else {
+      length += deleting ? -1 : 1;
+      setTimeout(typeNextLetter, deleting ? 45 : 85);
     }
-    label.classList.add('is-typing');
-    text.textContent = '';
-    setTimeout(typeNextLetter, 150 + index * 220);
-    });
   }
-  if (reducedMotion.matches) play?.addEventListener('click', startTyping, {once: true});
-  else startTyping();
+
+  function startTyping() {
+    play.hidden = true;
+    label.classList.add('is-typing');
+    typeNextLetter();
+  }
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    play.addEventListener('click', startTyping, {once: true});
+  } else startTyping();
 })();
 </script><div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><a class="btn btn-primary" href="#online-consultation">Book a Consultation →</a></div></div></aside>
 <div class="hero-content">
