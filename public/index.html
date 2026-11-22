@@ -222,6 +222,15 @@ body.treatment-modal-open{overflow:hidden}
 .hero-side{border:0!important;box-shadow:none!important;background:#fff!important;color:var(--text)!important;padding:0!important;border-radius:0!important;overflow:visible!important}
 .hero-side:before,.hero-side:after{display:none!important}
 .doctor-profile{display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff;width:100%;}
+.doctor-portrait-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:clamp(4px,1vw,14px);width:100%;max-width:740px}
+.doctor-portrait-row .doctor-visual{width:100%;min-width:0}
+.doctor-typewriter{margin:0;font:700 clamp(.66rem,1.25vw,1.1rem)/1.4 ui-monospace,monospace;text-align:left;white-space:nowrap}
+.doctor-typewriter-green{color:#087344;--letters:10}
+.doctor-typewriter-blue{color:#175ba3;--letters:12}
+.doctor-typewriter span{display:block;clip-path:inset(0 100% 0 0);animation:doctor-typewriter 5s steps(var(--letters),end) infinite}
+.doctor-typewriter-blue span{animation-delay:.25s}
+@keyframes doctor-typewriter{0%{clip-path:inset(0 100% 0 0)}38%,76%{clip-path:inset(0 0 0 0)}100%{clip-path:inset(0 100% 0 0)}}
+@media(prefers-reduced-motion:reduce){.doctor-typewriter span{animation:none;clip-path:none}}
 .doctor-visual{width:min(100%,440px);min-height:380px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;background:#fff;border:0;border-radius:0}
 .doctor-cutout{display:block;width:100%;height:475px;max-height:61vw;min-height:315px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 12px 12px rgba(2,62,33,.05));}
 .doctor-below{padding:12px 14px 18px;max-width:520px;background:#fff}
@@ -373,7 +382,11 @@ body>main{position:relative;z-index:1}
 <div class="page-scroll-track" role="progressbar" aria-label="Page scroll progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="page-scroll-fill"></span></div><main>
 <section class="hero" id="home"><video aria-hidden="true" autoplay="" class="hero-video" loop="" muted="" playsinline="" poster="assets/phc-wellness-poster.webp" preload="metadata"><source src="assets/phc-wellness-loop.mp4" type="video/mp4"/></video><div aria-hidden="true" class="hero-video-tint"></div>
 <div class="container hero-grid">
-<aside class="hero-side"><div class="doctor-profile"><div class="doctor-visual"><img alt="Dr. Umesh Prajapati" class="doctor-cutout" loading="eager" src="assets/doctor-portrait.webp"/></div><div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><a class="btn btn-primary" href="#online-consultation">Book a Consultation →</a></div></div></aside>
+<aside class="hero-side"><div class="doctor-profile"><div class="doctor-portrait-row">
+<p class="doctor-typewriter doctor-typewriter-green"><span>Homeopathy</span></p>
+<div class="doctor-visual"><img alt="Dr. Umesh Prajapati" class="doctor-cutout" loading="eager" src="assets/doctor-portrait.webp"/></div>
+<p class="doctor-typewriter doctor-typewriter-blue"><span>Consultation</span></p>
+</div><div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><a class="btn btn-primary" href="#online-consultation">Book a Consultation →</a></div></div></aside>
 <div class="hero-content">
 <span class="badge">Dr. Umesh Prajapati · B.H.M.S.</span>
 <h2>Personalised Consultations. A Caring Clinic Experience.</h2>
