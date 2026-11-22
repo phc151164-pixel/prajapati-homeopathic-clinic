@@ -11,8 +11,8 @@ async function handler(event) {
   if (event.httpMethod !== 'POST') return json(405, {error: 'Method not allowed.'});
   const authToken = process.env.MESSAGE_CENTRAL_AUTH_TOKEN;
   const whatsapp = otp.whatsapp();
-  const apiKey = process.env.FAST2SMS_API_KEY;
-  const otpId = process.env.FAST2SMS_BOOKING_OTP_ID;
+  const apiKey = process.env.FAST2SMS_API_KEY?.trim();
+  const otpId = process.env.FAST2SMS_BOOKING_OTP_ID?.trim();
   if (!otp.enabled() || (whatsapp ? !apiKey || !otpId : !authToken)) return json(503, {error: 'Mobile verification is unavailable.'});
 
   let input;
@@ -57,7 +57,18 @@ async function handler(event) {
       const requestId = response.headers.get('x-request-id');
       const result = await response.json().catch(() => null);
       if (requirePreviewDiagnostics() && !(response.ok && result?.return === true && Number(result.status_code) === 200)) {
+        const message = [result?.message, result?.error].flat().filter(value => typeof value === 'string').join(' ');
+        const reason = [
+          [/invalid otp id/i, 'invalid_otp_id'],
+          [/template.*not approved/i, 'template_not_approved'],
+          [/please wait|resend limit/i, 'resend_limit'],
+          [/insufficient.*balance/i, 'insufficient_balance'],
+          [/not active|not connected/i, 'sender_unavailable'],
+          [/authorization key/i, 'authorization_error'],
+          [/variables_values|variable/i, 'template_variables']
+        ].find(([pattern]) => pattern.test(message))?.[1] ?? 'unknown';
         console.warn('Fast2SMS OTP response', {
+          reason,
           operation: send ? 'send' : 'verify',
           httpStatus: response.status,
           providerStatus: /^\d{3}$/.test(String(result?.status_code)) ? Number(result.status_code) : null,
