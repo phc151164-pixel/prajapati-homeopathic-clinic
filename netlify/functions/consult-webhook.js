@@ -28,9 +28,10 @@ exports.handler=async(event)=>{
    // Retry later: a capture webhook may arrive before the whole order is marked paid.
    return json(503,{error:'Payment not fully settled yet'});
   }
-  const matches=Array.isArray(collection?.items)?collection.items.filter(p=>p?.order_id===orderId&&p?.status==='captured'&&p?.amount===amount&&p?.currency==='INR'&&/^pay_[A-Za-z0-9]+$/.test(p.id||'')):[];
+  const matches=Array.isArray(collection?.items)?collection.items.filter(p=>p?.order_id===orderId&&['captured','refunded'].includes(p?.status)&&p?.amount===amount&&p?.currency==='INR'&&/^pay_[A-Za-z0-9]+$/.test(p.id||'')):[];
   if(matches.length!==1)return json(503,{error:'Payment requires reconciliation'});
-  const confirmed=await supa('rpc/phc_confirm_paid_slot','POST',{p_order:orderId,p_payment:matches[0].id,p_amount:amount});
+  // A retry can arrive after the checkout callback has already refunded the payment.
+  const confirmed=matches[0].status==='refunded'?false:await supa('rpc/phc_confirm_paid_slot','POST',{p_order:orderId,p_payment:matches[0].id,p_amount:amount});
   if(confirmed!==true&&await refundExpiredCheckout(orderId,matches[0].id,amount))return json(200,{received:true,refundRequested:true});
   if(confirmed!==true){console.error('PHC WEBHOOK: valid paid order not matched to a booking');return json(503,{error:'Payment requires clinic reconciliation'});}
   // No patient data, payment identifiers, signatures or secrets in success logs.
