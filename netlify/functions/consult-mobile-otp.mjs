@@ -7,7 +7,13 @@ const {json, supa} = common;
 const requirePreviewDiagnostics = () => deployContext.context === 'deploy-preview';
 
 async function handler(event) {
-  if (event.httpMethod === 'GET') return json(200, {required: otp.enabled(), channel: otp.whatsapp() ? 'whatsapp' : 'sms'});
+  if (event.httpMethod === 'GET') {
+    const settings = {required: otp.enabled(), channel: otp.whatsapp() ? 'whatsapp' : 'sms'};
+    if (requirePreviewDiagnostics() && otp.whatsapp()) {
+      settings.otpIdMatches = process.env.FAST2SMS_BOOKING_OTP_ID?.trim() === 'e0331fdea4';
+    }
+    return json(200, settings);
+  }
   if (event.httpMethod !== 'POST') return json(405, {error: 'Method not allowed.'});
   const authToken = process.env.MESSAGE_CENTRAL_AUTH_TOKEN;
   const whatsapp = otp.whatsapp();
