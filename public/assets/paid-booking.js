@@ -39,7 +39,7 @@ function formatEnd(t){const [h,m]=t.split(':').map(Number);const total=h*60+m+(a
 async function confirmPayment(response){
   paymentInProgress=false;
   try{const res=await fetch('/.netlify/functions/consult-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:response.razorpay_order_id,paymentId:response.razorpay_payment_id,signature:response.razorpay_signature})});const result=await res.json();
-   if(result.status==='confirmed')note('Payment verified! Your appointment is confirmed. The clinic will arrange your call.');else note(result.message||result.error||'Payment confirmation pending. Contact the clinic; do not pay twice.',true);
+   if(result.status==='confirmed')note('Payment verified! Your appointment is confirmed. The clinic will arrange your call.');else if(result.status==='refund_requested')note(result.message);else note(result.message||result.error||'Payment confirmation pending. Contact the clinic; do not pay twice.',true);
   }catch{note('Payment may have been received, but confirmation is delayed. Contact the clinic and do not pay again.',true)}
   await loadSlots();
 }
@@ -229,8 +229,8 @@ form.addEventListener('submit',async(e)=>{
  try{
   const res=await fetch('/.netlify/functions/consult-create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:date.value,time:chosen,mode:$('paidMode').value,name,mobile,mobileProof,registration,kind:kind.value,whatsappUpdates:true})});const data=await res.json();if(!res.ok)throw Error(data.error||'Booking failed');
   paymentInProgress=true;
-  const options={key:data.key,amount:data.amount,currency:'INR',name:'Prajapati Homeopathic Clinic',description:(data.mode==='video'?'Video':'Audio')+' consultation · '+data.date+' '+data.time,order_id:data.orderId,prefill:{name:followup?'':name,contact:'+91'+mobile},theme:{color:'#087344'},handler:confirmPayment,modal:{ondismiss:()=>{paymentInProgress=false;note('Payment window closed. Your time may remain reserved until payment is checked. If money was deducted, do not pay again; contact the clinic.');loadSlots();}}};
-  new Razorpay(options).open();note('Complete payment in the secure Razorpay checkout.');
+  const options={key:data.key,amount:data.amount,currency:'INR',name:'Prajapati Homeopathic Clinic',description:(data.mode==='video'?'Video':'Audio')+' consultation · '+data.date+' '+data.time,order_id:data.orderId,prefill:{name:followup?'':name,contact:'+91'+mobile},theme:{color:'#087344'},handler:confirmPayment,modal:{ondismiss:()=>{paymentInProgress=false;note('Payment window closed. Unconfirmed slots reopen after two minutes. If you were charged, wait for confirmation or a refund before paying again.');loadSlots();}}};
+  new Razorpay(options).open();note('Complete payment within two minutes in the secure Razorpay checkout.');
  }catch(err){note(err.message,true);await loadSlots()}finally{refreshing=false}
 });
 let nextField = null;
