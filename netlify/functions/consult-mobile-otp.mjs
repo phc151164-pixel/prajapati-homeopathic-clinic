@@ -1,9 +1,10 @@
 import adapter from '../lib/request-adapter.cjs';
 import otp from '../lib/booking-otp.cjs';
+import deployContext from '../lib/deploy-context.cjs';
 import common from './_common.js';
 
 const {json, supa} = common;
-const requirePreviewDiagnostics = () => process.env.CONTEXT === 'deploy-preview';
+const requirePreviewDiagnostics = () => deployContext.context === 'deploy-preview';
 
 async function handler(event) {
   if (event.httpMethod === 'GET') return json(200, {required: otp.enabled(), channel: otp.whatsapp() ? 'whatsapp' : 'sms'});
