@@ -19,9 +19,9 @@ const supa = async (path, method='GET', body) => {
   const txt=await res.text();let data;try{data=txt?JSON.parse(txt):null}catch{data={message:'Unexpected database response'}}
   if(!res.ok){const e=new Error(data.message||data.details||'Database request failed');e.status=res.status; e.code=data.code; e.provider='supabase';throw e;}return data;
 };
-const razorpay=async(path,method='GET',body)=>{
+const razorpay=async(path,method='GET',body,extraHeaders={})=>{
   const auth=Buffer.from(process.env.RAZORPAY_KEY_ID+':'+process.env.RAZORPAY_KEY_SECRET).toString('base64');
-  const res=await fetch('https://api.razorpay.com/v1/'+path,{method,headers:{Authorization:'Basic '+auth,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+  const res=await fetch('https://api.razorpay.com/v1/'+path,{method,headers:{Authorization:'Basic '+auth,'Content-Type':'application/json',...extraHeaders},body:body===undefined?undefined:JSON.stringify(body)});
   const data=await res.json();if(!res.ok){const err=new Error(data?.error?.description||'Payment gateway error');err.status=res.status;err.code=data?.error?.code;err.provider='razorpay';throw err;}return data;
 };
 const safeDate = d => {

@@ -1,3 +1,4 @@
+const {refundExpiredCheckout} = require('../lib/checkout-refund.cjs');
 const {bookingAmount}=require('../lib/clinic-config.cjs');
 const {json,paymentConfigured,supa,razorpay,crypto,fee} = require('./_common');
 exports.handler=async(event)=>{
@@ -11,9 +12,10 @@ exports.handler=async(event)=>{
   if(!crypto.timingSafeEqual(Buffer.from(expected),Buffer.from(p.signature.toLowerCase())))return json(400,{error:'Invalid payment verification signature'});
   const amount=await bookingAmount(p.orderId);
   const [order,payment]=await Promise.all([razorpay('orders/'+encodeURIComponent(p.orderId)),razorpay('payments/'+encodeURIComponent(p.paymentId))]);
-  if(order.id!==p.orderId||payment.id!==p.paymentId||order.status!=='paid'||order.amount_paid!==amount||payment.status!=='captured'||payment.order_id!==p.orderId||payment.amount!==amount||order.amount!==amount||order.currency!=='INR'||payment.currency!=='INR')return json(202,{status:'pending',message:'Payment is processing. Please contact the clinic if it was deducted but confirmation is delayed.'});
-  const result=await supa('rpc/phc_confirm_paid_slot','POST',{p_order:p.orderId,p_payment:p.paymentId,p_amount:amount});
+  if(order.id!==p.orderId||payment.id!==p.paymentId||order.status!=='paid'||order.amount_paid!==amount||!['captured','refunded'].includes(payment.status)||payment.order_id!==p.orderId||payment.amount!==amount||order.amount!==amount||order.currency!=='INR'||payment.currency!=='INR')return json(202,{status:'pending',message:'Payment is processing. Please contact the clinic if it was deducted but confirmation is delayed.'});
+  const result=payment.status==='refunded'?false:await supa('rpc/phc_confirm_paid_slot','POST',{p_order:p.orderId,p_payment:p.paymentId,p_amount:amount});
   if(result===true)return json(200,{status:'confirmed',message:'Payment verified. Your slot is booked.'});
+  if(await refundExpiredCheckout(p.orderId,p.paymentId,amount))return json(200,{status:'refund_requested',message:'The slot hold expired. Your refund has been requested.'});
   return json(202,{status:'pending',message:'Payment received, but slot confirmation requires clinic assistance. Please contact the clinic; do not pay again.'});
  }catch(e){console.error('PHC VERIFY ERROR:', 'provider:',e.provider||'unknown','status:',e.status||'none','code:',e.code||'none');return json(500,{error:'Unable to confirm payment automatically. Do not pay again if already charged; contact the clinic.'})}
 };

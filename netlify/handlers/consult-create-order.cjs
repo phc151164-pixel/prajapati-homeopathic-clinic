@@ -1,7 +1,20 @@
 const bookingOtp = require('../lib/booking-otp.cjs');
 const {enabled,schedule,future}=require('../lib/clinic-config.cjs');
 const {json,configured,supa,razorpay,validSlot,fee} = require('../functions/_common');
+const {context}=require('../lib/deploy-context.cjs');
 exports.handler=async(event)=>{
+ if(context==='deploy-preview'){
+  const testConfigured=configured()&&process.env.RAZORPAY_KEY_ID.startsWith('rzp_test_')&&
+   process.env.SUPABASE_URL?.trim().replace(/\/$/,'')==='https://cefhdbqlzuxvnmktyxyk.supabase.co';
+  if(event.httpMethod==='GET'){
+   if(!testConfigured)return json(503,{testReady:false});
+   try{
+    await razorpay('orders?count=1');
+    return json(200,{testReady:true});
+   }catch{return json(503,{testReady:false});}
+  }
+  if(!testConfigured)return json(503,{error:'Test checkout is unavailable in this preview.'});
+ }
  if(event.httpMethod!=='POST')return json(405,{error:'Method not allowed'});
  if(!configured())return json(503,{error:'Online booking setup is incomplete.'});
  if((event.body||'').length>4096)return json(413,{error:'Request too large'});
