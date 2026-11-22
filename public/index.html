@@ -231,9 +231,9 @@ body.treatment-modal-open{overflow:hidden}
 @keyframes doctor-typewriter{0%{width:0;animation-timing-function:steps(var(--letters),end)}35%,70%{width:var(--word-width)}70%{animation-timing-function:steps(var(--letters),end)}95%,100%{width:0}}
 @keyframes doctor-cursor{50%{border-color:transparent}}
 @media(prefers-reduced-motion:reduce){.doctor-typewriter span{animation:none;width:auto;border:0}}
-.doctor-portrait-row{grid-template-columns:1fr minmax(0,2.4fr) 1fr}
+.doctor-portrait-row{grid-template-columns:auto minmax(0,1fr) auto}
+.doctor-typewriter{width:calc(var(--word-width) + 2px)}
 @media(max-width:540px){
-  .doctor-portrait-row{grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr)}
   .doctor-typewriter{font-size:clamp(.62rem,2.5vw,.84rem)}
 }
 
