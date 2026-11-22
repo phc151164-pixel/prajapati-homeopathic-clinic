@@ -224,14 +224,16 @@ body.treatment-modal-open{overflow:hidden}
 .doctor-profile{display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff;width:100%;}
 .doctor-portrait-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:clamp(4px,1vw,14px);width:100%;max-width:900px;container-type:inline-size}
 .doctor-portrait-row .doctor-visual{width:100%;min-width:0}
-.doctor-typewriter{display:grid;margin:0;text-align:left;white-space:nowrap;font:800 clamp(1rem,4.8vw,2.6rem)/1.15 Arial,sans-serif;font-size:clamp(.95rem,5cqw,2.6rem);letter-spacing:-.045em}
-.doctor-typewriter-green{color:#087344}
-.doctor-typewriter-blue{color:#174a81}
+.hero .doctor-typewriter{display:grid;margin:0;text-align:left;white-space:nowrap;font:800 clamp(1rem,4.8vw,2.6rem)/1.15 Arial,sans-serif;font-size:clamp(1rem,6cqw,3rem);letter-spacing:-.045em}
+.hero .doctor-typewriter-green{color:#087344}
+.hero .doctor-typewriter-blue{color:#1759a5}
 .doctor-typewriter::before,.doctor-typewriter span{grid-area:1/1}
 .doctor-typewriter::before{content:attr(data-word);visibility:hidden;padding-right:.18em}
 .doctor-typewriter span::after{content:'';display:inline-block;height:.88em;width:.075em;margin-left:.1em;background:#174a81;vertical-align:-.035em;animation:doctor-cursor .85s step-end infinite}
 @keyframes doctor-cursor{50%{opacity:0}}
-@media(prefers-reduced-motion:reduce){.doctor-typewriter span::after{display:none}}
+.doctor-typewriter:not(.is-typing) span::after{display:none}
+.doctor-typewriter-play{display:none;margin:6px auto 0}
+@media(prefers-reduced-motion:reduce){.doctor-typewriter-play:not([hidden]){display:inline-flex}}
 .doctor-visual{width:min(100%,440px);min-height:380px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;background:#fff;border:0;border-radius:0}
 .doctor-cutout{display:block;width:100%;height:475px;max-height:61vw;min-height:315px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 12px 12px rgba(2,62,33,.05));}
 .doctor-below{padding:12px 14px 18px;max-width:520px;background:#fff}
@@ -388,20 +390,19 @@ body>main{position:relative;z-index:1}
 <div class="doctor-visual"><img alt="Dr. Umesh Prajapati" class="doctor-cutout" loading="eager" src="assets/doctor-portrait.webp"/></div>
 <p class="doctor-typewriter doctor-typewriter-blue" data-word="Consultation" aria-label="Consultation"><span aria-hidden="true">Consultation</span></p>
 </div>
+<button class="btn btn-light doctor-typewriter-play" type="button">Play text animation</button>
 <script>
 (() => {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  if (reducedMotion.matches) return;
-  document.querySelectorAll('.doctor-typewriter').forEach((label, index) => {
+  const play = document.querySelector('.doctor-typewriter-play');
+  function startTyping() {
+    play?.setAttribute('hidden', '');
+    document.querySelectorAll('.doctor-typewriter').forEach((label, index) => {
     const word = label.dataset.word;
     const text = label.querySelector('span');
     let length = 0;
     let deleting = false;
     function typeNextLetter() {
-      if (reducedMotion.matches) {
-        text.textContent = word;
-        return;
-      }
       text.textContent = word.slice(0, length);
       if (!deleting && length === word.length) {
         deleting = true;
@@ -414,9 +415,13 @@ body>main{position:relative;z-index:1}
         setTimeout(typeNextLetter, deleting ? 55 : 110);
       }
     }
+    label.classList.add('is-typing');
     text.textContent = '';
     setTimeout(typeNextLetter, 150 + index * 220);
-  });
+    });
+  }
+  if (reducedMotion.matches) play?.addEventListener('click', startTyping, {once: true});
+  else startTyping();
 })();
 </script><div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><a class="btn btn-primary" href="#online-consultation">Book a Consultation →</a></div></div></aside>
 <div class="hero-content">
