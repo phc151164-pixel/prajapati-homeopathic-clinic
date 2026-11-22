@@ -3,6 +3,7 @@ import otp from '../lib/booking-otp.cjs';
 import common from './_common.js';
 
 const {json, supa} = common;
+const requirePreviewDiagnostics = () => process.env.CONTEXT === 'deploy-preview';
 
 async function handler(event) {
   if (event.httpMethod === 'GET') return json(200, {required: otp.enabled(), channel: otp.whatsapp() ? 'whatsapp' : 'sms'});
@@ -52,7 +53,17 @@ async function handler(event) {
         redirect: 'error',
         signal: AbortSignal.timeout(8000)
       });
-      const result = await response.json();
+      const requestId = response.headers.get('x-request-id');
+      const result = await response.json().catch(() => null);
+      if (requirePreviewDiagnostics() && !(response.ok && result?.return === true && Number(result.status_code) === 200)) {
+        console.warn('Fast2SMS OTP response', {
+          operation: send ? 'send' : 'verify',
+          httpStatus: response.status,
+          providerStatus: /^\d{3}$/.test(String(result?.status_code)) ? Number(result.status_code) : null,
+          hasJsonBody: result !== null,
+          hasRequestId: Boolean(requestId)
+        });
+      }
       if (response.ok && result?.return === true && Number(result.status_code) === 200) {
         return json(200, send ? {challenge: otp.sign('challenge', mobile)} : {proof: otp.sign('verified', mobile)});
       }
@@ -62,8 +73,10 @@ async function handler(event) {
       if (!send && [400, 404].includes(Number(result?.status_code ?? response.status))) {
         return json(400, {error: 'OTP could not be verified. Check the code or request a new one.'});
       }
-    } catch {
-      // Provider errors must not log codes or credentials.
+    } catch (error) {
+      if (requirePreviewDiagnostics()) {
+        console.warn('Fast2SMS OTP request failed', {operation: send ? 'send' : 'verify', timedOut: error?.name === 'TimeoutError'});
+      }
     }
     return json(503, {error: 'WhatsApp verification is temporarily unavailable. Please try again.'});
   }
