@@ -89,6 +89,10 @@ whatsappConsentLabel.append(whatsappConsent, ' Send my appointment confirmation 
 mobileInput.closest('label').after(whatsappConsentLabel);
 mobileInput.addEventListener('input', () => { whatsappConsent.checked = false; });
 const [sendOtp, codeLabel, verifyOtp] = otpField.children;
+const whatsappOtpHeading = document.createElement('p');
+whatsappOtpHeading.hidden = true;
+whatsappOtpHeading.textContent = 'Prajapati Homeopathic Clinic Online Appointment OTP';
+otpField.prepend(whatsappOtpHeading);
 const codeInput = codeLabel.querySelector('input');
 
 function resetOtp() {
@@ -100,7 +104,10 @@ function resetOtp() {
 mobileInput.addEventListener('input', resetOtp);
 fetch(otpEndpoint).then(response => response.json()).then(config => {
   otpRequired = config.required === true;
-  if (config.channel === 'whatsapp') sendOtp.textContent = 'Send WhatsApp OTP';
+  if (config.channel === 'whatsapp') {
+    whatsappOtpHeading.hidden = false;
+    sendOtp.textContent = 'Send WhatsApp OTP';
+  }
   updateBookingFields();
 }).catch(() => {});
 
