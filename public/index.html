@@ -231,8 +231,9 @@ body.treatment-modal-open{overflow:hidden}
 .doctor-typing-right{grid-area:right}
 .hero .doctor-typewriter{margin:0 auto;display:grid;place-items:start center;min-height:2.35em;max-width:100%;color:#087344;font:800 clamp(1.05rem,4.3vw,2rem)/1.17 Arial,sans-serif;letter-spacing:-.025em}
 .hero .doctor-typing-right .doctor-typewriter{color:#1759a5}
-.doctor-typewriter::before,.doctor-typewriter span{grid-area:1/1;overflow-wrap:normal;word-break:normal}
+.doctor-typewriter::before,.doctor-typewriter::after,.doctor-typewriter span{grid-area:1/1;overflow-wrap:normal;word-break:normal}
 .doctor-typewriter::before{content:'Prajapati Homeopathic Clinic';visibility:hidden}
+.doctor-typewriter::after{content:'YOUR HEALTH, OUR RESPONSIBILITY';visibility:hidden}
 .doctor-typewriter.is-typing span::after{content:'';display:inline-block;height:.88em;width:.075em;margin-left:.1em;background:#1759a5;vertical-align:-.035em}
 @media(min-width:961px){
   .doctor-portrait-row{grid-template-columns:minmax(0,1fr) 440px minmax(0,1fr);grid-template-areas:"left portrait right";gap:24px}
@@ -395,7 +396,7 @@ body>main{position:relative;z-index:1}
 <div class="container hero-grid">
 <aside class="hero-side"><div class="doctor-profile"><div class="doctor-portrait-row">
 <div class="doctor-visual"><img alt="Dr. Umesh Prajapati" class="doctor-cutout" loading="eager" src="assets/doctor-portrait.webp"/></div>
-<div class="doctor-typing doctor-typing-left"><p class="doctor-typewriter" aria-label="Gentle Healing, Pure Remedies, Prajapati Homeopathic Clinic, Ratlam"><span aria-hidden="true">Gentle Healing</span></p>
+<div class="doctor-typing doctor-typing-left"><p class="doctor-typewriter" aria-label="Gentle Healing, Pure Remedies, Prajapati Homeopathic Clinic, Ratlam. YOUR HEALTH, OUR RESPONSIBILITY"><span aria-hidden="true">Gentle Healing</span></p>
 </div>
 <div class="doctor-typing doctor-typing-right" aria-hidden="true"><p class="doctor-typewriter"><span></span></p></div>
 </div>
@@ -403,14 +404,14 @@ body>main{position:relative;z-index:1}
 (() => {
   const labels = Array.from(document.querySelectorAll('.doctor-portrait-row .doctor-typewriter'));
   const texts = labels.map(label => label.querySelector('span'));
-  const phrases = ['Gentle Healing', 'Pure Remedies', 'Prajapati Homeopathic Clinic', 'Ratlam'];
+  const phrases = ['Gentle Healing', 'Pure Remedies', 'Prajapati Homeopathic Clinic', 'Ratlam', 'YOUR HEALTH, OUR RESPONSIBILITY'];
   let index = 0;
+  let side = 0;
   let length = 0;
   let deleting = false;
 
   function typeNextLetter() {
     const phrase = phrases[index];
-    const side = index % labels.length;
     texts[side].textContent = phrase.slice(0, length);
     labels.forEach((label, position) => label.classList.toggle('is-typing', position === side));
     if (!deleting && length === phrase.length) {
@@ -419,6 +420,7 @@ body>main{position:relative;z-index:1}
     } else if (deleting && length === 0) {
       deleting = false;
       index = (index + 1) % phrases.length;
+      side = (side + 1) % labels.length;
       setTimeout(typeNextLetter, 300);
     } else {
       length += deleting ? -1 : 1;
