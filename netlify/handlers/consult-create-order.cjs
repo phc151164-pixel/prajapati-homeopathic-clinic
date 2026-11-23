@@ -29,7 +29,7 @@ exports.handler=async(event)=>{
   if(!future(date,time)||!['video','audio'].includes(mode)||!/^[0-9]{10}$/.test(mobile)||(kind!=='followup'&&(name.length<2||name.length>80)))
    return json(400,{error:'Please provide a valid future slot, name and mobile number.'});
 
-  if (kind !== 'followup' && bookingOtp.enabled() && !bookingOtp.read(b.mobileProof, 'verified', mobile)) {
+  if (bookingOtp.enabled() && !bookingOtp.read(b.mobileProof, 'verified', mobile)) {
    return json(403, {error: 'Verify your mobile number before continuing to payment.'});
   }
 

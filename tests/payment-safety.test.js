@@ -157,7 +157,7 @@ test('doctor calendar can close a time slot only with a valid admin token',async
   if(url.includes('online_bookings?'))return response([]);
   throw Error('Unexpected '+url);
  });
- const result=await admin({httpMethod:'POST',headers:{authorization:'Bearer '+baseEnv.PHC_ADMIN_TOKEN},body:JSON.stringify({date:'2026-11-20',time:'11:00',closed:true})});
+ const result=await admin({httpMethod:'POST',headers:{authorization:'Bearer '+baseEnv.PHC_ADMIN_TOKEN},body:JSON.stringify({date:new Date(Date.now()+2*864e5).toISOString().slice(0,10),time:'11:00',closed:true})});
  assert.equal(result.statusCode,200);assert.ok(seen.some(x=>x.url.includes('rpc/phc_change_closure')));
 });
 test.after(()=>{global.fetch=originalFetch;Object.keys(process.env).filter(k=>!(k in originalEnv)).forEach(k=>delete process.env[k]);Object.assign(process.env,originalEnv);});
@@ -186,4 +186,22 @@ test('valid uppercase hexadecimal callback signature verifies',async()=>{
  setup(defaultRoutes);const event=signedVerify();const body=JSON.parse(event.body);
  body.signature=body.signature.toUpperCase();event.body=JSON.stringify(body);
  assert.equal((await verify(event)).statusCode,200);
+});
+
+test('follow-up order requires proof bound to the submitted mobile',async()=>{
+ const seen=setup(defaultRoutes);
+ process.env.RAZORPAY_KEY_ID='rzp_test_fake_test_key';
+ process.env.PHC_BOOKING_OTP_REQUIRED='true';
+ process.env.MESSAGE_CENTRAL_AUTH_TOKEN='synthetic-provider-test';
+ process.env.PHC_OTP_SIGNING_SECRET='synthetic-signing-secret-for-tests-only';
+ const otp=require('../netlify/lib/booking-otp.cjs');
+ const date=new Date(Date.now()+4*864e5).toISOString().slice(0,10);
+ const body={date,time:'11:00',mode:'video',kind:'followup',mobile:'9999999999',registration:'PHC-000001'};
+ try{
+  for(const mobileProof of [undefined,otp.sign('verified','8888888888')]){
+   const result=await createOrder({httpMethod:'POST',body:JSON.stringify({...body,mobileProof})});
+   assert.equal(result.statusCode,403);
+  }
+  assert.equal(seen.length,0);
+ }finally{delete process.env.PHC_BOOKING_OTP_REQUIRED;delete process.env.MESSAGE_CENTRAL_AUTH_TOKEN;delete process.env.PHC_OTP_SIGNING_SECRET;}
 });
