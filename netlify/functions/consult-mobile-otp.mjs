@@ -34,7 +34,7 @@ async function handler(event) {
     }
     try {
       const query = new URLSearchParams({
-        select: 'patient_code', mobile: 'eq.' + mobile, merged_into: 'is.null',
+        select: 'patient_code', mobile: 'eq.' + mobile, merged_into: 'is.null', registration_pending: 'eq.false',
         order: 'patient_code.asc', limit: '50'
       });
       const patients = await supa('phc_patients?' + query);
