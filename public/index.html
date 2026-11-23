@@ -233,7 +233,7 @@ body.treatment-modal-open{overflow:hidden}
 .hero .doctor-typing-right .doctor-typewriter{color:#1759a5}
 .doctor-typewriter::before,.doctor-typewriter::after,.doctor-typewriter span{grid-area:1/1;overflow-wrap:normal;word-break:normal}
 .doctor-typewriter::before{content:'Prajapati Homeopathic Clinic';visibility:hidden}
-.doctor-typewriter::after{content:'YOUR HEALTH, OUR RESPONSIBILITY';visibility:hidden}
+.doctor-typewriter::after{content:'OUR RESPONSIBILITY';visibility:hidden}
 .doctor-typewriter.is-typing span::after{content:'';display:inline-block;height:.88em;width:.075em;margin-left:.1em;background:#1759a5;vertical-align:-.035em}
 @media(min-width:961px){
   .doctor-portrait-row{grid-template-columns:minmax(0,1fr) 440px minmax(0,1fr);grid-template-areas:"left portrait right";gap:24px}
@@ -396,7 +396,7 @@ body>main{position:relative;z-index:1}
 <div class="container hero-grid">
 <aside class="hero-side"><div class="doctor-profile"><div class="doctor-portrait-row">
 <div class="doctor-visual"><img alt="Dr. Umesh Prajapati" class="doctor-cutout" loading="eager" src="assets/doctor-portrait.webp"/></div>
-<div class="doctor-typing doctor-typing-left"><p class="doctor-typewriter" aria-label="Gentle Healing, Pure Remedies, Prajapati Homeopathic Clinic, Ratlam. YOUR HEALTH, OUR RESPONSIBILITY"><span aria-hidden="true">Gentle Healing</span></p>
+<div class="doctor-typing doctor-typing-left"><p class="doctor-typewriter" aria-label="Gentle Healing, Pure Remedies, Prajapati Homeopathic Clinic, Ratlam. YOUR HEALTH. OUR RESPONSIBILITY"><span aria-hidden="true">Gentle Healing</span></p>
 </div>
 <div class="doctor-typing doctor-typing-right" aria-hidden="true"><p class="doctor-typewriter"><span></span></p></div>
 </div>
@@ -404,7 +404,7 @@ body>main{position:relative;z-index:1}
 (() => {
   const labels = Array.from(document.querySelectorAll('.doctor-portrait-row .doctor-typewriter'));
   const texts = labels.map(label => label.querySelector('span'));
-  const phrases = ['Gentle Healing', 'Pure Remedies', 'Prajapati Homeopathic Clinic', 'Ratlam', 'YOUR HEALTH, OUR RESPONSIBILITY'];
+  const phrases = ['Gentle Healing', 'Pure Remedies', 'Prajapati Homeopathic Clinic', 'Ratlam', 'YOUR HEALTH', 'OUR RESPONSIBILITY'];
   let index = 0;
   let side = 0;
   let length = 0;
