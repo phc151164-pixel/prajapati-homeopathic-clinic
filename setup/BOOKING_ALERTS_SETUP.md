@@ -35,3 +35,7 @@ Meta decides approval and category. This text is a proposal, not an approved tem
 Email and WhatsApp can be released independently; missing WhatsApp setup never blocks email. The owner can queue an idempotent, rate-limited synthetic email from Booking notifications → Send setup test email. No real booking/payment is created.
 
 Apply to PHC Safety Test first; verify RLS/no public execution and rollback-only test payment→queue idempotency. Owner configures provider credentials privately. Verify a synthetic email and template notification, then deploy only after reviewed approval. No historical patient data is sent automatically. Existing payment keys, live switch, fees, bookings and confirmations must remain unchanged.
+
+## Booking OTP configuration
+
+Set `PHC_OTP_SIGNING_SECRET` in Netlify for each deploy context that uses booking OTP. Use a dedicated, randomly generated secret of at least 32 characters, separate from the provider credentials. Use different secrets for production and previews. Changing the secret invalidates outstanding OTP challenges and verification proofs.

@@ -59,3 +59,29 @@ test('OTP sends stop before provider access when the per-mobile limit or databas
   assert.deepEqual(calls,['https://synthetic.supabase.co/rest/v1/rpc/phc_record_booking_otp_send']);
  }
 });
+
+test('OTP tokens require a dedicated signing secret and stop validating after rotation', async t => {
+ const {default:otp} = await import('../netlify/lib/booking-otp.cjs');
+ const env = {...process.env};
+ t.after(() => {
+  for (const key of Object.keys(process.env)) if (!(key in env)) delete process.env[key];
+  Object.assign(process.env, env);
+ });
+ process.env.MESSAGE_CENTRAL_AUTH_TOKEN = 'synthetic-sms-provider-token-long-enough';
+ process.env.FAST2SMS_API_KEY = 'synthetic-whatsapp-provider-key-long-enough';
+ process.env.PHC_OTP_SIGNING_SECRET = 'synthetic-signing-secret-for-tests-only';
+ const token = otp.sign('verified',mobile);
+ assert.equal(otp.read(token,'verified',mobile)?.mobile,mobile);
+ for (const provider of ['messagecentral','fast2sms']) {
+  process.env.PHC_BOOKING_OTP_PROVIDER = provider;
+  for (const secret of [undefined,'x'.repeat(31)]) {
+   if (secret === undefined) delete process.env.PHC_OTP_SIGNING_SECRET;
+   else process.env.PHC_OTP_SIGNING_SECRET = secret;
+   assert.equal(otp.read(token,'verified',mobile),null);
+   assert.throws(() => otp.sign('verified',mobile), /signing is unavailable/);
+  }
+ }
+ process.env.PHC_BOOKING_OTP_PROVIDER = 'messagecentral';
+ process.env.PHC_OTP_SIGNING_SECRET = 'synthetic-replacement-signing-secret';
+ assert.equal(otp.read(token,'verified',mobile),null);
+});

@@ -20,7 +20,7 @@ async function handler(event) {
   const whatsapp = otp.whatsapp();
   const apiKey = process.env.FAST2SMS_API_KEY?.trim();
   const otpId = process.env.FAST2SMS_BOOKING_OTP_ID?.trim();
-  if (!otp.enabled() || (whatsapp ? !apiKey || !otpId : !authToken)) return json(503, {error: 'Mobile verification is unavailable.'});
+  if (!otp.enabled() || !otp.signingConfigured() || (whatsapp ? !apiKey || !otpId : !authToken)) return json(503, {error: 'Mobile verification is unavailable.'});
 
   let input;
   try { input = JSON.parse(event.body); } catch { return json(400, {error: 'Invalid request.'}); }
