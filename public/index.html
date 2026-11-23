@@ -223,18 +223,21 @@ body.treatment-modal-open{overflow:hidden}
 .hero-side:before,.hero-side:after{display:none!important}
 .doctor-profile{display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff;width:100%;}
 .site-home .hero .hero-side{max-width:1100px}
-.doctor-portrait-row{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;align-items:center;gap:12px;width:100%;max-width:1100px}
+.doctor-portrait-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));justify-items:center;align-items:center;gap:12px;width:100%;max-width:1100px}
 .doctor-portrait-row .doctor-visual{grid-area:portrait;width:min(100%,440px);min-width:0}
-.doctor-portrait-row{grid-template-areas:"typing" "portrait"}
-.doctor-typing{grid-area:typing;width:100%;min-width:0;text-align:center}
-.hero .doctor-typewriter{margin:0 auto;display:grid;place-items:start center;min-height:2.35em;max-width:100%;color:#087344;font:800 clamp(1.65rem,5.2vw,2.65rem)/1.17 Arial,sans-serif;letter-spacing:-.025em}
-.doctor-typewriter::before,.doctor-typewriter span{grid-area:1/1}
+.doctor-portrait-row{grid-template-areas:"left right" "portrait portrait"}
+.doctor-typing{width:100%;min-width:0;text-align:center}
+.doctor-typing-left{grid-area:left}
+.doctor-typing-right{grid-area:right}
+.hero .doctor-typewriter{margin:0 auto;display:grid;place-items:start center;min-height:2.35em;max-width:100%;color:#087344;font:800 clamp(1.05rem,4.3vw,2rem)/1.17 Arial,sans-serif;letter-spacing:-.025em}
+.hero .doctor-typing-right .doctor-typewriter{color:#1759a5}
+.doctor-typewriter::before,.doctor-typewriter span{grid-area:1/1;overflow-wrap:anywhere}
 .doctor-typewriter::before{content:'Prajapati Homeopathic Clinic';visibility:hidden}
 .doctor-typewriter.is-typing span::after{content:'';display:inline-block;height:.88em;width:.075em;margin-left:.1em;background:#1759a5;vertical-align:-.035em}
 .doctor-typewriter-play{margin:6px auto 0}
 .doctor-typewriter-play[hidden]{display:none}
 @media(min-width:961px){
-  .doctor-portrait-row{grid-template-columns:minmax(0,1fr) 440px minmax(0,1fr);grid-template-areas:". portrait typing";gap:24px}
+  .doctor-portrait-row{grid-template-columns:minmax(0,1fr) 440px minmax(0,1fr);grid-template-areas:"left portrait right";gap:24px}
   .hero .doctor-typewriter{font-size:clamp(1.65rem,3vw,3rem)}
 }
 .doctor-visual{width:min(100%,440px)}
@@ -394,14 +397,15 @@ body>main{position:relative;z-index:1}
 <div class="container hero-grid">
 <aside class="hero-side"><div class="doctor-profile"><div class="doctor-portrait-row">
 <div class="doctor-visual"><img alt="Dr. Umesh Prajapati" class="doctor-cutout" loading="eager" src="assets/doctor-portrait.webp"/></div>
-<div class="doctor-typing"><p class="doctor-typewriter" aria-label="Gentle Healing, Pure Remedies, Prajapati Homeopathic Clinic, Ratlam"><span aria-hidden="true">Gentle Healing</span></p>
+<div class="doctor-typing doctor-typing-left"><p class="doctor-typewriter" aria-label="Gentle Healing, Pure Remedies, Prajapati Homeopathic Clinic, Ratlam"><span aria-hidden="true">Gentle Healing</span></p>
+</div>
+<div class="doctor-typing doctor-typing-right" aria-hidden="true"><p class="doctor-typewriter"><span></span></p></div>
+</div>
 <button class="btn btn-light doctor-typewriter-play" type="button" hidden>Pause animation</button>
-</div>
-</div>
 <script>
 (() => {
-  const label = document.querySelector('.doctor-typewriter');
-  const text = label.querySelector('span');
+  const labels = Array.from(document.querySelectorAll('.doctor-portrait-row .doctor-typewriter'));
+  const texts = labels.map(label => label.querySelector('span'));
   const play = document.querySelector('.doctor-typewriter-play');
   const phrases = ['Gentle Healing', 'Pure Remedies', 'Prajapati Homeopathic Clinic', 'Ratlam'];
   let index = 0;
@@ -412,7 +416,9 @@ body>main{position:relative;z-index:1}
 
   function typeNextLetter() {
     const phrase = phrases[index];
-    text.textContent = phrase.slice(0, length);
+    const side = index % labels.length;
+    texts[side].textContent = phrase.slice(0, length);
+    labels.forEach((label, position) => label.classList.toggle('is-typing', position === side));
     if (!deleting && length === phrase.length) {
       deleting = true;
       timer = setTimeout(typeNextLetter, 1500);
@@ -431,8 +437,8 @@ body>main{position:relative;z-index:1}
     if (running) {
       clearTimeout(timer);
       running = false;
-      label.classList.remove('is-typing');
-      text.textContent = phrases[index];
+      labels.forEach(label => label.classList.remove('is-typing'));
+      texts[index % labels.length].textContent = phrases[index];
       play.textContent = 'Play text animation';
     } else {
       startTyping();
@@ -443,7 +449,6 @@ body>main{position:relative;z-index:1}
     length = 1;
     deleting = false;
     running = true;
-    label.classList.add('is-typing');
     play.textContent = 'Pause animation';
     typeNextLetter();
   }
