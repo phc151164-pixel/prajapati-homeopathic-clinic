@@ -231,14 +231,14 @@ body.treatment-modal-open{overflow:hidden}
 .doctor-typing-right{grid-area:right}
 .hero .doctor-typewriter{margin:0 auto;display:grid;place-items:start center;min-height:2.35em;max-width:100%;color:#087344;font:800 clamp(1.05rem,4.3vw,2rem)/1.17 Arial,sans-serif;letter-spacing:-.025em}
 .hero .doctor-typing-right .doctor-typewriter{color:#1759a5}
-.doctor-typewriter::before,.doctor-typewriter span{grid-area:1/1;overflow-wrap:anywhere}
+.doctor-typewriter::before,.doctor-typewriter span{grid-area:1/1;overflow-wrap:normal;word-break:normal}
 .doctor-typewriter::before{content:'Prajapati Homeopathic Clinic';visibility:hidden}
 .doctor-typewriter.is-typing span::after{content:'';display:inline-block;height:.88em;width:.075em;margin-left:.1em;background:#1759a5;vertical-align:-.035em}
 .doctor-typewriter-play{margin:6px auto 0}
 .doctor-typewriter-play[hidden]{display:none}
 @media(min-width:961px){
   .doctor-portrait-row{grid-template-columns:minmax(0,1fr) 440px minmax(0,1fr);grid-template-areas:"left portrait right";gap:24px}
-  .hero .doctor-typewriter{font-size:clamp(1.65rem,3vw,3rem)}
+  .hero .doctor-typewriter{font-size:clamp(1.6rem,2.75vw,2.85rem)}
 }
 .doctor-visual{width:min(100%,440px)}
   .hero .doctor-tagline,.hero .doctor-typewriter{font-size:clamp(1.6rem,6vw,2.75rem);text-align:center}
@@ -428,7 +428,7 @@ body>main{position:relative;z-index:1}
       timer = setTimeout(typeNextLetter, 300);
     } else {
       length += deleting ? -1 : 1;
-      timer = setTimeout(typeNextLetter, deleting ? 45 : 85);
+      timer = setTimeout(typeNextLetter, deleting ? 60 : 130);
     }
   }
 
