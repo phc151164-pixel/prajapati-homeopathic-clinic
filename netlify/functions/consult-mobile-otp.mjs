@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import adapter from '../lib/request-adapter.cjs';
 import otp from '../lib/booking-otp.cjs';
 import deployContext from '../lib/deploy-context.cjs';
@@ -49,6 +50,18 @@ async function handler(event) {
   const pending = send ? null : otp.read(challenge, 'challenge', mobile);
   if (!send && (action !== 'verify' || !pending || typeof code !== 'string' || !/^[0-9]{4,8}$/.test(code))) {
     return json(400, {error: 'Enter the latest verification code, or request a new one.'});
+  }
+
+  if (send) {
+    try {
+      const allowed = await supa('rpc/phc_record_booking_otp_send', 'POST', {
+        p_mobile_hash: createHash('sha256').update(mobile).digest('hex')
+      });
+      if (allowed === false) return json(429, {error: 'Too many OTP requests. Wait before trying again.'});
+      if (allowed !== true) throw Error('Unexpected OTP limit response');
+    } catch {
+      return json(503, {error: 'Mobile verification is temporarily unavailable. Please try again.'});
+    }
   }
 
   if (whatsapp) {
