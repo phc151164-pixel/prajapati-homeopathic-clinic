@@ -1,13 +1,16 @@
 'use strict';
 const {supa}=require('../functions/_common');
-const EMAIL='phc151164@gmail.com',WHATSAPP='918962540212';
+const alertEmail=env=>env.PHC_ALERT_EMAIL?.trim();
+const alertWhatsapp=env=>env.PHC_ALERT_WHATSAPP?.trim().replace(/^\+/,'');
+const validEmail=env=>/^[^\s@,<>]+@[^\s@,<>]+\.[^\s@,<>]+$/.test(alertEmail(env)||'');
+const validWhatsapp=env=>/^91[6-9]\d{9}$/.test(alertWhatsapp(env)||'');
 // Destinations are owner-approved clinic contacts, never patient/browser controlled.
 function channels(env=process.env,deployContext=require('./deploy-context.cjs').context){
  if(env.PHC_BOOKING_ALERTS_ENABLED!=='true'||deployContext!=='production')return [];
  const ready=[];
- if(env.PHC_EMAIL_ALERTS_ENABLED==='true'&&env.RESEND_API_KEY&&env.PHC_ALERT_EMAIL_FROM)ready.push('email');
+ if(env.PHC_EMAIL_ALERTS_ENABLED==='true'&&env.RESEND_API_KEY&&env.PHC_ALERT_EMAIL_FROM&&validEmail(env))ready.push('email');
  const fast2smsReady=env.FAST2SMS_API_KEY&&/^\d+$/.test(env.FAST2SMS_PHONE_NUMBER_ID||'');
- if(env.PHC_WHATSAPP_ALERTS_ENABLED==='true'&&(fast2smsReady||env.WHATSAPP_ACCESS_TOKEN&&/^\d+$/.test(env.WHATSAPP_PHONE_NUMBER_ID||'')&&/^v\d+\.\d+$/.test(env.WHATSAPP_API_VERSION||'')&&/^[a-z0-9_]+$/.test(env.WHATSAPP_ALERT_TEMPLATE||'')&&/^[a-z]{2}(_[A-Z]{2})?$/.test(env.WHATSAPP_TEMPLATE_LANGUAGE||'')))ready.push('whatsapp');
+ if(env.PHC_WHATSAPP_ALERTS_ENABLED==='true'&&validWhatsapp(env)&&(fast2smsReady||env.WHATSAPP_ACCESS_TOKEN&&/^\d+$/.test(env.WHATSAPP_PHONE_NUMBER_ID||'')&&/^v\d+\.\d+$/.test(env.WHATSAPP_API_VERSION||'')&&/^[a-z0-9_]+$/.test(env.WHATSAPP_ALERT_TEMPLATE||'')&&/^[a-z]{2}(_[A-Z]{2})?$/.test(env.WHATSAPP_TEMPLATE_LANGUAGE||'')))ready.push('whatsapp');
  if(env.PHC_PATIENT_WHATSAPP_ENABLED==='true'&&fast2smsReady)ready.push('patient_whatsapp');
  return ready;
 }
@@ -17,19 +20,20 @@ function details(p){
  return [clean(p.name),p.mobile,p.date,p.time+' IST',p.kind+' / '+p.mode,'INR '+(p.amountPaise/100).toFixed(2),p.payment,p.bookingId];
 }
 function request(job,env=process.env){
- if(job.source==='setup_test'){if(job.channel!=='email')throw Error('Invalid test channel');return {url:'https://api.resend.com/emails',options:{method:'POST',headers:{Authorization:'Bearer '+env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':'phc-booking-alert/'+job.id},body:JSON.stringify({from:env.PHC_ALERT_EMAIL_FROM,to:[EMAIL],subject:'PHC: booking notification setup test',text:'This is a test of Prajapati Homeopathic Clinic booking email notifications. No real appointment or payment was created. Future confirmed booking alerts will include patient name/mobile, slot, consultation type and payment status. Doctor dashboard: https://prajapatihomeopathicclinic.netlify.app/admin'})}};}
+ if((job.channel==='email'&&!validEmail(env))||(job.channel==='whatsapp'&&!validWhatsapp(env)))throw Error('Alert destination is unavailable');
+ if(job.source==='setup_test'){if(job.channel!=='email')throw Error('Invalid test channel');return {url:'https://api.resend.com/emails',options:{method:'POST',headers:{Authorization:'Bearer '+env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':'phc-booking-alert/'+job.id},body:JSON.stringify({from:env.PHC_ALERT_EMAIL_FROM,to:[alertEmail(env)],subject:'PHC: booking notification setup test',text:'This is a test of Prajapati Homeopathic Clinic booking email notifications. No real appointment or payment was created. Future confirmed booking alerts will include patient name/mobile, slot, consultation type and payment status. Doctor dashboard: https://prajapatihomeopathicclinic.netlify.app/admin'})}};}
  const v=details(job.payload);
  const patient=job.channel==='patient_whatsapp';
  if((job.channel==='whatsapp'||patient)&&env.FAST2SMS_API_KEY&&/^\d+$/.test(env.FAST2SMS_PHONE_NUMBER_ID||'')){
   const registrationNumber=job.payload.registrationNumber;
-  if(patient&&(job.payload.consentVersion!=='booking-whatsapp-v1'||!/^PHC-\d{6}$/.test(registrationNumber||'')||job.payload.mobile==='8103684642'))throw Error('Invalid patient confirmation');
+  if(patient&&(job.payload.consentVersion!=='booking-whatsapp-v1'||!/^PHC-\d{6}$/.test(registrationNumber||'')||job.payload.mobile===env.PHC_WHATSAPP_SENDER_MOBILE?.trim()))throw Error('Invalid patient confirmation');
   const values=patient?[v[0],v[2],v[3],registrationNumber]:[...v,registrationNumber||'Not assigned'];
-  const query=new URLSearchParams({message_id:patient?'45848':'45849',phone_number_id:env.FAST2SMS_PHONE_NUMBER_ID,numbers:patient?job.payload.mobile:WHATSAPP.slice(2),variables_values:values.map(value=>value.replace(/\|/g,' ')).join('|')});
+  const query=new URLSearchParams({message_id:patient?'45848':'45849',phone_number_id:env.FAST2SMS_PHONE_NUMBER_ID,numbers:patient?job.payload.mobile:alertWhatsapp(env).slice(2),variables_values:values.map(value=>value.replace(/\|/g,' ')).join('|')});
   return {url:'https://www.fast2sms.com/dev/whatsapp?'+query,options:{method:'GET',headers:{Authorization:env.FAST2SMS_API_KEY}},provider:'fast2sms'};
  }
- if(job.channel==='email')return {url:'https://api.resend.com/emails',options:{method:'POST',headers:{Authorization:'Bearer '+env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':'phc-booking-alert/'+job.id},body:JSON.stringify({from:env.PHC_ALERT_EMAIL_FROM,to:[EMAIL],subject:'PHC: confirmed appointment · '+job.payload.date+' '+job.payload.time,text:'New confirmed appointment\n\n'+['Patient','Mobile','Date','Time','Consultation','Amount','Payment','Booking reference'].map((label,i)=>label+': '+v[i]).join('\n')+'\n\nDoctor dashboard: https://prajapatihomeopathicclinic.netlify.app/admin'})}};
+ if(job.channel==='email')return {url:'https://api.resend.com/emails',options:{method:'POST',headers:{Authorization:'Bearer '+env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':'phc-booking-alert/'+job.id},body:JSON.stringify({from:env.PHC_ALERT_EMAIL_FROM,to:[alertEmail(env)],subject:'PHC: confirmed appointment · '+job.payload.date+' '+job.payload.time,text:'New confirmed appointment\n\n'+['Patient','Mobile','Date','Time','Consultation','Amount','Payment','Booking reference'].map((label,i)=>label+': '+v[i]).join('\n')+'\n\nDoctor dashboard: https://prajapatihomeopathicclinic.netlify.app/admin'})}};
  if(job.channel!=='whatsapp')throw Error('Invalid channel');
- return {url:`https://graph.facebook.com/${env.WHATSAPP_API_VERSION}/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`,options:{method:'POST',headers:{Authorization:'Bearer '+env.WHATSAPP_ACCESS_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to:WHATSAPP,type:'template',template:{name:env.WHATSAPP_ALERT_TEMPLATE,language:{code:env.WHATSAPP_TEMPLATE_LANGUAGE},components:[{type:'body',parameters:[...v,job.payload.registrationNumber||'Not assigned'].map(text=>({type:'text',text}))}]}})}};
+ return {url:`https://graph.facebook.com/${env.WHATSAPP_API_VERSION}/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`,options:{method:'POST',headers:{Authorization:'Bearer '+env.WHATSAPP_ACCESS_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to:alertWhatsapp(env),type:'template',template:{name:env.WHATSAPP_ALERT_TEMPLATE,language:{code:env.WHATSAPP_TEMPLATE_LANGUAGE},components:[{type:'body',parameters:[...v,job.payload.registrationNumber||'Not assigned'].map(text=>({type:'text',text}))}]}})}};
 }
 async function deliver(job,env=process.env,send=fetch){
  let req;try{req=request(job,env);}catch{return {result:'rejected'};}

@@ -205,3 +205,29 @@ test('follow-up order requires proof bound to the submitted mobile',async()=>{
   assert.equal(seen.length,0);
  }finally{delete process.env.PHC_BOOKING_OTP_REQUIRED;delete process.env.MESSAGE_CENTRAL_AUTH_TOKEN;delete process.env.PHC_OTP_SIGNING_SECRET;}
 });
+
+test('deploy preview checkout requires the explicitly configured test project URL',async()=>{
+ const contextPath=require.resolve('../netlify/lib/deploy-context.cjs');
+ const handlerPath=require.resolve('../netlify/handlers/consult-create-order.cjs');
+ const originalContext=require.cache[contextPath].exports;
+ const originalHandler=require.cache[handlerPath];
+ const seen=setup(()=>response({items:[]}));
+ process.env.RAZORPAY_KEY_ID='rzp_test_fake_test_key';
+ try{
+  require.cache[contextPath].exports={context:'deploy-preview'};
+  delete require.cache[handlerPath];
+  const preview=require(handlerPath).handler;
+  delete process.env.PHC_PREVIEW_SUPABASE_URL;
+  assert.equal((await preview({httpMethod:'GET'})).statusCode,503);
+  process.env.PHC_PREVIEW_SUPABASE_URL='https://another-test.supabase.co';
+  assert.equal((await preview({httpMethod:'GET'})).statusCode,503);
+  assert.equal(seen.length,0);
+  process.env.PHC_PREVIEW_SUPABASE_URL=baseEnv.SUPABASE_URL+'/';
+  assert.equal((await preview({httpMethod:'GET'})).statusCode,200);
+  assert.equal(seen.length,1);
+ }finally{
+  require.cache[contextPath].exports=originalContext;
+  require.cache[handlerPath]=originalHandler;
+  delete process.env.PHC_PREVIEW_SUPABASE_URL;
+ }
+});

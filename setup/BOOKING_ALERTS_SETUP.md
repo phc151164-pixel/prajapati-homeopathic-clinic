@@ -2,7 +2,7 @@
 
 Status: owner has saved Production email credentials/flags. Email rollout and a synthetic inbox test are next. WhatsApp credentials and approval are still required. Do not tell the owner alerts are active until a test reaches both destinations.
 
-Authorized destinations: clinic email `phc151164@gmail.com` and WhatsApp recipient `+91 8103684642`. These are server-controlled; no public request chooses a notification recipient. Notification contents: patient name/mobile, date/time in IST, consultation type/mode, saved fee, payment status and booking reference. No clinical notes, symptoms, passwords, admin tokens or gateway secrets are sent.
+Authorized destinations: Netlify Production variables `PHC_ALERT_EMAIL` and `PHC_ALERT_WHATSAPP`. These are server-controlled; no public request chooses a notification recipient. Notification contents: patient name/mobile, date/time in IST, consultation type/mode, saved fee, payment status and booking reference. No clinical notes, symptoms, passwords, admin tokens or gateway secrets are sent.
 
 ## Events and delivery
 
@@ -14,11 +14,13 @@ Email retries use a stable Resend idempotency key; retries stop before its 24h e
 
 ## Email setup
 
-1. Owner creates a Resend account using `phc151164@gmail.com`, verifies that email and creates a sending API key. Store the key directly in Netlify Production secret `RESEND_API_KEY`; never paste it in chat or git.
-2. Configure `PHC_ALERT_EMAIL_FROM`. A verified sending domain is recommended for production. Resend's `onboarding@resend.dev` sender is restricted to sending to the account's own email, so it can only be used here if that account email is exactly the authorized clinic recipient. Verify current provider account restrictions before enabling it.
+1. Owner creates a Resend account using the authorized clinic email, verifies that email and creates a sending API key. Store the key directly in Netlify Production secret `RESEND_API_KEY`; never paste it in chat or git.
+2. Set `PHC_ALERT_EMAIL` to the authorized recipient and configure `PHC_ALERT_EMAIL_FROM`. A verified sending domain is recommended for production. Resend's `onboarding@resend.dev` sender is restricted to sending to the account's own email, so it can only be used here if that account email is exactly the authorized clinic recipient. Verify current provider account restrictions before enabling it.
 3. Set Production `PHC_EMAIL_ALERTS_ENABLED=true` and `PHC_BOOKING_ALERTS_ENABLED=true` only after the migration and reviewed code deploy. Keep all preview flags false. Check the clinic inbox, spam and provider history with a synthetic test before using real patient notifications.
 
 ## WhatsApp setup
+
+Set `PHC_ALERT_WHATSAPP` to the authorized Indian clinic recipient, with country code 91 and no spaces. If patient WhatsApp confirmations are enabled, set `PHC_WHATSAPP_SENDER_MOBILE` to the sender’s 10-digit mobile number to suppress confirmations addressed to the sender. A missing clinic recipient leaves that channel’s jobs pending.
 
 Requires Meta WhatsApp Cloud API or a separately chosen official provider. A WhatsApp Business mobile app login or number alone does not supply sending API access. Do not move or deregister the existing clinic number as part of this change. Choose/verify the API sending number separately from the alert destination. If the same number is proposed as both sender and recipient, resolve that setup before attempting sends.
 
@@ -39,3 +41,5 @@ Apply to PHC Safety Test first; verify RLS/no public execution and rollback-only
 ## Booking OTP configuration
 
 Set `PHC_OTP_SIGNING_SECRET` in Netlify for each deploy context that uses booking OTP. Use a dedicated, randomly generated secret of at least 32 characters, separate from the provider credentials. Use different secrets for production and previews. Changing the secret invalidates outstanding OTP challenges and verification proofs.
+
+For deploy-preview checkout, set `PHC_PREVIEW_SUPABASE_URL` to the isolated test project URL and use that same project for the preview’s `SUPABASE_URL`. Use Razorpay test keys and the test project’s Supabase credentials in that context.
