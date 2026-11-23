@@ -79,20 +79,39 @@ async function unpaidAttempts(){
   page=0;
   reload();
  };
- c.append(form,el('p','Submission times are in IST. Serial numbers show the order of this list.','help'));
+ const exportArea=el('div',undefined,'export-download');
+ const exportButton=button('Download Excel (.xlsx)',async()=>{
+  exportButton.disabled=true;
+  exportArea.replaceChildren();
+  try{
+   const records=await PHCPatientExport.collect(filter=>read('unpaid',filter),unpaidFilter,count=>{
+    exportButton.textContent='Preparing '+count+' attempts…';
+   });
+   if(!c.isConnected)return;
+   PHCPatientExport.download(records.map(unpaidRow),'PHC-unpaid-attempts-'+today()+'.xlsx',exportArea,
+    {build:PHCPatientExport.unpaidWorkbook,label:'attempts'});
+  }catch(error){if(c.isConnected)message(error.message,true);}
+  finally{exportButton.disabled=false;exportButton.textContent='Download Excel (.xlsx)';}
+ });
+ c.append(form,exportButton,exportArea,el('p','Excel includes all attempts matching the applied filters. Submission times are in IST.','help'));
  const currentPage=page;
  const {items=[]}=await read('unpaid',unpaidFilter);
  if(section!=='unpaid'||currentPage!==page||!c.isConnected)return;
- const submitted=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'medium'});
- const statuses={held:'Payment pending',expired:'Expired',cancelled:'Cancelled'};
  table(c,['No.','Submitted at (IST)','Patient','Mobile','Requested appointment','Consultation','Fee','Status'],
-  items.slice(0,30).map((b,i)=>[
-   String(currentPage*30+i+1),submitted.format(new Date(b.created_at)),b.patient_name,b.mobile,
-   b.slot_date+' · '+b.slot_time,
-   (b.consultation_kind==='followup'?'Follow-up':'New patient')+' · '+(b.mode==='video'?'Video':'Audio'),
-   money(b.amount_paise),statuses[b.status]||b.status
-  ]));
+  items.slice(0,30).map((booking,i)=>{
+   const row=unpaidRow(booking,currentPage*30+i);
+   row[6]=money(booking.amount_paise);
+   return row;
+  }));
  pager(c,items.length>30,reload);
+}
+const attemptTime=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'medium'});
+const attemptStatuses={held:'Payment pending',expired:'Expired',cancelled:'Cancelled'};
+function unpaidRow(booking,index){
+ return [index+1,attemptTime.format(new Date(booking.created_at)),booking.patient_name,booking.mobile,
+  booking.slot_date+' · '+booking.slot_time,
+  (booking.consultation_kind==='followup'?'Follow-up':'New patient')+' · '+(booking.mode==='video'?'Video':'Audio'),
+  booking.amount_paise/100,attemptStatuses[booking.status]||booking.status];
 }
 async function pendingPayments(){
  content.replaceChildren();

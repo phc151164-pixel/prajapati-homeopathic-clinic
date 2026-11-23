@@ -12,32 +12,43 @@ function zip(files){const parts=[],central=[];let offset=0;
  const result=new Uint8Array(offset+size+22);let cursor=0;for(const part of [...parts,...central,end]){result.set(part,cursor);cursor+=part.length;}return result;
 }
 function workbook(patients){
- if(patients.length>1048575)throw Error('Too many rows for Excel. Narrow the patient filters.');
- const ns='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
  const headers=['Patient ID','Patient name','Mobile number','Registered date','Completed visits'];
- const rows=[headers,...patients.map(p=>[p.patient_id,p.full_name,p.mobile,String(p.registered_at||'').slice(0,10),Number.isFinite(Number(p.completed_visits))?Number(p.completed_visits):0])];
- const data=rows.map((row,i)=>'<row r="'+(i+1)+'">'+row.map((value,j)=>{const ref=String.fromCharCode(65+j)+(i+1);return i>0&&j===4?'<c r="'+ref+'"><v>'+value+'</v></c>':'<c r="'+ref+'" t="inlineStr"'+(i===0?' s="1"':'')+'><is><t xml:space="preserve">'+xml(value)+'</t></is></c>';}).join('')+'</row>').join('');
+ return buildWorkbook('Patients',headers,[19,32,20,20,19],patients.map(p=>[
+  p.patient_id,p.full_name,p.mobile,String(p.registered_at||'').slice(0,10),Number(p.completed_visits)||0
+ ]));
+}
+function unpaidWorkbook(rows){
+ return buildWorkbook('Unpaid booking attempts',
+  ['No.','Submitted at (IST)','Patient','Mobile','Requested appointment','Consultation','Fee (INR)','Status'],
+  [10,29,32,18,26,23,15,21],rows);
+}
+function buildWorkbook(sheet,headers,widths,records){
+ if(records.length>1048575)throw Error('Too many rows for Excel. Narrow the filters.');
+ const ns='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+ const rows=[headers,...records],range='A1:'+String.fromCharCode(64+headers.length)+rows.length;
+ const columns=widths.map((width,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+width+'" customWidth="1"/>').join('');
+ const data=rows.map((row,i)=>'<row r="'+(i+1)+'">'+row.map((value,j)=>{const ref=String.fromCharCode(65+j)+(i+1);return i>0&&Number.isFinite(value)?'<c r="'+ref+'"><v>'+value+'</v></c>':'<c r="'+ref+'" t="inlineStr"'+(i===0?' s="1"':'')+'><is><t xml:space="preserve">'+xml(value)+'</t></is></c>';}).join('')+'</row>').join('');
  return zip([
  ['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
  ['_rels/.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
- ['xl/workbook.xml','<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="'+ns+'" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Patients" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+ ['xl/workbook.xml','<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="'+ns+'" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="'+xml(sheet)+'" sheetId="1" r:id="rId1"/></sheets></workbook>'],
  ['xl/_rels/workbook.xml.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
  ['xl/styles.xml','<?xml version="1.0"?><styleSheet xmlns="'+ns+'"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="2"><xf xfId="0"/><xf fontId="1" applyFont="1" xfId="0"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
- ['xl/worksheets/sheet1.xml','<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="'+ns+'"><dimension ref="A1:E'+rows.length+'"/><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="1" width="19" customWidth="1"/><col min="2" max="2" width="32" customWidth="1"/><col min="3" max="4" width="20" customWidth="1"/><col min="5" max="5" width="19" customWidth="1"/></cols><sheetData>'+data+'</sheetData><autoFilter ref="A1:E'+rows.length+'"/></worksheet>']
+ ['xl/worksheets/sheet1.xml','<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="'+ns+'"><dimension ref="'+range+'"/><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>'+columns+'</cols><sheetData>'+data+'</sheetData><autoFilter ref="'+range+'"/></worksheet>']
  ]);
 }
 async function collect(readPage,filter,onProgress=()=>{}){const rows=[],seen=new Set();
  for(let page=0;page<=100000;page++){
   const r=await readPage({...filter,page}),items=r.items;
-  if(!Array.isArray(items))throw Error('Patient list could not be loaded. Please try again.');
-  for(const p of items.slice(0,30)){const key=p.id||p.patient_id;if(!key||seen.has(key))throw Error('Patient list changed during export. Please try again.');seen.add(key);rows.push(p);}
+  if(!Array.isArray(items))throw Error('List could not be loaded. Please try again.');
+  for(const p of items.slice(0,30)){const key=p.id||p.patient_id;if(!key||seen.has(key))throw Error('List changed during export. Please try again.');seen.add(key);rows.push(p);}
   onProgress(rows.length);if(items.length<=30)return rows;
  }
  throw Error('Too many records for one export. Narrow the search filters.');
 }
 let activeUrl=null;
 function clear(){if(activeUrl){URL.revokeObjectURL(activeUrl);activeUrl=null;}}
-function download(patients,filename,parent){clear();const blob=new Blob([workbook(patients)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});activeUrl=URL.createObjectURL(blob);const a=document.createElement('a');a.href=activeUrl;a.download=filename;a.textContent='Save Excel file ('+patients.length+' patients)';a.className='link-button';parent.replaceChildren(a);return a;}
+function download(records,filename,parent,{build=workbook,label='patients'}={}){clear();const blob=new Blob([build(records)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});activeUrl=URL.createObjectURL(blob);const a=document.createElement('a');a.href=activeUrl;a.download=filename;a.textContent='Save Excel file ('+records.length+' '+label+')';a.className='link-button';parent.replaceChildren(a);return a;}
 
-const api={workbook,collect,download,clear};if(typeof module==='object'&&module.exports)module.exports=api;else root.PHCPatientExport=api;
+const api={workbook,unpaidWorkbook,collect,download,clear};if(typeof module==='object'&&module.exports)module.exports=api;else root.PHCPatientExport=api;
 })(typeof window==='object'?window:globalThis);
