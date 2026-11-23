@@ -9,3 +9,20 @@ test.afterEach(()=>{global.fetch=originalFetch;for(const k of Object.keys(proces
 test('clinic request works independently of gateway activation and never trusts browser amount',async()=>{setup();const r=await handler(event(body()));assert.equal(r.statusCode,200);assert.equal(JSON.parse(r.body).slotReserved,false);assert.equal(calls.length,1);assert.match(calls[0].url,/rpc\/phc_request_clinic_booking_v2$/);assert.equal('amountPaise' in calls[0].body,false);});
 test('invalid or oversized requests stop before database access',async()=>{setup();for(const change of [{requestKey:'guess'},{mobile:'1'},{mode:'walkin'},{kind:'paid'},{date:'2000-01-01'}])assert.equal((await handler(event({...body(),...change}))).statusCode,400);assert.equal((await handler({httpMethod:'POST',body:'x'.repeat(4097)})).statusCode,413);assert.equal(calls.length,0);});
 test('clinic request endpoint fails closed when dashboard is disabled',async()=>{setup();delete process.env.PHC_DASHBOARD_ENABLED;assert.equal((await handler(event(body()))).statusCode,503);assert.equal(calls.length,0);});
+
+test('clinic request requires a valid verified proof for the submitted mobile',async()=>{
+ setup();
+ process.env.PHC_BOOKING_OTP_REQUIRED='true';
+ process.env.MESSAGE_CENTRAL_AUTH_TOKEN='synthetic-provider-test';
+ process.env.PHC_OTP_SIGNING_SECRET='synthetic-signing-secret-for-tests-only';
+ const otp=require('../netlify/lib/booking-otp.cjs');
+ const input=body();
+ for(const mobileProof of [undefined,'invalid',otp.sign('verified','8888888888'),otp.sign('challenge',input.mobile)]){
+  const r=await handler(event({...input,mobileProof}));
+  assert.equal(r.statusCode,403);
+ }
+ assert.equal(calls.length,0);
+ assert.equal((await handler(event({...input,mobileProof:otp.sign('verified',input.mobile)}))).statusCode,200);
+ assert.equal(calls.length,1);
+ assert.equal('mobileProof' in calls[0].body,false);
+});
