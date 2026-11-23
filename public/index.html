@@ -223,22 +223,21 @@ body.treatment-modal-open{overflow:hidden}
 .hero-side:before,.hero-side:after{display:none!important}
 .doctor-profile{display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff;width:100%;}
 .site-home .hero .hero-side{max-width:1100px}
-.doctor-portrait-row{display:grid;grid-template-columns:minmax(0,1fr) 440px minmax(0,1fr);align-items:center;gap:clamp(16px,3vw,36px);width:100%;max-width:1100px}
-.hero .doctor-tagline{text-wrap:balance}
-.hero .doctor-typewriter span{overflow-wrap:normal;text-wrap:balance}
-.doctor-portrait-row .doctor-visual{width:100%;min-width:0}
-.hero .doctor-tagline,.hero .doctor-typewriter{margin:0;font:800 clamp(1.5rem,3.3vw,3.25rem)/1.12 Arial,sans-serif;letter-spacing:-.045em}
-.hero .doctor-tagline{color:#1759a5;text-align:right}
-.hero .doctor-typewriter{color:#087344;text-align:left;display:grid;overflow-wrap:anywhere}
+.doctor-portrait-row{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;align-items:center;gap:12px;width:100%;max-width:1100px}
+.doctor-portrait-row .doctor-visual{grid-area:portrait;width:min(100%,440px);min-width:0}
+.doctor-portrait-row{grid-template-areas:"typing" "portrait"}
+.doctor-typing{grid-area:typing;width:100%;min-width:0;text-align:center}
+.hero .doctor-typewriter{margin:0 auto;display:grid;place-items:start center;min-height:2.35em;max-width:100%;color:#087344;font:800 clamp(1.65rem,5.2vw,2.65rem)/1.17 Arial,sans-serif;letter-spacing:-.025em}
 .doctor-typewriter::before,.doctor-typewriter span{grid-area:1/1}
 .doctor-typewriter::before{content:'Prajapati Homeopathic Clinic';visibility:hidden}
-.doctor-typewriter.is-typing span::after{content:'';display:inline-block;height:.88em;width:.075em;margin-left:.1em;background:#1759a5;vertical-align:-.035em;animation:doctor-cursor .85s step-end infinite}
-@keyframes doctor-cursor{50%{opacity:0}}
-.doctor-typewriter-play{display:none}
-@media(prefers-reduced-motion:reduce){.doctor-typewriter-play:not([hidden]){display:inline-flex}}
-@media(max-width:960px){
-  .doctor-portrait-row{grid-template-columns:minmax(0,1fr);justify-items:center;gap:14px}
-  .doctor-portrait-row .doctor-visual{width:min(100%,440px)}
+.doctor-typewriter.is-typing span::after{content:'';display:inline-block;height:.88em;width:.075em;margin-left:.1em;background:#1759a5;vertical-align:-.035em}
+.doctor-typewriter-play{margin:6px auto 0}
+.doctor-typewriter-play[hidden]{display:none}
+@media(min-width:961px){
+  .doctor-portrait-row{grid-template-columns:minmax(0,1fr) 440px minmax(0,1fr);grid-template-areas:". portrait typing";gap:24px}
+  .hero .doctor-typewriter{font-size:clamp(1.65rem,3vw,3rem)}
+}
+.doctor-visual{width:min(100%,440px)}
   .hero .doctor-tagline,.hero .doctor-typewriter{font-size:clamp(1.6rem,6vw,2.75rem);text-align:center}
   .hero .doctor-typewriter{width:100%;max-width:26rem;min-height:2.25em}
 }
@@ -394,11 +393,11 @@ body>main{position:relative;z-index:1}
 <section class="hero" id="home"><video aria-hidden="true" autoplay="" class="hero-video" loop="" muted="" playsinline="" poster="assets/phc-wellness-poster.webp" preload="metadata"><source src="assets/phc-wellness-loop.mp4" type="video/mp4"/></video><div aria-hidden="true" class="hero-video-tint"></div>
 <div class="container hero-grid">
 <aside class="hero-side"><div class="doctor-profile"><div class="doctor-portrait-row">
-<p class="doctor-tagline">Personalised Homeopathic Care</p>
 <div class="doctor-visual"><img alt="Dr. Umesh Prajapati" class="doctor-cutout" loading="eager" src="assets/doctor-portrait.webp"/></div>
-<p class="doctor-typewriter" aria-label="Gentle Healing, Pure Remedies, Prajapati Homeopathic Clinic, Ratlam"><span aria-hidden="true">Gentle Healing</span></p>
+<div class="doctor-typing"><p class="doctor-typewriter" aria-label="Gentle Healing, Pure Remedies, Prajapati Homeopathic Clinic, Ratlam"><span aria-hidden="true">Gentle Healing</span></p>
+<button class="btn btn-light doctor-typewriter-play" type="button" hidden>Pause animation</button>
 </div>
-<button class="btn btn-light doctor-typewriter-play" type="button">Play text animation</button>
+</div>
 <script>
 (() => {
   const label = document.querySelector('.doctor-typewriter');
@@ -408,32 +407,47 @@ body>main{position:relative;z-index:1}
   let index = 0;
   let length = 0;
   let deleting = false;
+  let timer;
+  let running = false;
 
   function typeNextLetter() {
     const phrase = phrases[index];
     text.textContent = phrase.slice(0, length);
     if (!deleting && length === phrase.length) {
       deleting = true;
-      setTimeout(typeNextLetter, 1500);
+      timer = setTimeout(typeNextLetter, 1500);
     } else if (deleting && length === 0) {
       deleting = false;
       index = (index + 1) % phrases.length;
-      setTimeout(typeNextLetter, 300);
+      timer = setTimeout(typeNextLetter, 300);
     } else {
       length += deleting ? -1 : 1;
-      setTimeout(typeNextLetter, deleting ? 45 : 85);
+      timer = setTimeout(typeNextLetter, deleting ? 45 : 85);
     }
   }
 
+  play.hidden = false;
+  play.addEventListener('click', () => {
+    if (running) {
+      clearTimeout(timer);
+      running = false;
+      label.classList.remove('is-typing');
+      text.textContent = phrases[index];
+      play.textContent = 'Play text animation';
+    } else {
+      startTyping();
+    }
+  });
+
   function startTyping() {
-    play.hidden = true;
+    length = 1;
+    deleting = false;
+    running = true;
     label.classList.add('is-typing');
+    play.textContent = 'Pause animation';
     typeNextLetter();
   }
-
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    play.addEventListener('click', startTyping, {once: true});
-  } else startTyping();
+  startTyping();
 })();
 </script><div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><a class="btn btn-primary" href="#online-consultation">Book a Consultation →</a></div></div></aside>
 <div class="hero-content">
