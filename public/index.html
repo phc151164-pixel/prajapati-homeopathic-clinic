@@ -235,6 +235,13 @@ body.treatment-modal-open{overflow:hidden}
 .doctor-typewriter::before{content:'Prajapati Homeopathic Clinic';visibility:hidden}
 .doctor-typewriter::after{content:'OUR RESPONSIBILITY';visibility:hidden}
 .doctor-typewriter.is-typing span::after{content:'';display:inline-block;height:.88em;width:.075em;margin-left:.1em;background:#1759a5;vertical-align:-.035em}
+.hero .doctor-typewriter-mobile{display:none}
+@media(max-width:960px){
+  .doctor-portrait-row{grid-template-columns:minmax(0,1fr);grid-template-areas:"portrait"}
+  .doctor-portrait-row .doctor-typing,.hero .doctor-badge{display:none}
+  .hero .doctor-typewriter-mobile{display:block;min-height:1.2em;margin:8px 0 0;white-space:nowrap;font-size:clamp(.8rem,4vw,1.35rem);text-align:center}
+  .doctor-typewriter-mobile::before,.doctor-typewriter-mobile::after{content:none}
+}
 @media(min-width:961px){
   .doctor-portrait-row{grid-template-columns:minmax(0,1fr) 440px minmax(0,1fr);grid-template-areas:"left portrait right";gap:24px}
   .hero .doctor-typewriter{font-size:clamp(1.6rem,2.75vw,2.85rem)}
@@ -400,10 +407,12 @@ body>main{position:relative;z-index:1}
 </div>
 <div class="doctor-typing doctor-typing-right" aria-hidden="true"><p class="doctor-typewriter"><span></span></p></div>
 </div>
+<div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><p class="doctor-typewriter doctor-typewriter-mobile is-typing" aria-hidden="true"><span>Gentle Healing</span></p><a class="btn btn-primary" href="#online-consultation">Book a Consultation →</a></div></div></aside>
 <script>
 (() => {
   const labels = Array.from(document.querySelectorAll('.doctor-portrait-row .doctor-typewriter'));
   const texts = labels.map(label => label.querySelector('span'));
+  const mobileText = document.querySelector('.doctor-typewriter-mobile span');
   const phrases = ['Gentle Healing', 'Pure Remedies', 'Prajapati Homeopathic Clinic', 'Ratlam', 'YOUR HEALTH', 'OUR RESPONSIBILITY'];
   let index = 0;
   let side = 0;
@@ -412,7 +421,9 @@ body>main{position:relative;z-index:1}
 
   function typeNextLetter() {
     const phrase = phrases[index];
-    texts[side].textContent = phrase.slice(0, length);
+    const typed = phrase.slice(0, length);
+    texts[side].textContent = typed;
+    mobileText.textContent = typed;
     labels.forEach((label, position) => label.classList.toggle('is-typing', position === side));
     if (!deleting && length === phrase.length) {
       deleting = true;
@@ -430,9 +441,9 @@ body>main{position:relative;z-index:1}
 
   typeNextLetter();
 })();
-</script><div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><a class="btn btn-primary" href="#online-consultation">Book a Consultation →</a></div></div></aside>
+</script>
 <div class="hero-content">
-<span class="badge">Dr. Umesh Prajapati · B.H.M.S.</span>
+<span class="badge doctor-badge">Dr. Umesh Prajapati · B.H.M.S.</span>
 <h2>Personalised Consultations. A Caring Clinic Experience.</h2>
 <p>Welcome to Prajapati Homeopathic Clinic, Ratlam. Meet Dr. Umesh Prajapati, explore all 12 health categories, and book a paid online consultation.</p>
 <div class="hero-cta">
