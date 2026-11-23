@@ -4,10 +4,16 @@ const enabled = () => process.env.PHC_BOOKING_OTP_REQUIRED === 'true' ||
   (require('./deploy-context.cjs').context === 'deploy-preview' && Boolean(process.env.MESSAGE_CENTRAL_AUTH_TOKEN));
 
 const whatsapp = () => process.env.PHC_BOOKING_OTP_PROVIDER === 'fast2sms';
-const signingKey = () => whatsapp() ? process.env.FAST2SMS_API_KEY : process.env.MESSAGE_CENTRAL_AUTH_TOKEN;
+function signingKey() {
+  const secret = process.env.PHC_OTP_SIGNING_SECRET;
+  return secret?.trim().length >= 32 ? secret : null;
+}
+const signingConfigured = () => signingKey() !== null;
 
 function digest(value) {
-  return createHmac('sha256', signingKey())
+  const key = signingKey();
+  if (!key) throw Error('OTP signing is unavailable.');
+  return createHmac('sha256', key)
     .update((whatsapp() ? 'phc-booking-whatsapp-otp-v1:' : 'phc-booking-otp-v1:') + value).digest('base64url');
 }
 
@@ -32,4 +38,4 @@ function read(token, purpose, mobile) {
   }
 }
 
-module.exports = {enabled, whatsapp, sign, read};
+module.exports = {enabled, whatsapp, signingConfigured, sign, read};

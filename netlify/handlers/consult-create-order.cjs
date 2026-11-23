@@ -4,8 +4,9 @@ const {json,configured,supa,razorpay,validSlot,fee} = require('../functions/_com
 const {context}=require('../lib/deploy-context.cjs');
 exports.handler=async(event)=>{
  if(context==='deploy-preview'){
-  const testConfigured=configured()&&process.env.RAZORPAY_KEY_ID.startsWith('rzp_test_')&&
-   process.env.SUPABASE_URL?.trim().replace(/\/$/,'')==='https://cefhdbqlzuxvnmktyxyk.supabase.co';
+  const previewUrl=process.env.PHC_PREVIEW_SUPABASE_URL?.trim().replace(/\/$/,'');
+  const testConfigured=Boolean(previewUrl)&&configured()&&process.env.RAZORPAY_KEY_ID.startsWith('rzp_test_')&&
+   process.env.SUPABASE_URL?.trim().replace(/\/$/,'')===previewUrl;
   if(event.httpMethod==='GET'){
    if(!testConfigured)return json(503,{testReady:false});
    try{
@@ -29,7 +30,7 @@ exports.handler=async(event)=>{
   if(!future(date,time)||!['video','audio'].includes(mode)||!/^[0-9]{10}$/.test(mobile)||(kind!=='followup'&&(name.length<2||name.length>80)))
    return json(400,{error:'Please provide a valid future slot, name and mobile number.'});
 
-  if (kind !== 'followup' && bookingOtp.enabled() && !bookingOtp.read(b.mobileProof, 'verified', mobile)) {
+  if (bookingOtp.enabled() && !bookingOtp.read(b.mobileProof, 'verified', mobile)) {
    return json(403, {error: 'Verify your mobile number before continuing to payment.'});
   }
 

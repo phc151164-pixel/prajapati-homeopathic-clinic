@@ -47,7 +47,7 @@ const otpEndpoint = '/.netlify/functions/consult-mobile-otp';
 const mobileInput = $('paidMobile');
 const nameInput = $('paidName');
 const registrationField = document.createElement('div');
-registrationField.innerHTML = '<p>Enter the registration number the clinic gave you and the same mobile number you registered with. Choose a slot and continue to payment. No OTP is needed.</p><label for="paidRegistration">Registration number</label><input id="paidRegistration" type="text" placeholder="PHC-000001" maxlength="10" autocomplete="off">';
+registrationField.innerHTML = '<p>Enter the registration number the clinic gave you and the same mobile number you registered with. Choose a slot and continue to payment.</p><label for="paidRegistration">Registration number</label><input id="paidRegistration" type="text" placeholder="PHC-000001" maxlength="10" autocomplete="off">';
 choiceRow.after(registrationField);
 const registrationInput = registrationField.querySelector('input');
 
@@ -69,7 +69,7 @@ function updateBookingFields() {
   registrationInput.required = followup;
   nameInput.closest('label').style.display = followup ? 'none' : '';
   nameInput.disabled = followup;
-  otpField.hidden = followup ? !recoveringRegistration : !otpRequired;
+  otpField.hidden = !(otpRequired || (followup && recoveringRegistration));
   recoveryHelp.hidden = !followup || !recoveringRegistration;
 }
 let otpRequired = false;
@@ -214,15 +214,15 @@ form.addEventListener('submit',async(e)=>{
  const followup = kind.value === 'followup' && method.value !== 'clinic';
  const registration = registrationInput.value.trim().toUpperCase();
  const name=nameInput.value.trim(),mobile=mobileInput.value.trim();if((!followup && name.length<2)||!/^[0-9]{10}$/.test(mobile)){note('Enter patient name and a valid 10-digit phone number.',true);return;}
+ if(otpRequired && (otpBusy || verifiedMobile !== mobile || !mobileProof)){
+  note('Verify your mobile number before continuing.',true);return;
+ }
  if(method.value==='clinic'){
   const payload={date:date.value,time:chosen,mode:$('paidMode').value,name,mobile,kind:kind.value,whatsappUpdates:true};const fingerprint=JSON.stringify(payload);
   if(clinicAttempt?.fingerprint!==fingerprint)clinicAttempt={fingerprint,key:crypto.randomUUID()};
   refreshing=true;book.disabled=true;note('Sending appointment request…');
-  try{const res=await fetch('/.netlify/functions/consult-clinic-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,requestKey:clinicAttempt.key})});const data=await res.json();if(!res.ok)throw Error(data.error||'Request failed');await loadSlots();requestSummary.textContent=data.slotReserved?'The doctor has approved this request. Cash payment is still due.':'Request received. Your slot is NOT reserved yet. Contact the clinic for doctor approval. Reference: '+data.requestId;note('Clinic request acknowledged. See the request reference below.');}
+  try{const res=await fetch('/.netlify/functions/consult-clinic-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,mobileProof,requestKey:clinicAttempt.key})});const data=await res.json();if(!res.ok)throw Error(data.error||'Request failed');await loadSlots();requestSummary.textContent=data.slotReserved?'The doctor has approved this request. Cash payment is still due.':'Request received. Your slot is NOT reserved yet. Contact the clinic for doctor approval. Reference: '+data.requestId;note('Clinic request acknowledged. See the request reference below.');}
   catch(error){note(error.message,true);book.disabled=false;}finally{refreshing=false;}return;
- }
- if(!followup && otpRequired && (otpBusy || verifiedMobile !== mobile || !mobileProof)){
-  note('Verify your mobile number before continuing to payment.',true);return;
  }
  if(!window.Razorpay){note('Payment gateway is still loading. Please try again.',true);return;}
  refreshing=true;book.disabled=true;note('Holding your time slot securely…');
@@ -238,7 +238,7 @@ let nextFieldGlow = null;
 function updateNextFieldGlow() {
   const mobile = mobileInput.value.trim();
   const followup = kind.value === 'followup' && method.value !== 'clinic';
-  const needsOtp = followup ? recoveringRegistration : method.value === 'online' && otpRequired;
+  const needsOtp = otpRequired || (followup && recoveringRegistration);
   let target = null;
   if (availability?.ready && !refreshing && !otpBusy && !paymentInProgress) {
     if (!date.value) target = date;
