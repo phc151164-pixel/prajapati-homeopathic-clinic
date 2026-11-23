@@ -234,8 +234,6 @@ body.treatment-modal-open{overflow:hidden}
 .doctor-typewriter::before,.doctor-typewriter span{grid-area:1/1;overflow-wrap:normal;word-break:normal}
 .doctor-typewriter::before{content:'Prajapati Homeopathic Clinic';visibility:hidden}
 .doctor-typewriter.is-typing span::after{content:'';display:inline-block;height:.88em;width:.075em;margin-left:.1em;background:#1759a5;vertical-align:-.035em}
-.doctor-typewriter-play{margin:6px auto 0}
-.doctor-typewriter-play[hidden]{display:none}
 @media(min-width:961px){
   .doctor-portrait-row{grid-template-columns:minmax(0,1fr) 440px minmax(0,1fr);grid-template-areas:"left portrait right";gap:24px}
   .hero .doctor-typewriter{font-size:clamp(1.6rem,2.75vw,2.85rem)}
@@ -401,18 +399,14 @@ body>main{position:relative;z-index:1}
 </div>
 <div class="doctor-typing doctor-typing-right" aria-hidden="true"><p class="doctor-typewriter"><span></span></p></div>
 </div>
-<button class="btn btn-light doctor-typewriter-play" type="button" hidden>Pause animation</button>
 <script>
 (() => {
   const labels = Array.from(document.querySelectorAll('.doctor-portrait-row .doctor-typewriter'));
   const texts = labels.map(label => label.querySelector('span'));
-  const play = document.querySelector('.doctor-typewriter-play');
   const phrases = ['Gentle Healing', 'Pure Remedies', 'Prajapati Homeopathic Clinic', 'Ratlam'];
   let index = 0;
   let length = 0;
   let deleting = false;
-  let timer;
-  let running = false;
 
   function typeNextLetter() {
     const phrase = phrases[index];
@@ -421,38 +415,18 @@ body>main{position:relative;z-index:1}
     labels.forEach((label, position) => label.classList.toggle('is-typing', position === side));
     if (!deleting && length === phrase.length) {
       deleting = true;
-      timer = setTimeout(typeNextLetter, 1500);
+      setTimeout(typeNextLetter, 1500);
     } else if (deleting && length === 0) {
       deleting = false;
       index = (index + 1) % phrases.length;
-      timer = setTimeout(typeNextLetter, 300);
+      setTimeout(typeNextLetter, 300);
     } else {
       length += deleting ? -1 : 1;
-      timer = setTimeout(typeNextLetter, deleting ? 60 : 130);
+      setTimeout(typeNextLetter, deleting ? 60 : 130);
     }
   }
 
-  play.hidden = false;
-  play.addEventListener('click', () => {
-    if (running) {
-      clearTimeout(timer);
-      running = false;
-      labels.forEach(label => label.classList.remove('is-typing'));
-      texts[index % labels.length].textContent = phrases[index];
-      play.textContent = 'Play text animation';
-    } else {
-      startTyping();
-    }
-  });
-
-  function startTyping() {
-    length = 1;
-    deleting = false;
-    running = true;
-    play.textContent = 'Pause animation';
-    typeNextLetter();
-  }
-  startTyping();
+  typeNextLetter();
 })();
 </script><div class="doctor-below"><p class="doctor-label">MEET YOUR CONSULTANT</p><h3>Dr. Umesh Prajapati</h3><p class="doctor-qualification">B.H.M.S. · Homeopathic Consultant</p><p class="doctor-registration">Reg No.: 29926  |  NRH No.: NRH/0091536</p><a class="btn btn-primary" href="#online-consultation">Book a Consultation →</a></div></div></aside>
 <div class="hero-content">
