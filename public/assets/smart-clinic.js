@@ -4,6 +4,7 @@
   const endpoint = 'smart-clinic';
   const aliases = {
     bonninghausen: 'bonninghausen boenninghausen repertory repertori lakshan',
+    'boericke-pocket-manual': 'boericke borik borick repertory बोरिक',
     boger: 'boger repertory repertori lakshan',
     organon: 'organon hahnemann itihas',
     jahr: 'jahr yaar itihas',
@@ -40,8 +41,12 @@
       return heading ? heading + ': ' + label[2].trim() : line;
     }).join('\n');
   }
+  function matchesKeynote(entry, query) {
+    const name = normalize([entry.title, entry.aliases || ''].join(' ')).replace(/æ/g, 'ae');
+    return normalize(query).replace(/æ/g, 'ae').trim().split(/\s+/u).every(term => name.includes(term));
+  }
   if (typeof module !== 'undefined') {
-    module.exports = {matches, matchesRubric, draftChart};
+    module.exports = {matches, matchesRubric, draftChart, matchesKeynote};
     return;
   }
 
@@ -179,6 +184,8 @@
 
     if (data.repertory) root.prepend(renderRepertory(data.repertory, progress, api));
 
+    if (data.keynotes?.entries.length) root.append(renderKeynotes(data.keynotes));
+
     const reader = card('Compare local editions');
     const columns = node('div');
     columns.className = 'phc-reader-columns';
@@ -269,6 +276,39 @@
     return panel;
   }
 
+  function renderKeynotes(index) {
+    const panel = card('Allen’s Keynotes entry index');
+    panel.append(node('p', index.edition + ' · Historical reading'));
+    const search = node('input');
+    search.type = 'search';
+    const label = node('label', 'Find an Allen entry by name');
+    label.append(search);
+    const count = node('p');
+    count.setAttribute('role', 'status');
+    const results = node('ul');
+    const pagination = action('Show more entries', () => { limit += 30; render(); });
+    let limit = 30;
+    function render() {
+      const matches = index.entries.filter(entry => matchesKeynote(entry, search.value));
+      count.textContent = matches.length + ' matching index entries';
+      results.replaceChildren();
+      for (const entry of matches.slice(0, limit)) {
+        const item = node('li');
+        const link = node('a', entry.title + ' · printed p. ' + entry.page);
+        link.href = index.pdf + '#page=' + entry.scanPage;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        item.append(link);
+        results.append(item);
+      }
+      pagination.hidden = matches.length <= limit;
+    }
+    search.addEventListener('input', () => { limit = 30; render(); });
+    panel.append(label, count, results, pagination);
+    render();
+    return panel;
+  }
+
   async function consultation(visit, ui) {
     const request = ++consultationRequest;
     try {
@@ -291,6 +331,11 @@
         'Drafts require review by a qualified clinician.');
       const history = fields[1].querySelector('textarea');
       const voice = dictation(history, ui);
+      const formatDraft = action('Format labelled transcript', () => {
+        const formatted = draftChart(history.value);
+        if (formatted.length <= history.maxLength) history.value = formatted;
+        history.focus();
+      });
       const chart = action('Insert case-sheet headings', () => {
         const headings = ['Chief complaint', 'Duration', 'Patient history'];
         if (!history.value.trim()) history.value = headings.map(heading => heading + ': ').join('\n');
@@ -306,7 +351,7 @@
         else ui.message('There is not enough room to insert every heading.', true, 'editorMessage');
         history.focus();
       });
-      ui.modal('Consultation document', [detail, ...fields, chart, classical, voice, consultationRecorder(), consultationLookup(ui.api)], values => ui.api(endpoint, {
+      ui.modal('Consultation document', [detail, ...fields, chart, classical, formatDraft, voice, consultationRecorder(), consultationLookup(ui.api)], values => ui.api(endpoint, {
         action: 'consultation', visitId: visit.id, version: saved?.version || 0,
         history: draftChart(values.history), observations: values.observations, follow_up: values.follow_up,
         consent: values.consent === 'yes', reviewed: values.reviewed === 'yes'

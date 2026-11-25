@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const deploy = require('../netlify/lib/deploy-context.cjs');
 deploy.context = 'dev';
 const {handler, enabled} = require('../netlify/handlers/smart-clinic.cjs');
-const {matches, matchesRubric, draftChart} = require('../public/assets/smart-clinic.js');
+const {matches, matchesRubric, draftChart, matchesKeynote} = require('../public/assets/smart-clinic.js');
 const catalog = require('../docs/reference-library-catalog.json');
 const doctor = '11111111-1111-4111-8111-111111111111';
 const visit = '22222222-2222-4222-8222-222222222222';
@@ -39,6 +39,15 @@ test('case sheet recognizes explicit headings and preserves unclassified wording
   assert.equal(draftChart('मुख्य शिकायत: Synthetic sample\nDuration: 2 days\nUnclassified text'),
     'Chief complaint: Synthetic sample\nDuration: 2 days\nUnclassified text');
   assert.equal(draftChart('Follow-up: keep wording unchanged'), 'Follow-up: keep wording unchanged');
+});
+
+test('Allen index returns name aliases and distinct scan and printed page references', () => {
+  const index = require('../docs/allen-keynotes-index.json');
+  const find = query => index.entries.filter(entry => matchesKeynote(entry, query));
+  assert.equal(find('नक्स वोमिका')[0].title, 'Nux vomica');
+  assert.equal(find('beladona')[0].scanPage, 63);
+  assert.equal(find('Bryonia Alba')[0].page, 66);
+  assert.ok(index.entries.every(entry => entry.scanPage === entry.page + 6));
 });
 
 test('Smart Clinic restricts deployment, authorizes the doctor, and binds writes to the session', async t => {

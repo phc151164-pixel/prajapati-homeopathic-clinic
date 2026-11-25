@@ -110,5 +110,21 @@
     "content_status": "external_catalogue_only",
     "translation_status": "Hindi catalogue label only",
     "purpose": "historical education only"
+  },
+  {
+    "id": "boericke-pocket-manual",
+    "title": "Boericke’s Pocket Manual and Repertory",
+    "title_hi": "बोरिक की पॉकेट मैनुअल और रिपर्टरी",
+    "author": "William Boericke / Oscar E. Boericke (repertory)",
+    "category": "Repertory",
+    "year": "1927",
+    "language": "en",
+    "source": "U.S. National Library of Medicine",
+    "source_url": "https://www.ncbi.nlm.nih.gov/nlmcatalog/198808",
+    "rights": "Public domain according to the National Library of Medicine",
+    "rights_checked": "2026-11-25",
+    "content_status": "external_catalogue_only",
+    "translation_status": "Hindi catalogue label only",
+    "purpose": "historical education only"
   }
 ]

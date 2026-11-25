@@ -4,6 +4,7 @@ const {json, supa} = require('../functions/_common');
 const {identify, sameOrigin} = require('../lib/doctor-auth.cjs');
 const {context} = require('../lib/deploy-context.cjs');
 const catalog = require('../../docs/reference-library-catalog.json');
+const keynotes = require('../../docs/allen-keynotes-index.json');
 const repertory = require('../../docs/kent-repertory-index.json');
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const consultationFields = ['history', 'observations', 'follow_up'];
@@ -28,7 +29,7 @@ exports.handler = async event => {
       }
       if (q.section === 'library') {
         const progress = await supa('phc_reference_progress?doctor_id=eq.' + user.id + '&select=book_id,bookmarked,note,last_opened');
-        return json(200, {catalog, progress, repertory});
+        return json(200, {catalog, progress, repertory, keynotes});
       }
       return json(400, {error: 'Invalid request.'});
     }

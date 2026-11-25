@@ -8,6 +8,7 @@ const assert = require('node:assert/strict');
 const root = path.resolve(__dirname, '..');
 const publicRoot = path.join(root, 'public');
 const catalog = require(path.join(root,'docs/reference-library-catalog.json'));
+const keynotes = require(path.join(root,'docs/allen-keynotes-index.json'));
 const repertory = require(path.join(root,'docs/kent-repertory-index.json'));
 const patientId = '11111111-1111-4111-8111-111111111111';
 const visitId = '22222222-2222-4222-8222-222222222222';
@@ -32,7 +33,7 @@ const srv = http.createServer(async (req,res) => {
       if (section==='patient') return json({patient,summary:{completed:0,upcoming:1},visits:[{id:visitId,visit_date:'2026-11-25',visit_time:'11:00',kind:'followup',mode:'walkin',state:'planned'}]});
       return json({items:[],bookings:[],counts:{},stats:{},has_more:false});
     }
-    if (section === 'library') return json({catalog,repertory,progress:progress?[progress]:[]});
+    if (section === 'library') return json({catalog,repertory,keynotes,progress:progress?[progress]:[]});
     if (section === 'consultation') return json({document:document||null});
     if (body.action === 'reference_opened') {
       progress = {...progress, book_id: body.bookId, last_opened: new Date().toISOString()};
@@ -122,6 +123,9 @@ const srv = http.createServer(async (req,res) => {
     await rubric.getByText('Saved.', {exact: true}).waitFor();
     await page.getByLabel('Show my study list').check();
     await rubric.locator('summary').waitFor();
+    await page.getByLabel('Find an Allen entry by name').fill('नक्स वोमिका');
+    const keynote = page.getByRole('link', {name: 'Nux vomica · printed p. 209'});
+    assert.match(await keynote.getAttribute('href'), /#page=215$/);
     await nav('Patient records');
     await page.getByRole('button',{name:'Open profile',exact:true}).click();
     await page.getByRole('button',{name:'Consultation document'}).click();
