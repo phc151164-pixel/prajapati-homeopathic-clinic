@@ -271,8 +271,91 @@
     return box;
   }
 
+  async function repertorisation(container, api) {
+    const {repertory, boericke, progress} = await api(endpoint + '?section=library');
+    const entries = [repertory, boericke].flatMap((index, position) =>
+      index.rubrics.map(rubric => ({
+        id: rubric.id,
+        label: [rubric.chapter, ...rubric.path].join(' → '),
+        terms: rubric.aliases,
+        source: position === 0 ? 'Kent' : 'Boericke'
+      })));
+    const saved = new Map(progress.map(item => [item.book_id, item]));
+    const selected = new Set(entries.filter(entry => saved.get(entry.id)?.bookmarked).map(entry => entry.id));
+    const panel = node('section');
+    panel.className = 'card';
+    const input = node('input');
+    input.type = 'search';
+    const label = node('label', 'Search historical rubrics');
+    label.append(input);
+    const results = node('ul');
+    const selection = node('ul');
+    const status = node('p');
+    status.setAttribute('role', 'status');
+    let saving = false;
+    const save = action('Save study list', async () => {
+      saving = true;
+      render();
+      try {
+        for (const entry of entries) {
+          const prior = saved.get(entry.id);
+          if (Boolean(prior?.bookmarked) === selected.has(entry.id)) continue;
+          const {progress: updated} = await api(endpoint, {
+            action: 'progress', bookId: entry.id,
+            bookmarked: selected.has(entry.id), note: prior?.note || ''
+          });
+          saved.set(entry.id, updated);
+        }
+        status.textContent = 'Study list saved.';
+      } catch (error) {
+        status.textContent = error.message;
+      } finally {
+        saving = false;
+        render();
+      }
+    });
+    function render() {
+      const terms = normalize(input.value).trim().split(/\s+/u);
+      const matching = entries.filter(entry => terms.every(term =>
+        normalize(entry.label + ' ' + entry.source + ' ' + entry.terms).includes(term)));
+      results.replaceChildren();
+      selection.replaceChildren();
+      for (const entry of matching) {
+        const item = node('li');
+        const add = action('Add ' + entry.label + ' (' + entry.source + ')', () => {
+          selected.add(entry.id);
+          status.textContent = '';
+          render();
+        });
+        add.disabled = saving || selected.has(entry.id);
+        item.append(add);
+        results.append(item);
+      }
+      if (!matching.length) results.append(node('li', 'No matching rubrics in the current index.'));
+      for (const entry of entries.filter(entry => selected.has(entry.id))) {
+        const item = node('li');
+        const remove = action('Remove ' + entry.label + ' (' + entry.source + ')', () => {
+          selected.delete(entry.id);
+          status.textContent = '';
+          render();
+        });
+        remove.disabled = saving;
+        item.append(remove);
+        selection.append(item);
+      }
+      if (!selected.size) selection.append(node('li', 'No rubrics selected.'));
+      save.disabled = saving || !entries.some(entry =>
+        Boolean(saved.get(entry.id)?.bookmarked) !== selected.has(entry.id));
+    }
+    input.addEventListener('input', render);
+    panel.append(label, node('h2', 'Search results'), results,
+      node('h2', 'Selected rubrics'), selection, save, status);
+    render();
+    container.replaceChildren(panel);
+  }
+
   window.PHCSmartClinic = {
-    consultation,
+    consultation, repertorisation,
     close() {
       consultationRequest++;
       stopDictation();
