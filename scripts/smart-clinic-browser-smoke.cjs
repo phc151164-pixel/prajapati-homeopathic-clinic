@@ -130,6 +130,12 @@ const srv = http.createServer(async (req,res) => {
     await page.getByRole('button', {name: 'Stop recording'}).click();
     await page.locator('audio[src^="blob:"]').waitFor();
     assert.match(await page.getByLabel('Editable transcript preview').inputValue(), /synthetic note/);
+    await page.getByRole('button', {name: 'Review symptoms and find rubrics'}).click();
+    await page.getByRole('button', {name: 'Chief complaint synthetic note', exact: true}).click();
+    await page.getByLabel('Review and edit symptom wording').fill('sar dard khansi');
+    await page.getByRole('button', {name: 'Find matching rubrics'}).click();
+    await page.getByRole('button', {name: /Add Head → Pain → Pressing → Coughing/}).click();
+    await page.getByRole('cell', {name: 'Kent', exact: true}).waitFor();
     await historyField.fill('');
     await page.getByRole('button', {name: 'Create draft from transcript'}).click();
     assert.match(await historyField.inputValue(), /Chief complaint: synthetic note/);

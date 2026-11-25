@@ -101,6 +101,26 @@
       const transcript = ui.field('transcriptPreview', 'Editable transcript preview', 'textarea', '');
       const preview = transcript.querySelector('textarea');
       preview.removeAttribute('name');
+      const study = node('div');
+      const studyStatus = node('p');
+      studyStatus.setAttribute('role', 'status');
+      const openStudy = action('Review symptoms and find rubrics', async () => {
+        if (!preview.value.trim()) {
+          studyStatus.textContent = 'Record or enter a transcript first.';
+          return;
+        }
+        openStudy.disabled = true;
+        studyStatus.textContent = 'Loading historical rubric index…';
+        try {
+          await repertorisation(study, ui.api, preview.value);
+          studyStatus.textContent = '';
+        } catch (error) {
+          studyStatus.textContent = error.message;
+        } finally {
+          openStudy.disabled = false;
+        }
+      });
+      preview.addEventListener('input', () => study.replaceChildren());
       const useTranscript = action('Create draft from transcript', () => {
         const draft = transcriptDraft(preview.value.trim());
         if (!draft) return ui.message('Add or transcribe some text first.', true, 'editorMessage');
@@ -132,7 +152,7 @@
         else ui.message('There is not enough room to insert every heading.', true, 'editorMessage');
         history.focus();
       });
-      ui.modal('Consultation document', [detail, ...fields, chart, classical, formatDraft, consultationRecorder(preview, ui), transcript, useTranscript], values => ui.api(endpoint, {
+      ui.modal('Consultation document', [detail, ...fields, chart, classical, formatDraft, consultationRecorder(preview, ui), transcript, useTranscript, openStudy, studyStatus, study], values => ui.api(endpoint, {
         action: 'consultation', visitId: visit.id, version: saved?.version || 0,
         history: draftChart(values.history), observations: values.observations, follow_up: values.follow_up,
         consent: values.consent === 'yes', reviewed: values.reviewed === 'yes'
@@ -428,7 +448,7 @@
     return guide;
   }
 
-  async function repertorisation(container, api) {
+  async function repertorisation(container, api, transcript) {
     const {repertory, boericke, progress} = await api(endpoint + '?section=library');
     const entries = [repertory, boericke].flatMap((index, position) =>
       index.rubrics.map(rubric => ({
@@ -440,7 +460,8 @@
         page: rubric.page,
         edition: index.edition
       })));
-    const saved = new Map(progress.map(item => [item.book_id, item]));
+    const sessionStudy = transcript !== undefined;
+    const saved = new Map((sessionStudy ? [] : progress).map(item => [item.book_id, item]));
     const selected = new Set(entries.filter(entry => saved.get(entry.id)?.bookmarked).map(entry => entry.id));
     const panel = node('section');
     panel.className = 'card';
@@ -449,6 +470,28 @@
     const label = node('label', 'Search historical rubrics');
     label.append(input);
     const results = node('ul');
+    const review = node('div');
+    if (sessionStudy) {
+      const excerptList = node('ul');
+      const symptom = node('input');
+      const symptomLabel = node('label', 'Review and edit symptom wording');
+      symptomLabel.append(symptom);
+      const excerpts = [...new Set(transcript.split(/[.!?।;\n]+/u).map(text => text.trim()).filter(Boolean))];
+      for (const excerpt of excerpts.slice(0, 30)) {
+        const item = node('li');
+        item.append(action(excerpt, () => {
+          symptom.value = excerpt;
+          symptom.focus();
+        }));
+        excerptList.append(item);
+      }
+      review.append(node('h3', 'Review transcript excerpts'),
+        node('p', 'Choose an excerpt and keep only the confirmed symptom words. Check for negation and who reported the symptom.'),
+        excerptList, symptomLabel, action('Find matching rubrics', () => {
+          input.value = symptom.value.trim();
+          render();
+        }));
+    }
     const selection = node('ul');
     const chart = node('table');
     const header = chart.createTHead().insertRow();
@@ -481,8 +524,9 @@
       }
     });
     function render() {
-      const terms = normalize(input.value).trim().split(/\s+/u);
-      const matching = entries.filter(entry => terms.every(term =>
+      const query = normalize(input.value).trim();
+      const terms = query.split(/\s+/u);
+      const matching = sessionStudy && !query ? [] : entries.filter(entry => terms.every(term =>
         normalize(entry.label + ' ' + entry.source + ' ' + entry.terms).includes(term)));
       results.replaceChildren();
       selection.replaceChildren();
@@ -497,7 +541,8 @@
         item.append(add, node('p', entry.edition + ' · Page ' + entry.page));
         results.append(item);
       }
-      if (!matching.length) results.append(node('li', 'No matching rubrics in the current index.'));
+      if (!matching.length) results.append(node('li', sessionStudy && !query ?
+        'Enter reviewed symptom words to find historical rubrics.' : 'No matching rubrics in the current index.'));
       if (matching.length > 40) results.append(node('li', 'Showing 40 of ' + matching.length + ' matches. Refine your search to see more.'));
       const groups = new Map();
       for (const entry of entries.filter(entry => selected.has(entry.id))) {
@@ -527,10 +572,12 @@
     }
     input.addEventListener('input', render);
     panel.append(node('p', entries.length + ' indexed rubrics for historical study.'),
-      label, node('h2', 'Search results'), results,
-      node('h2', 'Selected rubrics'), selection, chart, save, status);
+      review, label, node('h2', 'Search results'), results,
+      node('h2', 'Selected rubrics'), selection, chart);
+    if (!sessionStudy) panel.append(save, status);
     render();
-    container.replaceChildren(panel, studyWorkflow());
+    container.replaceChildren(panel);
+    if (!sessionStudy) container.append(studyWorkflow());
   }
 
   const medicineNames = new Map(Object.entries({
