@@ -111,8 +111,42 @@
     toolbar.className = 'toolbar';
     toolbar.append(label, categoryLabel, modeLabel);
     const results = node('div');
+    results.className = 'phc-book-list';
+    const reading = node('div');
+    reading.hidden = true;
+    let clearBook = () => {};
+    function openBook(book, source, trigger) {
+      clearBook();
+      reading.replaceChildren();
+      reading.hidden = false;
+      const panel = card(book.title);
+      const close = action('Back to book list', () => {
+        clearBook();
+        reading.replaceChildren();
+        reading.hidden = true;
+        trigger.focus();
+      });
+      panel.append(close);
+      if (book.reader_url) {
+        const frame = node('iframe');
+        frame.className = 'phc-book-frame';
+        frame.title = book.title + ' book reader';
+        frame.referrerPolicy = 'no-referrer';
+        frame.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+        frame.src = book.reader_url;
+        panel.append(frame);
+      } else {
+        panel.append(node('p', 'Open the source to download the scan if available, then choose the PDF here to read it in the app.'));
+      }
+      const publisher = source.cloneNode(true);
+      panel.append(publisher);
+      if (!book.reader_url) clearBook = window.PHCPdfReader.create('Read a downloaded edition', panel);
+      else clearBook = () => {};
+      reading.append(panel);
+      close.focus();
+    }
     filters.append(node('p', 'Historical education only. Keep patient information out of reference notes.'), toolbar, state, results);
-    root.append(filters);
+    root.append(filters, reading);
 
     function render() {
       const books = data.catalog.filter(book => {
@@ -121,6 +155,7 @@
           && (!mode.selectedIndex || (mode.selectedIndex === 1 ? item?.bookmarked : item?.last_opened));
       });
       if (mode.selectedIndex === 2) books.sort((a, b) => progress.get(b.id).last_opened.localeCompare(progress.get(a.id).last_opened));
+      if (mode.selectedIndex !== 2) books.sort((a, b) => a.title.localeCompare(b.title, 'en'));
       state.textContent = books.length + ' catalogue entries';
       results.replaceChildren();
       for (const book of books) {
@@ -162,7 +197,7 @@
           }
         }
         const saveButton = action('Save bookmark and note', save);
-        source.addEventListener('click', async () => {
+        const markOpened = async () => {
           try {
             const {progress: item} = await api(endpoint, {action: 'reference_opened', bookId: book.id});
             const existing = progress.get(book.id) || item;
@@ -170,10 +205,17 @@
           } catch {
             feedback.textContent = 'The edition opened, but its reading history could not be saved.';
           }
+        };
+        source.addEventListener('click', markOpened);
+        const readBook = action('Read in app', () => {
+          openBook(book, source, readBook);
+          void markOpened();
         });
+        const noteTools = node('details');
+        noteTools.append(node('summary', 'Bookmark and notes'), noteLabel, bookmarkLabel, saveButton, feedback);
         entry.append(node('h3', book.title + ' / ' + book.title_hi),
           node('p', [book.author, book.year, book.category, 'English', book.rights].filter(Boolean).join(' · ')),
-          source, noteLabel, bookmarkLabel, saveButton, feedback);
+          readBook, noteTools);
         if (saved?.last_opened) entry.append(node('p', 'Last opened ' + new Date(saved.last_opened).toLocaleString('en-IN')));
         results.append(entry);
       }
@@ -183,8 +225,8 @@
     mode.addEventListener('change', render);
     render();
 
-    if (data.boericke) root.prepend(renderRepertory(data.boericke, progress, api));
-    if (data.repertory) root.prepend(renderRepertory(data.repertory, progress, api));
+    if (data.boericke) root.append(renderRepertory(data.boericke, progress, api));
+    if (data.repertory) root.append(renderRepertory(data.repertory, progress, api));
 
     if (data.keynotes?.entries.length) root.append(renderKeynotes(data.keynotes));
 
@@ -197,6 +239,7 @@
     root.append(reader);
     disposeLibrary = () => {
       closed = true;
+      clearBook();
       clearFirst();
       clearSecond();
     };

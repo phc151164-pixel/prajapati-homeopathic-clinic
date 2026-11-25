@@ -93,7 +93,8 @@
     "rights_checked": "2026-11-25",
     "content_status": "external_catalogue_only",
     "translation_status": "Hindi catalogue label only",
-    "purpose": "historical education only"
+    "purpose": "historical education only",
+    "reader_url": "https://archive.org/embed/keynotescharacte00alle"
   },
   {
     "id": "hahnemann-chronic-diseases",
@@ -122,6 +123,23 @@
     "source": "U.S. National Library of Medicine",
     "source_url": "https://www.ncbi.nlm.nih.gov/nlmcatalog/198808",
     "rights": "Public domain according to the National Library of Medicine",
+    "rights_checked": "2026-11-25",
+    "content_status": "external_catalogue_only",
+    "translation_status": "Hindi catalogue label only",
+    "purpose": "historical education only",
+    "reader_url": "https://archive.org/embed/bwb_T4-AVD-810"
+  },
+  {
+    "id": "kent-repertory",
+    "title": "Kent’s Repertory of the Homoeopathic Materia Medica",
+    "title_hi": "केंट की रिपर्टरी",
+    "author": "James Tyler Kent",
+    "category": "Repertory",
+    "year": "1897–1899",
+    "language": "en",
+    "source": "Wellcome Collection",
+    "source_url": "https://wellcomecollection.org/works/aguw48nw/items",
+    "rights": "Public Domain Mark",
     "rights_checked": "2026-11-25",
     "content_status": "external_catalogue_only",
     "translation_status": "Hindi catalogue label only",
