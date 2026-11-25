@@ -371,6 +371,28 @@
     container.replaceChildren(panel);
   }
 
+  const medicineNames = new Map(Object.entries({
+    "ABADILLA": "SABADILLA",
+    "ABINA": "SABINA",
+    "ANICULA AQUA": "SANICULA AQUA",
+    "ARISTOLOCHIA MILHOMEN": "ARISTOLOCHIA MILHOMENS",
+    "BERBERIS VULGARI": "BERBERIS VULGARIS",
+    "BLATTA ORIENTALI": "BLATTA ORIENTALIS",
+    "BOLETUS LARICI": "BOLETUS LARICIS",
+    "EDUM ACRE": "SEDUM ACRE",
+    "ENEGA": "SENEGA",
+    "ENNA": "SENNA",
+    "GRAPHITE": "GRAPHITES",
+    "HOMARU": "HOMARUS",
+    "LOBELIA PURPURASCEN": "LOBELIA PURPURASCENS",
+    "MOSCHU": "MOSCHUS",
+    "RICINUS COMMUNI": "RICINUS COMMUNIS",
+    "TIGMATA MAYDI": "STIGMATA MAYDIS",
+    "UCCINUM": "SUCCINUM",
+    "ULPHUR": "SULPHUR",
+    "YPHILINUM": "SYPHILINUM"
+}));
+
   async function medicines(container, api) {
     const panel = node('section');
     panel.className = 'card';
@@ -401,7 +423,8 @@
             record.name.length > 150 || !Number.isInteger(record.page) ||
             record.page < 1 || record.page > 595 || typeof record.text !== 'string' ||
             record.text.length > 50000)) throw Error('Choose the Boericke_Medicines.json file.');
-      entries = [...records].sort((a, b) => a.name.localeCompare(b.name, 'en'));
+      entries = records.map(record => ({...record, name: medicineNames.get(record.name.trim().toUpperCase()) || record.name}))
+        .sort((a, b) => a.name.localeCompare(b.name, 'en'));
     }
     function render() {
       const query = normalize(search.value).trim();
