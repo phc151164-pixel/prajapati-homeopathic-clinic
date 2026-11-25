@@ -30,6 +30,8 @@ test('Kent rubric search preserves hierarchy, Hindi and Hinglish aliases, and pa
   const find = query => index.rubrics.filter(rubric => matchesRubric(rubric, query)).map(rubric => rubric.id);
   assert.deepEqual(find('Head pressing khansi'), ['kent-rubric-pressing-cough']);
   assert.deepEqual(find('कनपटी'), ['kent-rubric-tearing-temples']);
+  assert.deepEqual(find('Mind यात्रा safar'), ['kent-rubric-mind-travel']);
+  assert.deepEqual(find('behoshi रात'), ['kent-rubric-mind-unconscious-night']);
   assert.deepEqual(find('Sides Right'), ['kent-rubric-tearing-sides-right']);
   assert.equal(new Set(index.rubrics.map(rubric => rubric.id)).size, index.rubrics.length);
   assert.ok(index.rubrics.every(rubric => new URL(index.pages[rubric.page]).hostname === 'wellcomecollection.org'));

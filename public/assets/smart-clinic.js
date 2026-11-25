@@ -23,6 +23,7 @@
     const searchable = normalize([rubric.chapter, ...rubric.path, rubric.aliases].join(' '));
     return normalize(query).trim().split(/\s+/u).every(term => searchable.includes(term));
   };
+  const pageLabel = page => typeof page === 'number' ? 'printed page ' + page : page;
   const chartLabels = new Map([
     ['chief complaint', 'Chief complaint'], ['मुख्य शिकायत', 'Chief complaint'],
     ['duration', 'Duration'], ['अवधि', 'Duration'],
@@ -233,7 +234,7 @@
       for (const rubric of rubrics) {
         const item = node('details');
         item.className = 'visit';
-        const source = node('a', index.source + ' · printed page ' + rubric.page);
+        const source = node('a', index.source + ' · ' + pageLabel(rubric.page));
         source.href = index.pages[rubric.page];
         source.target = '_blank';
         source.rel = 'noopener noreferrer';
@@ -385,7 +386,7 @@
         results.replaceChildren();
         for (const rubric of entries.slice(0, 15)) {
           const item = node('li');
-          const link = node('a', [rubric.chapter, ...rubric.path].join(' → ') + ' · p. ' + rubric.page);
+          const link = node('a', [rubric.chapter, ...rubric.path].join(' → ') + ' · ' + pageLabel(rubric.page));
           link.href = index.pages[rubric.page];
           link.target = '_blank';
           link.rel = 'noopener noreferrer';

@@ -2,20 +2,295 @@
   "edition": "J. T. Kent, Repertory of the Homoeopathic Materia Medica, 1897–1899",
   "source": "Wellcome Collection",
   "rights": "Public Domain Mark",
-  "coverage": "Starter index covering selected Head rubrics from printed pages 195 and 220, volume 1.",
+  "coverage": "Selected Head and Mind rubrics from the 1897–1899 edition. Hindi and Hinglish terms are PHC search aliases.",
   "pages": {
     "195": "https://wellcomecollection.org/works/aguw48nw/items?canvas=201",
-    "220": "https://wellcomecollection.org/works/aguw48nw/items?canvas=226"
+    "220": "https://wellcomecollection.org/works/aguw48nw/items?canvas=226",
+    "scan 98": "https://wellcomecollection.org/works/aguw48nw/items?canvas=98&page=17&shouldScrollToCanvas=true"
   },
   "rubrics": [
-    {"id":"kent-rubric-pressing-cough","chapter":"Head","path":["Pain","Pressing","Coughing, while"],"page":195,"aliases":"सिर दर्द दबाव खाँसी खांसी khansi khasi sar dard dabav"},
-    {"id":"kent-rubric-pressing-darkness","chapter":"Head","path":["Pain","Pressing","Darkness, in"],"page":195,"aliases":"सिर दर्द दबाव अंधेरा andhera sar dard dabav"},
-    {"id":"kent-rubric-pressing-dinner","chapter":"Head","path":["Pain","Pressing","Dinner, during"],"page":195,"aliases":"सिर दर्द दबाव खाना khana sar dard dabav"},
-    {"id":"kent-rubric-pressing-reading","chapter":"Head","path":["Pain","Pressing","Reading, while"],"page":195,"aliases":"सिर दर्द दबाव पढ़ते वक्त padhte waqt sar dard dabav"},
-    {"id":"kent-rubric-pressing-sleep","chapter":"Head","path":["Pain","Pressing","Sleep, after"],"page":195,"aliases":"सिर दर्द दबाव नींद के बाद neend sone ke baad sar dard dabav"},
-    {"id":"kent-rubric-tearing-sides-right","chapter":"Head","path":["Pain","Tearing","Sides","Right"],"page":220,"aliases":"सिर दर्द दाहिनी तरफ dahini taraf sar dard"},
-    {"id":"kent-rubric-tearing-sides-left","chapter":"Head","path":["Pain","Tearing","Sides","Left"],"page":220,"aliases":"सिर दर्द बाईं तरफ bain taraf baayi taraf sar dard"},
-    {"id":"kent-rubric-tearing-stooping","chapter":"Head","path":["Pain","Tearing","Stooping"],"page":220,"aliases":"सिर दर्द झुकने पर jhukne par sar dard"},
-    {"id":"kent-rubric-tearing-temples","chapter":"Head","path":["Pain","Tearing","Temples"],"page":220,"aliases":"सिर दर्द कनपटी kanpati sar dard"}
+    {
+      "id": "kent-rubric-pressing-cough",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Coughing, while"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव खाँसी खांसी khansi khasi sar dard dabav"
+    },
+    {
+      "id": "kent-rubric-pressing-darkness",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Darkness, in"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव अंधेरा andhera sar dard dabav"
+    },
+    {
+      "id": "kent-rubric-pressing-dinner",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Dinner, during"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव खाना khana sar dard dabav"
+    },
+    {
+      "id": "kent-rubric-pressing-reading",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Reading, while"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव पढ़ते वक्त padhte waqt sar dard dabav"
+    },
+    {
+      "id": "kent-rubric-pressing-sleep",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Sleep, after"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव नींद के बाद neend sone ke baad sar dard dabav"
+    },
+    {
+      "id": "kent-rubric-tearing-sides-right",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Right"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द दाहिनी तरफ dahini taraf sar dard"
+    },
+    {
+      "id": "kent-rubric-tearing-sides-left",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Left"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द बाईं तरफ bain taraf baayi taraf sar dard"
+    },
+    {
+      "id": "kent-rubric-tearing-stooping",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Stooping"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द झुकने पर jhukne par sar dard"
+    },
+    {
+      "id": "kent-rubric-tearing-temples",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Temples"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द कनपटी kanpati sar dard"
+    },
+    {
+      "id": "kent-rubric-pressing-downward",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Downward"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव sar dard dabav नीचे niche"
+    },
+    {
+      "id": "kent-rubric-pressing-drawing",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Drawing"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव sar dard dabav खींचना kheenchna"
+    },
+    {
+      "id": "kent-rubric-pressing-deepseated",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Deep-seated"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव sar dard dabav गहरा gahra deep"
+    },
+    {
+      "id": "kent-rubric-pressing-digging",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Digging"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव sar dard dabav खोदने जैसा khodne jaisa"
+    },
+    {
+      "id": "kent-rubric-tearing-daybreak",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Morning"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द तरफ sar dard taraf सुबह subah"
+    },
+    {
+      "id": "kent-rubric-tearing-evening",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Evening"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द तरफ sar dard taraf शाम shaam"
+    },
+    {
+      "id": "kent-rubric-tearing-night",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Night"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द तरफ sar dard taraf रात raat"
+    },
+    {
+      "id": "kent-rubric-tearing-sitting",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Sitting, while"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द तरफ sar dard taraf बैठे हुए baithe hue"
+    },
+    {
+      "id": "kent-rubric-tearing-walking",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Walking, while"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द तरफ sar dard taraf चलते समय chalte samay"
+    },
+    {
+      "id": "kent-rubric-tearing-reading",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Reading, while"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द तरफ sar dard taraf पढ़ते समय padhte samay"
+    },
+    {
+      "id": "kent-rubric-mind-travel",
+      "chapter": "Mind",
+      "path": [
+        "Travel, desire to"
+      ],
+      "page": "scan 98",
+      "aliases": "यात्रा सफर घूमने की इच्छा yatra safar ghoomne ki iccha"
+    },
+    {
+      "id": "kent-rubric-mind-trifles",
+      "chapter": "Mind",
+      "path": [
+        "Trifles, seem important"
+      ],
+      "page": "scan 98",
+      "aliases": "छोटी बातें महत्वपूर्ण choti baatein mahatvapurn"
+    },
+    {
+      "id": "kent-rubric-mind-unattractive",
+      "chapter": "Mind",
+      "path": [
+        "Unattractive, things seem"
+      ],
+      "page": "scan 98",
+      "aliases": "चीजें अनाकर्षक cheezen akarshak nahi"
+    },
+    {
+      "id": "kent-rubric-mind-unconscious",
+      "chapter": "Mind",
+      "path": [
+        "Unconsciousness"
+      ],
+      "page": "scan 98",
+      "aliases": "बेहोशी मूर्छा behoshi behoshee murchha"
+    },
+    {
+      "id": "kent-rubric-mind-unconscious-morning",
+      "chapter": "Mind",
+      "path": [
+        "Unconsciousness",
+        "Morning"
+      ],
+      "page": "scan 98",
+      "aliases": "बेहोशी behoshi सुबह subah"
+    },
+    {
+      "id": "kent-rubric-mind-unconscious-evening",
+      "chapter": "Mind",
+      "path": [
+        "Unconsciousness",
+        "Evening"
+      ],
+      "page": "scan 98",
+      "aliases": "बेहोशी behoshi शाम shaam"
+    },
+    {
+      "id": "kent-rubric-mind-unconscious-night",
+      "chapter": "Mind",
+      "path": [
+        "Unconsciousness",
+        "Night"
+      ],
+      "page": "scan 98",
+      "aliases": "बेहोशी behoshi रात raat"
+    }
   ]
 }
