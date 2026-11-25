@@ -107,7 +107,7 @@ const srv = http.createServer(async (req,res) => {
     await page.getByRole('button', {name: 'Stop recording'}).click();
     await page.locator('audio[src^="blob:"]').waitFor();
     await page.getByLabel('Patient-reported history').fill('Synthetic history');
-    await page.getByLabel('Patient consent for structured documentation').selectOption('yes');
+    await page.getByLabel('Patient consent for structured documentation').check();
     await page.locator('#editorSave').click();
     await page.locator('#editor').waitFor({state:'hidden'});
     assert.equal(document.reviewed_at,null);

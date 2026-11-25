@@ -58,14 +58,24 @@
     element.addEventListener('click', click);
     return element;
   };
+  function consentCheckbox(name, text, checked = false) {
+    const label = node('label', text);
+    const input = node('input');
+    input.type = 'checkbox';
+    input.name = name;
+    input.value = 'yes';
+    input.checked = checked;
+    label.prepend(input);
+    return label;
+  }
+
   async function consultation(visit, ui) {
     const request = ++consultationRequest;
     try {
       const {document: saved} = await ui.api(endpoint + '?section=consultation&visitId=' + visit.id);
       if (request !== consultationRequest) return;
       const fields = [
-        ui.field('consent', 'Patient consent for structured documentation', 'select',
-          saved ? 'yes' : '', [['', 'Select after obtaining consent'], ['yes', 'Consent confirmed']]),
+        consentCheckbox('consent', 'Patient consented to structured documentation', Boolean(saved)),
         ui.field('history', 'Patient-reported history', 'textarea', saved?.history),
         ui.field('observations', 'Clinician observations', 'textarea', saved?.observations),
         ui.field('follow_up', 'Clinician follow-up plan', 'textarea', saved?.follow_up),
@@ -74,7 +84,7 @@
         ])
       ];
       for (const label of fields.slice(1, 4)) label.querySelector('textarea').maxLength = 3000;
-      fields[0].querySelector('select').required = true;
+      fields[0].querySelector('input').required = true;
       const detail = ui.el('p', saved?.reviewed_at ?
         'Last saved version reviewed on ' + new Date(saved.reviewed_at).toLocaleString('en-IN') :
         'Drafts require review by a qualified clinician.');
@@ -265,11 +275,10 @@
     }
     const language = ui.field('voiceLanguage', 'On-device dictation language', 'select', 'hi-IN',
       [['hi-IN', 'Hindi'], ['en-IN', 'English (India)']]);
-    const consent = ui.field('voiceConsent', 'Separate patient consent for microphone use', 'select', '',
-      [['', 'Select after obtaining consent'], ['yes', 'Consent confirmed']]);
+    const consent = consentCheckbox('voiceConsent', 'Patient consented to on-device dictation');
     let recognition, generation = 0;
     const start = action('Dictate patient history', async () => {
-      if (consent.querySelector('select').value !== 'yes') {
+      if (!consent.querySelector('input').checked) {
         status.textContent = 'Confirm microphone consent before starting.';
         return;
       }

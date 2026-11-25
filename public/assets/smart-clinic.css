@@ -45,3 +45,11 @@
 .phc-book-list article p {
   margin: 0;
 }
+
+.phc-workspace-home { padding: 1rem; }
+.phc-workspace-hero { background: #096849; color: #fff; border-radius: .9rem; padding: 1.4rem; text-align: center; }
+.phc-workspace-hero h2, .phc-workspace-hero p { color: #fff; }
+.phc-workspace-hero button { width: 100%; background: #fff; color: #095e43; }
+.phc-workspace-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .65rem; margin-top: .85rem; }
+.phc-workspace-grid button { min-height: 4rem; overflow-wrap: anywhere; }
+@media(max-width: 450px) { .phc-workspace-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
