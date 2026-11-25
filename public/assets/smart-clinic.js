@@ -348,7 +348,8 @@
         Boolean(saved.get(entry.id)?.bookmarked) !== selected.has(entry.id));
     }
     input.addEventListener('input', render);
-    panel.append(label, node('h2', 'Search results'), results,
+    panel.append(node('p', entries.length + ' indexed rubrics for historical study.'),
+      label, node('h2', 'Search results'), results,
       node('h2', 'Selected rubrics'), selection, save, status);
     render();
     container.replaceChildren(panel);

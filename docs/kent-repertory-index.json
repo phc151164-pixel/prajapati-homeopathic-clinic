@@ -2,11 +2,13 @@
   "edition": "J. T. Kent, Repertory of the Homoeopathic Materia Medica, 1897–1899",
   "source": "Wellcome Collection",
   "rights": "Public Domain Mark",
-  "coverage": "Selected Head and Mind rubrics from the 1897–1899 edition. Hindi and Hinglish terms are PHC search aliases.",
+  "coverage": "Selected historical Head and Mind rubrics from Kent’s first edition.",
   "pages": {
     "195": "https://wellcomecollection.org/works/aguw48nw/items?canvas=201",
     "220": "https://wellcomecollection.org/works/aguw48nw/items?canvas=226",
-    "scan 98": "https://wellcomecollection.org/works/aguw48nw/items?canvas=98&page=17&shouldScrollToCanvas=true"
+    "scan 98": "https://wellcomecollection.org/works/aguw48nw/items?canvas=98&page=17&shouldScrollToCanvas=true",
+    "scan 17": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Repertory_of_the_homoeopathic_materia_medica_%28electronic_resource%29_%28IA_b20416234_001%29.pdf#page=17",
+    "scan 18": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Repertory_of_the_homoeopathic_materia_medica_%28electronic_resource%29_%28IA_b20416234_001%29.pdf#page=18"
   },
   "rubrics": [
     {
@@ -291,6 +293,156 @@
       ],
       "page": "scan 98",
       "aliases": "बेहोशी behoshi रात raat"
+    },
+    {
+      "id": "kent-rubric-mind-abandoned",
+      "chapter": "Mind",
+      "path": [
+        "Abandoned"
+      ],
+      "page": "scan 17",
+      "aliases": "अकेला छोड़ दिया akela chhod diya"
+    },
+    {
+      "id": "kent-rubric-mind-abrupt",
+      "chapter": "Mind",
+      "path": [
+        "Abrupt"
+      ],
+      "page": "scan 17",
+      "aliases": "अचानक achanak"
+    },
+    {
+      "id": "kent-rubric-mind-absent-minded",
+      "chapter": "Mind",
+      "path": [
+        "Absent minded"
+      ],
+      "page": "scan 17",
+      "aliases": "ध्यान भटकना dhyan bhatakna"
+    },
+    {
+      "id": "kent-rubric-mind-abusive",
+      "chapter": "Mind",
+      "path": [
+        "Abusive"
+      ],
+      "page": "scan 17",
+      "aliases": "अपशब्द apashabd gaali"
+    },
+    {
+      "id": "kent-rubric-mind-acuteness",
+      "chapter": "Mind",
+      "path": [
+        "Acuteness"
+      ],
+      "page": "scan 17",
+      "aliases": "तीक्ष्णता tikshnata"
+    },
+    {
+      "id": "kent-rubric-mind-affectation",
+      "chapter": "Mind",
+      "path": [
+        "Affectation"
+      ],
+      "page": "scan 17",
+      "aliases": "दिखावा dikhawa"
+    },
+    {
+      "id": "kent-rubric-mind-affectionate",
+      "chapter": "Mind",
+      "path": [
+        "Affectionate"
+      ],
+      "page": "scan 17",
+      "aliases": "स्नेही snehi"
+    },
+    {
+      "id": "kent-rubric-mind-air-castles",
+      "chapter": "Mind",
+      "path": [
+        "Air castles"
+      ],
+      "page": "scan 17",
+      "aliases": "कल्पना kalpana"
+    },
+    {
+      "id": "kent-rubric-mind-ambition-loss",
+      "chapter": "Mind",
+      "path": [
+        "Ambition, loss of"
+      ],
+      "page": "scan 17",
+      "aliases": "महत्वाकांक्षा कम mahatvakanksha"
+    },
+    {
+      "id": "kent-rubric-mind-absent-minded-periodical",
+      "chapter": "Mind",
+      "path": [
+        "Absent minded",
+        "Periodical attacks of, short lasting"
+      ],
+      "page": "scan 17",
+      "aliases": "ध्यान भटकना बार बार dhyan bhatakna"
+    },
+    {
+      "id": "kent-rubric-mind-absent-minded-starts",
+      "chapter": "Mind",
+      "path": [
+        "Absent minded",
+        "Starts when spoken to"
+      ],
+      "page": "scan 17",
+      "aliases": "बोलने पर चौंकना bolne par chaunkna"
+    },
+    {
+      "id": "kent-rubric-mind-abusive-forenoon",
+      "chapter": "Mind",
+      "path": [
+        "Abusive",
+        "Forenoon"
+      ],
+      "page": "scan 17",
+      "aliases": "अपशब्द सुबह gaali subah"
+    },
+    {
+      "id": "kent-rubric-mind-abusive-evening",
+      "chapter": "Mind",
+      "path": [
+        "Abusive",
+        "Evening"
+      ],
+      "page": "scan 17",
+      "aliases": "अपशब्द शाम gaali shaam"
+    },
+    {
+      "id": "kent-rubric-mind-anger",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा क्रोध gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-morning",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Morning"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा सुबह gussa subah"
+    },
+    {
+      "id": "kent-rubric-mind-anger-alternates-cheerfulness",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Alternating with cheerfulness"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा खुशी gussa khushi"
     }
   ]
 }
