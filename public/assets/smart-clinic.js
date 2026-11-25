@@ -287,6 +287,54 @@
     return box;
   }
 
+  function studyWorkflow() {
+    const guide = node('details');
+    guide.className = 'card';
+    guide.append(node('summary', 'Study workflow'));
+    const steps = [
+      ['Case Taking', 'Record the complaints, history and general symptoms described in a study case.'],
+      ['Symptom Analysis', 'Classify observations as mental generals, physical generals or particular symptoms.'],
+      ['Evaluation of Symptoms', 'Distinguish characteristic observations from common ones.'],
+      ['Totality of Symptoms', 'Organise the selected observations into one case summary.'],
+      ['Rubric Selection', 'Find and review corresponding historical rubrics and sub-rubrics.'],
+      ['Repertorial Analysis', 'Compare how historical sources recorded the selected rubrics and grades.'],
+      ['Materia Medica Reference', 'Read the corresponding historical descriptions in the Medicine section.']
+    ];
+    const list = node('ol');
+    for (const [heading, description] of steps) {
+      const item = node('li');
+      item.append(node('strong', heading), node('p', description));
+      list.append(item);
+    }
+    const methods = node('ul');
+    for (const method of ['J. T. Kent · General to Particular',
+      'Bönninghausen · Particular to General', 'C. M. Boger · Pathological and General Approach']) {
+      methods.append(node('li', method));
+    }
+    const glossary = node('dl');
+    for (const [term, meaning] of [
+      ['Mental Generals', 'Observations about mood, emotions or thinking.'],
+      ['Physical Generals', 'Whole-person observations such as sleep, appetite or temperature preferences.'],
+      ['Particular Symptoms', 'Observations tied to a specific complaint or body area.'],
+      ['Modalities', 'Circumstances in which a symptom changes.'],
+      ['Concomitant Symptoms', 'Other symptoms that occur alongside the main complaint.'],
+      ['LSMC', 'Location, Sensation, Modality and Concomitant.'],
+      ['Rubrics and Sub-rubrics', 'Standard repertory headings and their narrower categories.'],
+      ['Remedy Gradation', 'The grade recorded by the source for an entry.'],
+      ['Totality of Symptoms', 'The selected observations considered together.'],
+      ['Susceptibility', 'A historical term describing a person’s responsiveness to influences.']
+    ]) {
+      glossary.append(node('dt', term), node('dd', meaning));
+    }
+    const medicine = action('Open Medicine', () => {
+      document.querySelector('#nav button[data-section="medicines"]')?.click();
+    });
+    guide.append(node('p', 'Traditional historical workflow for educational study.'),
+      node('h2', 'Seven steps'), list, node('h2', 'Traditional methods'), methods,
+      node('h2', 'Terminology'), glossary, medicine);
+    return guide;
+  }
+
   async function repertorisation(container, api) {
     const {repertory, boericke, progress} = await api(endpoint + '?section=library');
     const entries = [repertory, boericke].flatMap((index, position) =>
@@ -368,7 +416,7 @@
       label, node('h2', 'Search results'), results,
       node('h2', 'Selected rubrics'), selection, save, status);
     render();
-    container.replaceChildren(panel);
+    container.replaceChildren(studyWorkflow(), panel);
   }
 
   const medicineNames = new Map(Object.entries({

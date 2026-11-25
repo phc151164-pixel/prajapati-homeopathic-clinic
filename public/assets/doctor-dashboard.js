@@ -32,7 +32,7 @@ async function enter(user,features){smartClinic=features.smartClinic===true&&Boo
 $('loginForm').onsubmit=async e=>{e.preventDefault();const b=e.currentTarget.querySelector('button');b.disabled=true;try{const session=await api('doctor-auth',{action:'login',email:$('email').value.trim(),password:$('password').value},false);await enter(session.user,session);}catch(e){message(e.message,true,'loginMessage');}finally{b.disabled=false;}};
 $('recoverButton').onclick=async()=>{try{const r=await api('doctor-auth',{action:'recover',email:$('email').value.trim()},false);message(r.message,false,'loginMessage');}catch(e){message(e.message,true,'loginMessage');}};
 $('logout').onclick=async()=>{try{await api('doctor-auth',{action:'logout'},false);}catch{}showLogin();};
-for(const [key,title]of sections)$('nav').append(button(title,()=>navigate(key)));
+for(const [key,title]of sections){const item=button(title,()=>navigate(key));item.dataset.section=key;$('nav').append(item);}
 const themeNav=button('Toggle light / dark theme',()=>window.PHCSmartClinic.toggleTheme());
 themeNav.id='smartThemeNav';themeNav.hidden=true;
 $('nav').append(themeNav);
