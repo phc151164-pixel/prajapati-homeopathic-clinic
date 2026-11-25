@@ -167,8 +167,16 @@ function passwordEditor(){const fields=[field('password','New password (at least
  if(hash||code||providerError){
   history.replaceState(null,'','/admin');
   if(providerError){message('Recovery link expired or could not be verified. Request a new recovery email.',true,'loginMessage');return;}
-  try{await api('doctor-auth',code?{action:'exchangeRecoveryCode',code}:{action:'verifyRecovery',tokenHash:hash},false);passwordEditor();}
-  catch(error){message(error.message,true,'loginMessage');}
+  const recovery=code?{action:'exchangeRecoveryCode',code}:{action:'verifyRecovery',tokenHash:hash};
+  const proceed=button('Continue password reset',async()=>{
+   proceed.disabled=true;
+   proceed.remove();
+   try{await api('doctor-auth',recovery,false);message('',false,'loginMessage');passwordEditor();}
+   catch(error){message(error.message,true,'loginMessage');}
+  });
+  message('Use the button below to verify your recovery link.',false,'loginMessage');
+  $('loginMessage').after(proceed);
+  proceed.focus();
   return;
  }
  try{const session=await api('doctor-auth',undefined,false);await enter(session.user,session);}
