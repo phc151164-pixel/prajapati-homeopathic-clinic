@@ -1,10 +1,11 @@
 'use strict';
 const crypto=require('node:crypto');
+const smartClinic=require('./smart-clinic.cjs');
 const {recoveryCookieName,withRecoveryCookie,auth,member,identify,sameOrigin,cookies,withSession,cookieNames,json}=require('../lib/doctor-auth.cjs');
 exports.handler=async event=>{
  if(process.env.PHC_DASHBOARD_ENABLED!=='true')return json(503,{error:'Doctor dashboard is not enabled on this deployment.'});
  if(event.httpMethod==='GET'){
-  const user=await identify(event);return user?json(200,{user}):json(401,{error:'Please sign in with an authorized clinic account.'});
+  const user=await identify(event);return user?json(200,{user,...(smartClinic.enabled()?{smartClinic:true}:{})}):json(401,{error:'Please sign in with an authorized clinic account.'});
  }
  if(event.httpMethod!=='POST')return json(405,{error:'Method not allowed'});
  if(!sameOrigin(event))return json(403,{error:'Request origin not allowed'});
@@ -46,7 +47,7 @@ exports.handler=async event=>{
    }
    const user=await member(session.access_token);
    if(!user){try{await auth('logout','POST',{},session.access_token);}catch{}return withSession(json(403,{error:'This account is not authorized for the clinic dashboard.'}),null);}
-   const response=withSession(json(200,{user}),session);
+   const response=withSession(json(200,{user,...(smartClinic.enabled()?{smartClinic:true}:{})}),session);
    return ['verifyRecovery','exchangeRecoveryCode'].includes(b.action)?withRecoveryCookie(response,null):response;
   }
   if(b.action==='password'){

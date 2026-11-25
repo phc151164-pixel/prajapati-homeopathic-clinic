@@ -62,5 +62,21 @@
     "content_status": "external_catalogue_only",
     "translation_status": "Hindi catalogue title only; no translated text",
     "purpose": "historical education only"
+  },
+  {
+    "id": "materia-medica-pura",
+    "title": "Materia medica pura",
+    "title_hi": "मेटेरिया मेडिका प्यूरा",
+    "author": "Samuel Hahnemann / R. E. Dudgeon (translator)",
+    "category": "Materia Medica",
+    "year": "1880–1881",
+    "language": "en",
+    "source": "Wellcome Collection",
+    "source_url": "https://wellcomecollection.org/works/ukrrfv6p/items",
+    "rights": "Public Domain Mark",
+    "rights_checked": "2026-11-25",
+    "content_status": "external_catalogue_only",
+    "translation_status": "Hindi catalogue title only; linked edition is the historical English translation",
+    "purpose": "historical education only"
   }
 ]

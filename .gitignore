@@ -4,3 +4,4 @@
 node_modules/
 .netlify/
 *.log
+/public/assets/pdfjs/

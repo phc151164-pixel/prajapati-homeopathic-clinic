@@ -1,0 +1,28 @@
+.phc-reader-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.phc-pdf-view { width: 100%; height: min(65vh, 640px); overflow: auto; border: 1px solid var(--line); background: #e0eae3; margin-top: 12px; }
+.phc-pdf-view canvas { display: block; }
+.phc-pdf-pane .actions label { width: min(100%, 95px); margin: 0; }
+.phc-pdf-text { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 40vh; overflow: auto; }
+@media (max-width: 720px) {
+  .phc-reader-columns { grid-template-columns: minmax(0, 1fr); }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --green: #6fe1ae;
+  --dark: #e6f6ec;
+  --muted: #b3ccbc;
+  --line: #416451;
+  --bg: #11251c;
+}
+[data-theme="dark"] :is(#appView > aside, #appView .card, #appView .stat, .dashboard-menu-panel, dialog, input, textarea, select, .visit, .install-guide, th) {
+  background: #19392b;
+  color: var(--dark);
+}
+[data-theme="dark"] :is(button:not(.secondary):not(.text-button):not(.danger), .link-button) {
+  color: #10271d;
+}
+[data-theme="dark"] #appView nav button { color: var(--green); background: #19392b; }
+[data-theme="dark"] #appView nav button.active { background: #284e3c; }
+[data-theme="dark"] .secondary { background: #1c3d2f; }
+[data-theme="dark"] .login-wrap { background: var(--bg); }
+[data-theme="dark"] .login-card { background: #19392b; }
