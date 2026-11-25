@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const deploy = require('../netlify/lib/deploy-context.cjs');
 deploy.context = 'dev';
 const {handler, enabled} = require('../netlify/handlers/smart-clinic.cjs');
-const {draftChart} = require('../public/assets/smart-clinic.js');
+const {draftChart, medicineSections} = require('../public/assets/smart-clinic.js');
 const doctor = '11111111-1111-4111-8111-111111111111';
 const visit = '22222222-2222-4222-8222-222222222222';
 const origin = 'https://phc-preview.example';
@@ -94,4 +94,12 @@ test('Smart Clinic restricts deployment, authorizes the doctor, and binds writes
       else process.env[key] = value;
     }
   }
+});
+
+test('medicine view separates source headings and preserves continuation text', () => {
+  assert.deepEqual(medicineSections('Historical introduction\nMind.––First line\nSecond line\nHead.—Another section'), [
+    {heading: 'Overview', text: 'Historical introduction'},
+    {heading: 'Mind', text: 'First line\nSecond line'},
+    {heading: 'Head', text: 'Another section'}
+  ]);
 });

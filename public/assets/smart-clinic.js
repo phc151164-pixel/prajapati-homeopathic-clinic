@@ -22,8 +22,24 @@
       return heading ? heading + ': ' + label[2].trim() : line;
     }).join('\n');
   }
+  function medicineSections(text) {
+    const sections = [];
+    let current = {heading: 'Overview', text: ''};
+    for (const line of text.split(/\r?\n/u)) {
+      const marker = line.match(/^\s*([\p{L}][\p{L} &/’'-]{0,48})\.\s*(?:[–—]{1,2}|--+)\s*(.*)$/u);
+      if (marker) {
+        if (current.text.trim()) sections.push(current);
+        current = {heading: marker[1].trim(), text: marker[2]};
+      } else {
+        current.text += (current.text ? '\n' : '') + line;
+      }
+    }
+    if (current.text.trim()) sections.push(current);
+    return sections;
+  }
+
   if (typeof module !== 'undefined') {
-    module.exports = {draftChart};
+    module.exports = {draftChart, medicineSections};
     return;
   }
 
@@ -403,7 +419,14 @@
             search.focus();
           });
           detail.replaceChildren(title, node('p', 'Boericke, ninth edition · PDF page ' + record.page), close);
-          for (const paragraph of record.text.split(/\n\s*\n/u)) detail.append(node('p', paragraph));
+          for (const entry of medicineSections(record.text)) {
+            const section = node('section');
+            section.append(node('h3', entry.heading));
+            for (const paragraph of entry.text.trim().split(/\n\s*\n/u)) {
+              section.append(node('p', paragraph.replace(/\n/u, ' ')));
+            }
+            detail.append(section);
+          }
           searchLabel.hidden = list.hidden = true;
           detail.hidden = false;
           title.focus();
