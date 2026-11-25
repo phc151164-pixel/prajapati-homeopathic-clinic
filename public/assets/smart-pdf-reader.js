@@ -35,7 +35,7 @@
   }
   const normalize = text => text.normalize('NFKC').toLowerCase().replace(/\s+/gu, ' ').trim();
 
-  function create(title, container) {
+  function create(title, container, bookUrl) {
     const pane = make('section');
     pane.className = 'card phc-pdf-pane';
     const file = field('Choose a local PDF', 'file');
@@ -158,22 +158,21 @@
       }
     }
 
-    file.input.addEventListener('change', async () => {
-      const selected = file.input.files[0];
+    async function open(selected) {
       clear();
       const token = generation;
-      if (!selected) return;
+      if (!selected && !bookUrl) return;
       try {
-        if (selected.size > 100 * 1024 * 1024 || !(await selected.slice(0, 1024).text()).includes('%PDF-')) {
+        if (selected && (selected.size > 100 * 1024 * 1024 || !(await selected.slice(0, 1024).text()).includes('%PDF-'))) {
           if (token === generation) status.textContent = 'Choose a PDF no larger than 100 MB.';
           return;
         }
         if (token !== generation) return;
-        status.textContent = 'Opening ' + selected.name + '…';
-        const [engine, data] = await Promise.all([pdfEngine(), selected.arrayBuffer()]);
+        status.textContent = 'Opening PDF…';
+        const [engine, data] = await Promise.all([pdfEngine(), selected?.arrayBuffer()]);
         if (token !== generation) return;
         loading = engine.getDocument({
-          data: new Uint8Array(data), cMapUrl: vendor + 'cmaps/', cMapPacked: true,
+          ...(selected ? {data: new Uint8Array(data)} : {url: bookUrl}), cMapUrl: vendor + 'cmaps/', cMapPacked: true,
           standardFontDataUrl: vendor + 'standard_fonts/', iccUrl: vendor + 'iccs/',
           wasmUrl: vendor + 'decoders/', useWasm: false, isEvalSupported: false
         });
@@ -187,7 +186,8 @@
       } catch {
         if (token === generation) status.textContent = 'Unable to open this PDF. Check that the file is readable and unlocked.';
       }
-    });
+    }
+    file.input.addEventListener('change', () => { void open(file.input.files[0]); });
 
     function scale(change) {
       zoom = Math.max(0.5, Math.min(2, zoom + change));
@@ -209,6 +209,10 @@
     const resize = new ResizeObserver(() => { if (activePdf) void show(number); });
     resize.observe(view, {box: 'border-box'});
     pane.append(make('h2', title), file.wrapper, status, controls);
+    if (bookUrl) {
+      file.wrapper.hidden = true;
+      void open();
+    }
     container.append(pane);
     return () => {
       resize.disconnect();

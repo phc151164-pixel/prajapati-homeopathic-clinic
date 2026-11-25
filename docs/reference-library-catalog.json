@@ -94,7 +94,7 @@
     "content_status": "external_catalogue_only",
     "translation_status": "Hindi catalogue label only",
     "purpose": "historical education only",
-    "reader_url": "https://archive.org/embed/keynotescharacte00alle"
+    "pdf_path": "/assets/books/allen-keynotes-1899.pdf"
   },
   {
     "id": "hahnemann-chronic-diseases",
@@ -126,8 +126,7 @@
     "rights_checked": "2026-11-25",
     "content_status": "external_catalogue_only",
     "translation_status": "Hindi catalogue label only",
-    "purpose": "historical education only",
-    "reader_url": "https://archive.org/embed/bwb_T4-AVD-810"
+    "purpose": "historical education only"
   },
   {
     "id": "kent-repertory",

@@ -53,7 +53,7 @@ const srv = http.createServer(async (req,res) => {
   }
   const requestPath = url.pathname === '/admin' ? '/admin.html' : url.pathname;
   const file = path.resolve(publicRoot, '.' + requestPath);
-  const type = {'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.webmanifest':'application/manifest+json','.webp':'image/webp','.png':'image/png'}[path.extname(file)];
+  const type = {'.pdf':'application/pdf','.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.webmanifest':'application/manifest+json','.webp':'image/webp','.png':'image/png'}[path.extname(file)];
   if (file.startsWith(publicRoot + path.sep) && type && fs.existsSync(file) && fs.statSync(file).isFile()) {
     res.writeHead(200,{'content-type':type,...(file.endsWith('admin.html')?{'content-security-policy':csp}:{})});
     return res.end(fs.readFileSync(file));
@@ -90,8 +90,8 @@ const srv = http.createServer(async (req,res) => {
     await page.getByText('Saved.',{exact:true}).waitFor();
     await page.context().route('https://wellcomecollection.org/**', route => route.fulfill({body: 'Synthetic source page'}));
     const historySaved = page.waitForResponse(response => response.request().postDataJSON()?.action === 'reference_opened');
-    await page.getByRole('button', {name: 'Read in app', exact: true}).click();
-    await page.getByRole('heading', {name: 'Read a downloaded edition'}).waitFor();
+    await page.getByRole('button', {name: 'Edition details', exact: true}).click();
+    await page.getByRole('heading', {name: 'Open a PDF from this device'}).waitFor();
     await page.getByRole('button', {name: 'Back to book list'}).click();
     assert.equal((await historySaved).status(), 200);
     await nav('Toggle light / dark theme');
@@ -102,6 +102,14 @@ const srv = http.createServer(async (req,res) => {
     assert.equal(await page.getByLabel('Private reference note').inputValue(),'Synthetic reading note');
     await page.getByRole('combobox', {name: 'Show', exact: true}).selectOption('Recently opened');
     await page.getByText('1 catalogue entries').waitFor();
+    await page.getByRole('combobox', {name: 'Show', exact: true}).selectOption('All books');
+    await page.getByLabel('Search titles and authors / शीर्षक और लेखक खोजें').fill('Allen');
+    await page.route('**/assets/books/allen-keynotes-1899.pdf', route =>
+      route.fulfill({contentType: 'application/pdf', body: pdf}));
+    await page.getByRole('button', {name: 'Read in app', exact: true}).click();
+    await page.getByText('Page 1 of 2 · Zoom 100%', {exact: true}).waitFor();
+    await page.getByRole('button', {name: 'Back to book list'}).click();
+    await page.getByRole('button', {name: 'PDF tools', exact: true}).click();
     const uploads=page.locator('input[type=file]');
     for(let i=0;i<2;i++) await uploads.nth(i).setInputFiles({name:'sample.pdf',mimeType:'application/pdf',buffer:pdf});
     await page.getByText('Page 1 of 2 · Zoom 100%',{exact:true}).last().waitFor();
@@ -116,6 +124,7 @@ const srv = http.createServer(async (req,res) => {
     await page.setViewportSize({width:390,height:844});
     assert.equal(await page.locator('.phc-reader-columns').evaluate(node=>getComputedStyle(node).gridTemplateColumns.split(' ').length),1);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    await page.getByRole('button', {name: 'Repertory', exact: true}).click();
     await page.getByLabel('Search rubrics / रूब्रिक खोजें').fill('Head खाँसी khansi');
     const rubric = page.locator('details').filter({hasText: 'Head → Pain → Pressing → Coughing, while'});
     await rubric.locator('summary').click();
@@ -123,8 +132,9 @@ const srv = http.createServer(async (req,res) => {
     await rubric.getByLabel('Private study note').fill('Synthetic study note');
     await rubric.getByRole('button', {name: 'Save study entry'}).click();
     await rubric.getByText('Saved.', {exact: true}).waitFor();
-    await page.getByLabel('Show my study list').check();
+    await rubric.locator('xpath=ancestor::section').getByLabel('Show my study list').check();
     await rubric.locator('summary').waitFor();
+    await page.getByRole('button', {name: 'Books', exact: true}).click();
     await page.getByLabel('Find an Allen entry by name').fill('नक्स वोमिका');
     const keynote = page.getByRole('link', {name: 'Nux vomica · printed p. 209'});
     assert.match(await keynote.getAttribute('href'), /#page=215$/);

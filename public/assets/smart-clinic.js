@@ -119,34 +119,44 @@
       clearBook();
       reading.replaceChildren();
       reading.hidden = false;
+      filters.hidden = true;
       const panel = card(book.title);
       const close = action('Back to book list', () => {
         clearBook();
         reading.replaceChildren();
         reading.hidden = true;
+        filters.hidden = false;
         trigger.focus();
       });
       panel.append(close);
-      if (book.reader_url) {
-        const frame = node('iframe');
-        frame.className = 'phc-book-frame';
-        frame.title = book.title + ' book reader';
-        frame.referrerPolicy = 'no-referrer';
-        frame.setAttribute('sandbox', 'allow-scripts allow-same-origin');
-        frame.src = book.reader_url;
-        panel.append(frame);
-      } else {
-        panel.append(node('p', 'Open the source to download the scan if available, then choose the PDF here to read it in the app.'));
+      panel.append(source.cloneNode(true));
+      clearBook = window.PHCPdfReader.create(
+        book.pdf_path ? 'Book pages' : 'Open a PDF from this device', panel, book.pdf_path
+      );
+      if (!book.pdf_path) {
+        panel.insertBefore(node('p', 'This edition is listed in the catalogue. Its scan has not been added to the app yet.'), panel.lastElementChild);
       }
-      const publisher = source.cloneNode(true);
-      panel.append(publisher);
-      if (!book.reader_url) clearBook = window.PHCPdfReader.create('Read a downloaded edition', panel);
-      else clearBook = () => {};
       reading.append(panel);
       close.focus();
     }
     filters.append(node('p', 'Historical education only. Keep patient information out of reference notes.'), toolbar, state, results);
-    root.append(filters, reading);
+    const tabs = node('div');
+    tabs.className = 'toolbar';
+    const repertories = node('div');
+    const tools = node('div');
+    const sections = [filters, repertories, tools];
+    const tabNames = ['Books', 'Repertory', 'PDF tools'];
+    const buttons = tabNames.map((name, selected) => action(name, () => {
+      clearBook();
+      reading.replaceChildren();
+      reading.hidden = true;
+      sections.forEach((section, index) => { section.hidden = index !== selected; });
+      buttons.forEach((button, index) => button.setAttribute('aria-pressed', String(index === selected)));
+    }));
+    buttons.forEach((button, index) => button.setAttribute('aria-pressed', String(index === 0)));
+    repertories.hidden = tools.hidden = true;
+    tabs.append(...buttons);
+    root.append(tabs, filters, reading, repertories, tools);
 
     function render() {
       const books = data.catalog.filter(book => {
@@ -207,7 +217,7 @@
           }
         };
         source.addEventListener('click', markOpened);
-        const readBook = action('Read in app', () => {
+        const readBook = action(book.pdf_path ? 'Read in app' : 'Edition details', () => {
           openBook(book, source, readBook);
           void markOpened();
         });
@@ -225,10 +235,10 @@
     mode.addEventListener('change', render);
     render();
 
-    if (data.boericke) root.append(renderRepertory(data.boericke, progress, api));
-    if (data.repertory) root.append(renderRepertory(data.repertory, progress, api));
+    if (data.boericke) repertories.append(renderRepertory(data.boericke, progress, api));
+    if (data.repertory) repertories.append(renderRepertory(data.repertory, progress, api));
 
-    if (data.keynotes?.entries.length) root.append(renderKeynotes(data.keynotes));
+    if (data.keynotes?.entries.length) filters.append(renderKeynotes(data.keynotes));
 
     const reader = card('Compare local editions');
     const columns = node('div');
@@ -236,7 +246,7 @@
     reader.append(node('p', 'Open one or two PDFs you have permission to read. Files stay on this device. Find text in searchable PDFs or compare scanned pages visually.'), columns);
     const clearFirst = window.PHCPdfReader.create('First edition', columns);
     const clearSecond = window.PHCPdfReader.create('Second edition', columns);
-    root.append(reader);
+    tools.append(reader);
     disposeLibrary = () => {
       closed = true;
       clearBook();
