@@ -183,6 +183,7 @@
     mode.addEventListener('change', render);
     render();
 
+    if (data.boericke) root.prepend(renderRepertory(data.boericke, progress, api));
     if (data.repertory) root.prepend(renderRepertory(data.repertory, progress, api));
 
     if (data.keynotes?.entries.length) root.append(renderKeynotes(data.keynotes));
@@ -202,12 +203,12 @@
   }
 
   function renderRepertory(index, progress, api) {
-    const panel = card('Kent Repertory / केंट रिपर्टरी');
+    const panel = card(index.title || 'Kent Repertory / केंट रिपर्टरी');
     panel.append(node('p', index.coverage), node('p', index.edition + ' · Historical study'));
     const search = node('input');
     search.type = 'search';
     search.placeholder = 'Pressing, कनपटी, khansi…';
-    const searchLabel = node('label', 'Search rubrics / रूब्रिक खोजें');
+    const searchLabel = node('label', index.title ? 'Search Boericke rubrics' : 'Search rubrics / रूब्रिक खोजें');
     searchLabel.append(search);
     const chapter = node('select');
     chapter.append(node('option', 'All chapters'));

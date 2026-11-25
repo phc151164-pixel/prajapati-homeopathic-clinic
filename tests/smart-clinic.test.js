@@ -52,6 +52,13 @@ test('Allen index returns name aliases and distinct scan and printed page refere
   assert.ok(index.entries.every(entry => entry.scanPage === entry.page + 6));
 });
 
+test('Boericke historical headings support Hindi and Hinglish search', () => {
+  const index = require('../docs/boericke-repertory-index.json');
+  assert.deepEqual(index.rubrics.filter(r => matchesRubric(r, 'खुजली scalp')).map(r => r.id), ['boericke-rubric-scalp-itching']);
+  assert.deepEqual(index.rubrics.filter(r => matchesRubric(r, 'chakkar')).map(r => r.id), ['boericke-rubric-vertigo']);
+  assert.ok(index.rubrics.every(r => index.pages[r.page]));
+});
+
 test('Smart Clinic restricts deployment, authorizes the doctor, and binds writes to the session', async t => {
   const settings = {PHC_SMART_CLINIC_ENABLED: 'true', PHC_ENVIRONMENT: 'staging', PHC_DASHBOARD_ENABLED: 'true', CONTEXT: 'dev',
     PHC_SUPABASE_AUTH_KEY: 'synthetic', SUPABASE_URL: 'https://cefhdbqlzuxvnmktyxyk.supabase.co'};

@@ -1,0 +1,66 @@
+{
+  "title": "Boericke Repertory / बोरिक रिपर्टरी",
+  "edition": "Oscar E. Boericke, ninth edition, 1927",
+  "source": "Internet Archive",
+  "coverage": "Selected headings from the Head chapter. The scan link opens the chapter start.",
+  "pages": {
+    "Head chapter start": "https://archive.org/details/bwb_T4-AVD-810/page/n713/mode/2up"
+  },
+  "rubrics": [
+    {
+      "id": "boericke-rubric-headache",
+      "chapter": "Head",
+      "path": [
+        "Headache (cephalalgia)"
+      ],
+      "page": "Head chapter start",
+      "aliases": "सिर दर्द sar dard headache"
+    },
+    {
+      "id": "boericke-rubric-scalp",
+      "chapter": "Head",
+      "path": [
+        "Scalp"
+      ],
+      "page": "Head chapter start",
+      "aliases": "सिर की त्वचा sar ki twacha scalp"
+    },
+    {
+      "id": "boericke-rubric-scalp-itching",
+      "chapter": "Head",
+      "path": [
+        "Scalp",
+        "Itching of scalp"
+      ],
+      "page": "Head chapter start",
+      "aliases": "सिर की खुजली sar ki khujli khujali"
+    },
+    {
+      "id": "boericke-rubric-vertigo",
+      "chapter": "Head",
+      "path": [
+        "Vertigo"
+      ],
+      "page": "Head chapter start",
+      "aliases": "चक्कर chakkar dizziness"
+    },
+    {
+      "id": "boericke-rubric-fontanelles",
+      "chapter": "Head",
+      "path": [
+        "Fontanelles"
+      ],
+      "page": "Head chapter start",
+      "aliases": "फॉन्टानेल fontanel"
+    },
+    {
+      "id": "boericke-rubric-motion",
+      "chapter": "Head",
+      "path": [
+        "Motion"
+      ],
+      "page": "Head chapter start",
+      "aliases": "सिर की गति sar ki gati motion"
+    }
+  ]
+}
