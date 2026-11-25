@@ -1,5 +1,5 @@
 {
-  "edition": "H. C. Allen, 1899 edition · selected entries",
+  "edition": "H. C. Allen, 1899 edition · 167 indexed headings",
   "source": "Library of Congress scan via Wikimedia Commons",
   "pdf": "https://upload.wikimedia.org/wikipedia/commons/f/f1/Keynotes_and_characteristics_%28IA_keynotescharacte00alle%29.pdf",
   "entries": [
@@ -22,10 +22,105 @@
       "aliases": "एकोनाइट aconite"
     },
     {
+      "title": "Actaea racemosa",
+      "scanPage": 21,
+      "page": 15
+    },
+    {
+      "title": "Aesculus hippocastanum",
+      "scanPage": 23,
+      "page": 17
+    },
+    {
+      "title": "Aethusa cynapium",
+      "scanPage": 25,
+      "page": 19
+    },
+    {
+      "title": "Agaricus muscarius",
+      "scanPage": 26,
+      "page": 20
+    },
+    {
+      "title": "Agnus castus",
+      "scanPage": 27,
+      "page": 21
+    },
+    {
+      "title": "Allium cepa",
+      "scanPage": 28,
+      "page": 22
+    },
+    {
+      "title": "Aloe socotrina",
+      "scanPage": 29,
+      "page": 23
+    },
+    {
       "title": "Alumina",
       "scanPage": 31,
       "page": 25,
       "aliases": "एलुमिना alumina"
+    },
+    {
+      "title": "Ambra grisea",
+      "scanPage": 33,
+      "page": 27
+    },
+    {
+      "title": "Ammonium carbonicum",
+      "scanPage": 34,
+      "page": 28
+    },
+    {
+      "title": "Ammonium muriaticum",
+      "scanPage": 36,
+      "page": 30
+    },
+    {
+      "title": "Amylenum nitrosum",
+      "scanPage": 36,
+      "page": 30
+    },
+    {
+      "title": "Anacardium orientale",
+      "scanPage": 38,
+      "page": 32
+    },
+    {
+      "title": "Anthracinum",
+      "scanPage": 39,
+      "page": 33
+    },
+    {
+      "title": "Antimonium crudum",
+      "scanPage": 41,
+      "page": 35
+    },
+    {
+      "title": "Antimonium tartaricum",
+      "scanPage": 43,
+      "page": 37
+    },
+    {
+      "title": "Apis mellifica",
+      "scanPage": 45,
+      "page": 39
+    },
+    {
+      "title": "Apocynum cannabinum",
+      "scanPage": 46,
+      "page": 40
+    },
+    {
+      "title": "Argentum metallicum",
+      "scanPage": 47,
+      "page": 41
+    },
+    {
+      "title": "Argentum nitricum",
+      "scanPage": 48,
+      "page": 42
     },
     {
       "title": "Arnica montana",
@@ -40,10 +135,65 @@
       "aliases": "आर्सेनिकम एल्बम arsenic alb"
     },
     {
+      "title": "Arum triphyllum",
+      "scanPage": 55,
+      "page": 49
+    },
+    {
+      "title": "Asarum europaeum",
+      "scanPage": 57,
+      "page": 51
+    },
+    {
+      "title": "Asterias rubens",
+      "scanPage": 58,
+      "page": 52
+    },
+    {
+      "title": "Baptisia tinctoria",
+      "scanPage": 61,
+      "page": 55
+    },
+    {
+      "title": "Baryta carbonica",
+      "scanPage": 62,
+      "page": 56
+    },
+    {
       "title": "Belladonna",
       "scanPage": 63,
       "page": 57,
       "aliases": "बेलाडोना beladona"
+    },
+    {
+      "title": "Benzoic acid",
+      "scanPage": 66,
+      "page": 60
+    },
+    {
+      "title": "Berberis vulgaris",
+      "scanPage": 66,
+      "page": 60
+    },
+    {
+      "title": "Bismuth",
+      "scanPage": 68,
+      "page": 62
+    },
+    {
+      "title": "Borax",
+      "scanPage": 68,
+      "page": 62
+    },
+    {
+      "title": "Bovista",
+      "scanPage": 70,
+      "page": 64
+    },
+    {
+      "title": "Bromium",
+      "scanPage": 71,
+      "page": 65
     },
     {
       "title": "Bryonia alba",
@@ -52,10 +202,305 @@
       "aliases": "ब्रायोनिया brayonia"
     },
     {
+      "title": "Cactus grandiflorus",
+      "scanPage": 75,
+      "page": 69
+    },
+    {
+      "title": "Caladium",
+      "scanPage": 76,
+      "page": 70
+    },
+    {
+      "title": "Calcarea arsenica",
+      "scanPage": 77,
+      "page": 71
+    },
+    {
+      "title": "Calcarea ostrearum",
+      "scanPage": 77,
+      "page": 71
+    },
+    {
+      "title": "Calcarea phosphorica",
+      "scanPage": 80,
+      "page": 74
+    },
+    {
       "title": "Camphora",
       "scanPage": 83,
       "page": 77,
       "aliases": "कैंफोरा कपूर camphor kapur"
+    },
+    {
+      "title": "Cannabis indica",
+      "scanPage": 84,
+      "page": 78
+    },
+    {
+      "title": "Cannabis sativa",
+      "scanPage": 85,
+      "page": 79
+    },
+    {
+      "title": "Cantharides",
+      "scanPage": 86,
+      "page": 80
+    },
+    {
+      "title": "Capsicum",
+      "scanPage": 87,
+      "page": 81
+    },
+    {
+      "title": "Carbo animalis",
+      "scanPage": 89,
+      "page": 83
+    },
+    {
+      "title": "Carbo vegetabilis",
+      "scanPage": 90,
+      "page": 84
+    },
+    {
+      "title": "Carbolic acid",
+      "scanPage": 92,
+      "page": 86
+    },
+    {
+      "title": "Caulophyllum",
+      "scanPage": 93,
+      "page": 87
+    },
+    {
+      "title": "Causticum",
+      "scanPage": 95,
+      "page": 89
+    },
+    {
+      "title": "Chamomilla",
+      "scanPage": 97,
+      "page": 91
+    },
+    {
+      "title": "Chelidonium majus",
+      "scanPage": 99,
+      "page": 93
+    },
+    {
+      "title": "Cicuta virosa",
+      "scanPage": 101,
+      "page": 95
+    },
+    {
+      "title": "Cina",
+      "scanPage": 102,
+      "page": 96
+    },
+    {
+      "title": "Coca",
+      "scanPage": 105,
+      "page": 99
+    },
+    {
+      "title": "Cocculus",
+      "scanPage": 106,
+      "page": 100
+    },
+    {
+      "title": "Coffea cruda",
+      "scanPage": 108,
+      "page": 102
+    },
+    {
+      "title": "Collinsonia canadensis",
+      "scanPage": 110,
+      "page": 104
+    },
+    {
+      "title": "Colocynth",
+      "scanPage": 111,
+      "page": 105
+    },
+    {
+      "title": "Conium maculatum",
+      "scanPage": 112,
+      "page": 106
+    },
+    {
+      "title": "Crocus sativus",
+      "scanPage": 114,
+      "page": 108
+    },
+    {
+      "title": "Crotalus horridus",
+      "scanPage": 115,
+      "page": 109
+    },
+    {
+      "title": "Croton tiguum",
+      "scanPage": 117,
+      "page": 111
+    },
+    {
+      "title": "Cuprum metallicum",
+      "scanPage": 118,
+      "page": 112
+    },
+    {
+      "title": "Digitalis purpurea",
+      "scanPage": 121,
+      "page": 115
+    },
+    {
+      "title": "Dioscorea villosa",
+      "scanPage": 122,
+      "page": 116
+    },
+    {
+      "title": "Diphtherinum",
+      "scanPage": 123,
+      "page": 117
+    },
+    {
+      "title": "Drosera rotundifolia",
+      "scanPage": 125,
+      "page": 119
+    },
+    {
+      "title": "Dulcamara",
+      "scanPage": 126,
+      "page": 120
+    },
+    {
+      "title": "Equisetum hyemale",
+      "scanPage": 128,
+      "page": 122
+    },
+    {
+      "title": "Euphrasia",
+      "scanPage": 130,
+      "page": 124
+    },
+    {
+      "title": "Ferrum metallicum",
+      "scanPage": 131,
+      "page": 125
+    },
+    {
+      "title": "Fluoric acid",
+      "scanPage": 132,
+      "page": 126
+    },
+    {
+      "title": "Glonoine",
+      "scanPage": 135,
+      "page": 129
+    },
+    {
+      "title": "Graphites",
+      "scanPage": 137,
+      "page": 131
+    },
+    {
+      "title": "Hamamelis virginica",
+      "scanPage": 139,
+      "page": 133
+    },
+    {
+      "title": "Helleborus niger",
+      "scanPage": 140,
+      "page": 134
+    },
+    {
+      "title": "Helonias dioica",
+      "scanPage": 142,
+      "page": 136
+    },
+    {
+      "title": "Hepar sulphur",
+      "scanPage": 143,
+      "page": 137
+    },
+    {
+      "title": "Hydrastis canadensis",
+      "scanPage": 146,
+      "page": 140
+    },
+    {
+      "title": "Hyoscyamus niger",
+      "scanPage": 146,
+      "page": 140
+    },
+    {
+      "title": "Hypericum perforatum",
+      "scanPage": 148,
+      "page": 142
+    },
+    {
+      "title": "Iodium",
+      "scanPage": 152,
+      "page": 146
+    },
+    {
+      "title": "Ipecacuanha",
+      "scanPage": 153,
+      "page": 147
+    },
+    {
+      "title": "Kali bichromicum",
+      "scanPage": 155,
+      "page": 149
+    },
+    {
+      "title": "Kali bromatum",
+      "scanPage": 157,
+      "page": 151
+    },
+    {
+      "title": "Kali carbonicum",
+      "scanPage": 159,
+      "page": 153
+    },
+    {
+      "title": "Kalmia latifolia",
+      "scanPage": 161,
+      "page": 155
+    },
+    {
+      "title": "Kreosotum",
+      "scanPage": 161,
+      "page": 155
+    },
+    {
+      "title": "Lachesis",
+      "scanPage": 163,
+      "page": 157
+    },
+    {
+      "title": "Lac caninum",
+      "scanPage": 166,
+      "page": 160
+    },
+    {
+      "title": "Lac defloratum",
+      "scanPage": 169,
+      "page": 163
+    },
+    {
+      "title": "Ledum palustre",
+      "scanPage": 171,
+      "page": 165
+    },
+    {
+      "title": "Lilium tigrinum",
+      "scanPage": 172,
+      "page": 166
+    },
+    {
+      "title": "Lobelia inflata",
+      "scanPage": 174,
+      "page": 168
     },
     {
       "title": "Lycopodium clavatum",
@@ -64,10 +509,120 @@
       "aliases": "लाइकोपोडियम lycopodium"
     },
     {
+      "title": "Magnesia carbonica",
+      "scanPage": 179,
+      "page": 173
+    },
+    {
+      "title": "Magnesia phosphorica",
+      "scanPage": 182,
+      "page": 176
+    },
+    {
+      "title": "Medorrhinum",
+      "scanPage": 184,
+      "page": 178
+    },
+    {
+      "title": "Melilotus alba",
+      "scanPage": 190,
+      "page": 184
+    },
+    {
+      "title": "Menyanthes trifoliata",
+      "scanPage": 190,
+      "page": 184
+    },
+    {
+      "title": "Mercurius",
+      "scanPage": 191,
+      "page": 185
+    },
+    {
+      "title": "Mercurius corrosivus",
+      "scanPage": 194,
+      "page": 188
+    },
+    {
+      "title": "Mercurius cyanide",
+      "scanPage": 195,
+      "page": 189
+    },
+    {
+      "title": "Mercurius dulcis",
+      "scanPage": 195,
+      "page": 189
+    },
+    {
+      "title": "Mercurius biniodide",
+      "scanPage": 196,
+      "page": 190
+    },
+    {
+      "title": "Mercurius solubilis",
+      "scanPage": 196,
+      "page": 190
+    },
+    {
+      "title": "Mezereum",
+      "scanPage": 198,
+      "page": 192
+    },
+    {
+      "title": "Murex purpurea",
+      "scanPage": 200,
+      "page": 194
+    },
+    {
+      "title": "Muriatic acid",
+      "scanPage": 201,
+      "page": 195
+    },
+    {
+      "title": "Natrum carbonicum",
+      "scanPage": 203,
+      "page": 197
+    },
+    {
+      "title": "Natrum muriaticum",
+      "scanPage": 205,
+      "page": 199
+    },
+    {
+      "title": "Natrum sulphuricum",
+      "scanPage": 208,
+      "page": 202
+    },
+    {
+      "title": "Nux moschata",
+      "scanPage": 213,
+      "page": 207
+    },
+    {
       "title": "Nux vomica",
       "scanPage": 215,
       "page": 209,
       "aliases": "नक्स वोमिका नक्स वॉमिका naks vomika"
+    },
+    {
+      "title": "Opium",
+      "scanPage": 218,
+      "page": 212
+    },
+    {
+      "title": "Petroleum",
+      "scanPage": 221,
+      "page": 215
+    },
+    {
+      "title": "Petroselinum",
+      "scanPage": 222,
+      "page": 216
+    },
+    {
+      "title": "Phosphoric acid",
+      "scanPage": 223,
+      "page": 217
     },
     {
       "title": "Phosphorus",
@@ -76,16 +631,226 @@
       "aliases": "फॉस्फोरस phosphorus"
     },
     {
+      "title": "Physostigma",
+      "scanPage": 228,
+      "page": 222
+    },
+    {
+      "title": "Podophyllum",
+      "scanPage": 229,
+      "page": 223
+    },
+    {
+      "title": "Phytolacca",
+      "scanPage": 231,
+      "page": 225
+    },
+    {
+      "title": "Picric acid",
+      "scanPage": 232,
+      "page": 226
+    },
+    {
+      "title": "Platina",
+      "scanPage": 233,
+      "page": 227
+    },
+    {
+      "title": "Plumbum",
+      "scanPage": 235,
+      "page": 229
+    },
+    {
       "title": "Pulsatilla",
       "scanPage": 241,
       "page": 235,
       "aliases": "पल्सेटिला pulsatila"
     },
     {
+      "title": "Pyrogen",
+      "scanPage": 243,
+      "page": 237
+    },
+    {
+      "title": "Ratanhia",
+      "scanPage": 245,
+      "page": 239
+    },
+    {
+      "title": "Rheum",
+      "scanPage": 247,
+      "page": 241
+    },
+    {
+      "title": "Rhododendron",
+      "scanPage": 247,
+      "page": 241
+    },
+    {
+      "title": "Rhus toxicodendron",
+      "scanPage": 248,
+      "page": 242
+    },
+    {
+      "title": "Rumex crispus",
+      "scanPage": 251,
+      "page": 245
+    },
+    {
+      "title": "Ruta graveolens",
+      "scanPage": 252,
+      "page": 246
+    },
+    {
+      "title": "Sabina",
+      "scanPage": 254,
+      "page": 248
+    },
+    {
+      "title": "Sabadilla",
+      "scanPage": 255,
+      "page": 249
+    },
+    {
+      "title": "Sambucus nigra",
+      "scanPage": 256,
+      "page": 250
+    },
+    {
+      "title": "Sanguinaria",
+      "scanPage": 257,
+      "page": 251
+    },
+    {
+      "title": "Sanicula",
+      "scanPage": 259,
+      "page": 253
+    },
+    {
+      "title": "Sarsaparilla",
+      "scanPage": 261,
+      "page": 255
+    },
+    {
+      "title": "Secale cornutum",
+      "scanPage": 262,
+      "page": 256
+    },
+    {
+      "title": "Selenium",
+      "scanPage": 265,
+      "page": 259
+    },
+    {
       "title": "Sepia",
       "scanPage": 266,
       "page": 260,
       "aliases": "सेपिया sepiya"
+    },
+    {
+      "title": "Spigelia",
+      "scanPage": 273,
+      "page": 267
+    },
+    {
+      "title": "Spongia tosta",
+      "scanPage": 275,
+      "page": 269
+    },
+    {
+      "title": "Staphisagria",
+      "scanPage": 278,
+      "page": 272
+    },
+    {
+      "title": "Stramonium",
+      "scanPage": 281,
+      "page": 275
+    },
+    {
+      "title": "Sulphur",
+      "scanPage": 283,
+      "page": 277
+    },
+    {
+      "title": "Sulphuric acid",
+      "scanPage": 286,
+      "page": 280
+    },
+    {
+      "title": "Symphytum",
+      "scanPage": 288,
+      "page": 282
+    },
+    {
+      "title": "Syphilinum",
+      "scanPage": 288,
+      "page": 282
+    },
+    {
+      "title": "Tabacum",
+      "scanPage": 290,
+      "page": 284
+    },
+    {
+      "title": "Tarantula",
+      "scanPage": 293,
+      "page": 287
+    },
+    {
+      "title": "Taraxacum",
+      "scanPage": 293,
+      "page": 287
+    },
+    {
+      "title": "Terebinthina",
+      "scanPage": 295,
+      "page": 289
+    },
+    {
+      "title": "Theridion curassavicum",
+      "scanPage": 296,
+      "page": 290
+    },
+    {
+      "title": "Thlaspi bursa pastoris",
+      "scanPage": 297,
+      "page": 291
+    },
+    {
+      "title": "Thuja occidentalis",
+      "scanPage": 298,
+      "page": 292
+    },
+    {
+      "title": "Trillium pendulum",
+      "scanPage": 301,
+      "page": 295
+    },
+    {
+      "title": "Tuberculinum",
+      "scanPage": 302,
+      "page": 296
+    },
+    {
+      "title": "Valeriana",
+      "scanPage": 304,
+      "page": 298
+    },
+    {
+      "title": "Variolinum",
+      "scanPage": 305,
+      "page": 299
+    },
+    {
+      "title": "Veratrum album",
+      "scanPage": 306,
+      "page": 300
+    },
+    {
+      "title": "Veratrum viride",
+      "scanPage": 309,
+      "page": 303
     }
   ]
 }
