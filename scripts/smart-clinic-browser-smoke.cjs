@@ -64,7 +64,7 @@ const srv = http.createServer(async (req,res) => {
   const browser = await chromium.launch({
     headless: true,
     executablePath: process.env.PHC_TEST_CHROMIUM_PATH || undefined,
-    args: ['--no-sandbox']
+    args: ['--no-sandbox', '--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream']
   });
   try {
     const page=await browser.newPage({viewport:{width:1280,height:900}});
@@ -125,6 +125,20 @@ const srv = http.createServer(async (req,res) => {
     await nav('Patient records');
     await page.getByRole('button',{name:'Open profile',exact:true}).click();
     await page.getByRole('button',{name:'Consultation document'}).click();
+    await page.getByRole('button', {name: 'Insert case-sheet headings'}).click();
+    assert.match(await page.getByLabel('Patient-reported history').inputValue(), /Chief complaint:/);
+    await page.getByText('Search historical rubrics', {exact: true}).click();
+    await page.getByLabel('Historical search terms').fill('khansi');
+    await page.getByRole('button', {name: 'Find historical entries'}).click();
+    await page.getByText('1 matching historical entries').waitFor();
+    await page.getByText('Record audio for this session', {exact: true}).click();
+    await page.getByRole('button', {name: 'Start recording'}).click();
+    await page.getByText('Confirm recording consent before starting.').waitFor();
+    await page.getByLabel('Patient consented to local audio recording').check();
+    await page.getByRole('button', {name: 'Start recording'}).click();
+    await page.getByText('Recording on this device.', {exact: false}).waitFor();
+    await page.getByRole('button', {name: 'Stop recording'}).click();
+    await page.locator('audio[src^="blob:"]').waitFor();
     await page.getByLabel('Patient-reported history').fill('Synthetic history');
     await page.getByLabel('Patient consent for structured documentation').selectOption('yes');
     await page.locator('#editorSave').click();

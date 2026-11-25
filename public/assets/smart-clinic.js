@@ -20,13 +20,26 @@
     const searchable = normalize([rubric.chapter, ...rubric.path, rubric.aliases].join(' '));
     return normalize(query).trim().split(/\s+/u).every(term => searchable.includes(term));
   };
+  const chartLabels = new Map([
+    ['chief complaint', 'Chief complaint'], ['मुख्य शिकायत', 'Chief complaint'],
+    ['duration', 'Duration'], ['अवधि', 'Duration'],
+    ['patient history', 'Patient history'], ['मरीज का इतिहास', 'Patient history']
+  ]);
+  function draftChart(transcript) {
+    return transcript.split(/\n/u).map(line => {
+      const label = line.match(/^\s*([^:：]+)[:：]\s*(.+)$/u);
+      const heading = label && chartLabels.get(normalize(label[1]).trim());
+      return heading ? heading + ': ' + label[2].trim() : line;
+    }).join('\n');
+  }
   if (typeof module !== 'undefined') {
-    module.exports = {matches, matchesRubric};
+    module.exports = {matches, matchesRubric, draftChart};
     return;
   }
 
   let disposeLibrary = () => {};
   let stopDictation = () => {};
+  let disposeRecording = () => {};
   let consultationRequest = 0;
   const node = (tag, text) => {
     const element = document.createElement(tag);
@@ -268,16 +281,161 @@
       const detail = ui.el('p', saved?.reviewed_at ?
         'Last saved version reviewed on ' + new Date(saved.reviewed_at).toLocaleString('en-IN') :
         'Drafts require review by a qualified clinician.');
-      const voice = dictation(fields[1].querySelector('textarea'), ui);
-      ui.modal('Consultation document', [detail, ...fields, voice], values => ui.api(endpoint, {
+      const history = fields[1].querySelector('textarea');
+      const voice = dictation(history, ui);
+      const chart = action('Insert case-sheet headings', () => {
+        const headings = ['Chief complaint', 'Duration', 'Patient history'];
+        if (!history.value.trim()) history.value = headings.map(heading => heading + ': ').join('\n');
+        history.focus();
+      });
+      ui.modal('Consultation document', [detail, ...fields, chart, voice, consultationRecorder(), consultationLookup(ui.api)], values => ui.api(endpoint, {
         action: 'consultation', visitId: visit.id, version: saved?.version || 0,
-        history: values.history, observations: values.observations, follow_up: values.follow_up,
+        history: draftChart(values.history), observations: values.observations, follow_up: values.follow_up,
         consent: values.consent === 'yes', reviewed: values.reviewed === 'yes'
       }));
-      document.getElementById('editor').addEventListener('close', () => stopDictation(), {once: true});
+      document.getElementById('editor').addEventListener('close', () => {
+        stopDictation();
+        disposeRecording();
+      }, {once: true});
     } catch (error) {
       if (request === consultationRequest) ui.message(error.message, true);
     }
+  }
+
+  function consultationLookup(api) {
+    const box = node('details');
+    box.append(node('summary', 'Search historical rubrics'));
+    const input = node('input');
+    input.type = 'search';
+    const label = node('label', 'Historical search terms');
+    label.append(input);
+    const results = node('ul');
+    const status = node('p');
+    status.setAttribute('role', 'status');
+    let index;
+    const search = action('Find historical entries', async () => {
+      if (!input.value.trim()) return;
+      search.disabled = true;
+      try {
+        index ||= (await api(endpoint + '?section=library')).repertory;
+        const entries = index.rubrics.filter(rubric => matchesRubric(rubric, input.value));
+        results.replaceChildren();
+        for (const rubric of entries.slice(0, 15)) {
+          const item = node('li');
+          const link = node('a', [rubric.chapter, ...rubric.path].join(' → ') + ' · p. ' + rubric.page);
+          link.href = index.pages[rubric.page];
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          item.append(link);
+          results.append(item);
+        }
+        status.textContent = entries.length + ' matching historical entries';
+      } catch {
+        status.textContent = 'The historical index is unavailable.';
+      } finally {
+        search.disabled = false;
+      }
+    });
+    box.append(label, search, status, results);
+    return box;
+  }
+
+  function consultationRecorder() {
+    const box = node('details');
+    box.append(node('summary', 'Record audio for this session'));
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+      box.append(node('p', 'Local recording is unavailable in this browser.'));
+      return box;
+    }
+    const consent = node('input');
+    consent.type = 'checkbox';
+    const label = node('label', 'Patient consented to local audio recording ');
+    label.append(consent);
+    const audio = node('audio');
+    audio.controls = true;
+    audio.hidden = true;
+    const status = node('p');
+    status.setAttribute('role', 'status');
+    let recorder, stream, url, timer;
+    let generation = 0;
+    function release() {
+      generation++;
+      clearTimeout(timer);
+      if (recorder?.state === 'recording') recorder.stop();
+      stream?.getTracks().forEach(track => track.stop());
+      if (url) URL.revokeObjectURL(url);
+      url = null;
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.hidden = true;
+    }
+    disposeRecording = release;
+    const stop = action('Stop recording', () => {
+      if (recorder?.state === 'recording') recorder.stop();
+    });
+    stop.disabled = true;
+    const start = action('Start recording', async () => {
+      if (!consent.checked) {
+        status.textContent = 'Confirm recording consent before starting.';
+        return;
+      }
+      release();
+      const token = generation;
+      start.disabled = true;
+      try {
+        const captured = await navigator.mediaDevices.getUserMedia({audio: true});
+        if (token !== generation) {
+          captured.getTracks().forEach(track => track.stop());
+          return;
+        }
+        stream = captured;
+        recorder = new MediaRecorder(stream);
+        const chunks = [];
+        recorder.ondataavailable = event => {
+          if (token === generation && event.data.size) chunks.push(event.data);
+        };
+        recorder.onstop = () => {
+          if (token !== generation) return;
+          clearTimeout(timer);
+          captured.getTracks().forEach(track => track.stop());
+          start.disabled = false;
+          stop.disabled = true;
+          if (!chunks.length) {
+            status.textContent = 'No audio was captured.';
+            return;
+          }
+          url = URL.createObjectURL(new Blob(chunks, {type: recorder.mimeType}));
+          audio.src = url;
+          audio.hidden = false;
+          status.textContent = 'Recording stopped. Playback is available until you close this form.';
+        };
+        recorder.onerror = () => {
+          if (token !== generation) return;
+          release();
+          start.disabled = false;
+          stop.disabled = true;
+          status.textContent = 'Recording stopped because the microphone became unavailable.';
+        };
+        recorder.start(1000);
+        stop.disabled = false;
+        timer = setTimeout(() => stop.click(), 15 * 60 * 1000);
+        status.textContent = 'Recording on this device. Maximum 15 minutes per recording.';
+      } catch {
+        if (token !== generation) return;
+        release();
+        start.disabled = false;
+        status.textContent = 'Could not start recording. Check browser microphone permission.';
+      }
+    });
+    consent.addEventListener('change', () => {
+      if (consent.checked) return;
+      release();
+      start.disabled = false;
+      stop.disabled = true;
+      status.textContent = 'Recording cleared.';
+    });
+    box.append(node('p', 'Audio stays in this tab and is discarded when you close the form.'), label, start, stop, status, audio);
+    return box;
   }
 
   function dictation(target, ui) {
@@ -362,6 +520,8 @@
       disposeLibrary();
       disposeLibrary = () => {};
       stopDictation();
+      disposeRecording();
+      disposeRecording = () => {};
       stopDictation = () => {};
     },
     init() {

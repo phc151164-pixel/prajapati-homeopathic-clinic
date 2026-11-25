@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const deploy = require('../netlify/lib/deploy-context.cjs');
 deploy.context = 'dev';
 const {handler, enabled} = require('../netlify/handlers/smart-clinic.cjs');
-const {matches, matchesRubric} = require('../public/assets/smart-clinic.js');
+const {matches, matchesRubric, draftChart} = require('../public/assets/smart-clinic.js');
 const catalog = require('../docs/reference-library-catalog.json');
 const doctor = '11111111-1111-4111-8111-111111111111';
 const visit = '22222222-2222-4222-8222-222222222222';
@@ -31,6 +31,12 @@ test('Kent rubric search preserves hierarchy, Hindi and Hinglish aliases, and pa
   assert.deepEqual(find('Sides Right'), ['kent-rubric-tearing-sides-right']);
   assert.equal(new Set(index.rubrics.map(rubric => rubric.id)).size, index.rubrics.length);
   assert.ok(index.rubrics.every(rubric => new URL(index.pages[rubric.page]).hostname === 'wellcomecollection.org'));
+});
+
+test('case sheet recognizes explicit headings and preserves unclassified wording', () => {
+  assert.equal(draftChart('मुख्य शिकायत: Synthetic sample\nDuration: 2 days\nUnclassified text'),
+    'Chief complaint: Synthetic sample\nDuration: 2 days\nUnclassified text');
+  assert.equal(draftChart('Follow-up: keep wording unchanged'), 'Follow-up: keep wording unchanged');
 });
 
 test('Smart Clinic restricts deployment, authorizes the doctor, and binds writes to the session', async t => {
