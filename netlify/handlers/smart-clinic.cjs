@@ -23,6 +23,10 @@ exports.handler = async event => {
   const q = event.queryStringParameters || {};
   try {
     if (event.httpMethod === 'GET') {
+      if (q.section === 'medicines') {
+        const rows = await supa('phc_medicine_library?doctor_id=eq.' + user.id + '&select=medicines');
+        return json(200, {medicines: rows[0]?.medicines || []});
+      }
       if (q.section === 'consultation' && uuid.test(q.visitId || '')) {
         const rows = await supa('phc_consultation_documents?visit_id=eq.' + q.visitId);
         return json(200, {document: rows[0] || null});
@@ -35,10 +39,31 @@ exports.handler = async event => {
     }
     if (event.httpMethod !== 'POST') return json(405, {error: 'Method not allowed.'});
     if (!sameOrigin(event)) return json(403, {error: 'Request origin not allowed.'});
-    if (Buffer.byteLength(event.body || '') > 38000) return json(413, {error: 'Request too large.'});
+    if (Buffer.byteLength(event.body || '') > (q.section === 'medicines' ? 2000000 : 38000)) return json(413, {error: 'Request too large.'});
     let body;
     try { body = JSON.parse(event.body); } catch { return json(400, {error: 'Invalid request.'}); }
     if (!body || typeof body !== 'object') return json(400, {error: 'Invalid request.'});
+    if (q.section === 'medicines') {
+      const records = body.medicines;
+      if (!Array.isArray(records) || !records.length || records.length > 1500 ||
+          records.some(row => typeof row?.name !== 'string' || !row.name.trim() || row.name.length > 150 ||
+            !Number.isInteger(row.page) || row.page < 1 || row.page > 595 ||
+            typeof row.text !== 'string' || row.text.length > 50000)) {
+        return json(400, {error: 'Choose the Boericke medicine data file.'});
+      }
+      const medicines = records.map(({name, page, text}) => ({name, page, text}));
+      const key = 'phc_medicine_library?doctor_id=eq.' + user.id;
+      const rows = await supa(key, 'PATCH', {medicines});
+      if (!rows.length) {
+        try {
+          await supa('phc_medicine_library', 'POST', {doctor_id: user.id, medicines});
+        } catch (error) {
+          if (error.code !== '23505') throw error;
+          await supa(key, 'PATCH', {medicines});
+        }
+      }
+      return json(200, {count: medicines.length});
+    }
     if (body.action === 'consultation' && typeof body.visitId === 'string' && uuid.test(body.visitId)
       && Number.isInteger(body.version) && body.version >= 0 && body.version < 2147483647
       && body.consent === true && typeof body.reviewed === 'boolean'

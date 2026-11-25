@@ -371,10 +371,11 @@
     container.replaceChildren(panel);
   }
 
-  function medicines(container) {
+  async function medicines(container, api) {
     const panel = node('section');
     panel.className = 'card';
     const storageKey = 'phc-boericke-materia-medica';
+    const url = endpoint + '?section=medicines';
     const notice = node('p', 'Historical reference only. This is not a treatment guide.');
     const picker = node('input');
     picker.type = 'file';
@@ -438,10 +439,12 @@
       const file = picker.files[0];
       if (!file) return;
       try {
-        if (file.size > 4 * 1024 * 1024) throw Error('The file exceeds 4 MB.');
+        if (file.size > 1900000) throw Error('The file exceeds the 1.9 MB upload limit.');
         const raw = await file.text();
+        const data = JSON.parse(raw);
+        await api(url, {medicines: data.medicines});
         load(raw);
-        try { localStorage.setItem(storageKey, raw); } catch {}
+        try { localStorage.removeItem(storageKey); } catch {}
         detail.replaceChildren();
         detail.hidden = true;
         searchLabel.hidden = list.hidden = false;
@@ -451,13 +454,39 @@
       }
     });
     search.addEventListener('input', render);
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) load(stored);
-    } catch {}
+    picker.disabled = true;
     panel.append(notice, importLabel, status, searchLabel, list, detail);
     container.replaceChildren(panel);
-    render();
+    status.textContent = 'Loading your saved medicines…';
+    try {
+      const result = await api(url);
+      if (!panel.isConnected) return;
+      if (result.medicines.length) {
+        load(JSON.stringify(result));
+      } else {
+        const sync = action('Save this browser’s imported list to my account', async () => {
+          sync.disabled = true;
+          try {
+            const raw = localStorage.getItem(storageKey);
+            if (!raw) throw Error('Import the medicine data file first.');
+            await api(url, {medicines: JSON.parse(raw).medicines});
+            load(raw);
+            localStorage.removeItem(storageKey);
+            sync.remove();
+            render();
+          } catch (error) {
+            status.textContent = error.message;
+            sync.disabled = false;
+          }
+        });
+        if (localStorage.getItem(storageKey)) importLabel.after(sync);
+      }
+      render();
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      picker.disabled = false;
+    }
   }
 
   window.PHCSmartClinic = {
