@@ -2,23 +2,8 @@
   'use strict';
 
   const endpoint = 'smart-clinic';
-  const aliases = {
-    bonninghausen: 'bonninghausen boenninghausen repertory repertori lakshan',
-    'boericke-pocket-manual': 'boericke borik borick repertory बोरिक',
-    boger: 'boger repertory repertori lakshan',
-    organon: 'organon hahnemann itihas',
-    jahr: 'jahr yaar itihas',
-    'allen-keynotes': 'allen keynotes keynote alan elan allen ki keynotes एलन कीनोट',
-    'hahnemann-chronic-diseases': 'hahnemann chronic diseases purani bimari itihas पुरानी बीमारी',
-    'materia-medica-pura': 'materia medica aushadhi aushadhiya औषधि'
-  };
   const normalize = text => text.normalize('NFC').toLowerCase().replace(/œ/g, 'oe')
     .normalize('NFD').replace(/([a-z])\p{M}+/gu, '$1').normalize('NFC');
-  const matches = (book, query) => {
-    const searchable = normalize([book.title, book.title_hi, book.author, book.category,
-      book.category === 'Repertory' ? 'रिपर्टरी' : '', aliases[book.id]].join(' '));
-    return normalize(query).trim().split(/\s+/u).every(term => searchable.includes(term));
-  };
   const matchesRubric = (rubric, query) => {
     const searchable = normalize([rubric.chapter, ...rubric.path, rubric.aliases].join(' '));
     return normalize(query).trim().split(/\s+/u).every(term => searchable.includes(term));
@@ -42,12 +27,8 @@
       return heading ? heading + ': ' + label[2].trim() : line;
     }).join('\n');
   }
-  function matchesKeynote(entry, query) {
-    const name = normalize([entry.title, entry.aliases || ''].join(' ')).replace(/æ/g, 'ae');
-    return normalize(query).replace(/æ/g, 'ae').trim().split(/\s+/u).every(term => name.includes(term));
-  }
   if (typeof module !== 'undefined') {
-    module.exports = {matches, matchesRubric, draftChart, matchesKeynote};
+    module.exports = {matchesRubric, draftChart};
     return;
   }
 
@@ -79,7 +60,7 @@
     container.replaceChildren(root);
     let closed = false;
     disposeLibrary = () => { closed = true; };
-    const state = node('p', 'Loading catalogue…');
+    const state = node('p', 'Loading repertory…');
     state.setAttribute('role', 'status');
     root.append(state);
     let data;
@@ -91,168 +72,8 @@
     }
     if (closed) return;
     const progress = new Map(data.progress.map(item => [item.book_id, item]));
-    const filters = card('Historical book catalogue');
-    const search = node('input');
-    search.type = 'search';
-    search.placeholder = 'Boger, रिपर्टरी, aushadhi…';
-    const label = node('label', 'Search titles and authors / शीर्षक और लेखक खोजें');
-    label.append(search);
-    const category = node('select');
-    for (const name of ['All categories', 'Repertory', 'Materia Medica', 'History']) {
-      category.append(node('option', name));
-    }
-    const categoryLabel = node('label', 'Category');
-    categoryLabel.append(category);
-    const mode = node('select');
-    for (const name of ['All books', 'Bookmarked', 'Recently opened']) mode.append(node('option', name));
-    const modeLabel = node('label', 'Show');
-    modeLabel.append(mode);
-    const toolbar = node('div');
-    toolbar.className = 'toolbar';
-    toolbar.append(label, categoryLabel, modeLabel);
-    const results = node('div');
-    results.className = 'phc-book-list';
-    const reading = node('div');
-    reading.hidden = true;
-    let clearBook = () => {};
-    function openBook(book, source, trigger) {
-      clearBook();
-      reading.replaceChildren();
-      reading.hidden = false;
-      filters.hidden = true;
-      const panel = card(book.title);
-      const close = action('Back to book list', () => {
-        clearBook();
-        reading.replaceChildren();
-        reading.hidden = true;
-        filters.hidden = false;
-        trigger.focus();
-      });
-      panel.append(close);
-      panel.append(source.cloneNode(true));
-      clearBook = window.PHCPdfReader.create(
-        book.pdf_path ? 'Book pages' : 'Open a PDF from this device', panel, book.pdf_path
-      );
-      if (!book.pdf_path) {
-        panel.insertBefore(node('p', 'This edition is listed in the catalogue. Its scan has not been added to the app yet.'), panel.lastElementChild);
-      }
-      reading.append(panel);
-      close.focus();
-    }
-    filters.append(node('p', 'Historical education only. Keep patient information out of reference notes.'), toolbar, state, results);
-    const tabs = node('div');
-    tabs.className = 'toolbar';
-    const repertories = node('div');
-    const tools = node('div');
-    const sections = [filters, repertories, tools];
-    const tabNames = ['Books', 'Repertory', 'PDF tools'];
-    const buttons = tabNames.map((name, selected) => action(name, () => {
-      clearBook();
-      reading.replaceChildren();
-      reading.hidden = true;
-      sections.forEach((section, index) => { section.hidden = index !== selected; });
-      buttons.forEach((button, index) => button.setAttribute('aria-pressed', String(index === selected)));
-    }));
-    buttons.forEach((button, index) => button.setAttribute('aria-pressed', String(index === 0)));
-    repertories.hidden = tools.hidden = true;
-    tabs.append(...buttons);
-    root.append(tabs, filters, reading, repertories, tools);
-
-    function render() {
-      const books = data.catalog.filter(book => {
-        const item = progress.get(book.id);
-        return matches(book, search.value) && (!category.selectedIndex || book.category === category.value)
-          && (!mode.selectedIndex || (mode.selectedIndex === 1 ? item?.bookmarked : item?.last_opened));
-      });
-      if (mode.selectedIndex === 2) books.sort((a, b) => progress.get(b.id).last_opened.localeCompare(progress.get(a.id).last_opened));
-      if (mode.selectedIndex !== 2) books.sort((a, b) => a.title.localeCompare(b.title, 'en'));
-      state.textContent = books.length + ' catalogue entries';
-      results.replaceChildren();
-      for (const book of books) {
-        const entry = node('article');
-        entry.className = 'visit';
-        const saved = progress.get(book.id);
-        const note = node('textarea');
-        note.maxLength = 4000;
-        note.value = saved?.note || '';
-        const noteLabel = node('label', 'Private reference note');
-        noteLabel.append(note);
-        const source = node('a', 'Open edition at ' + book.source);
-        source.href = book.source_url;
-        source.target = '_blank';
-        source.rel = 'noopener noreferrer';
-        const feedback = node('p');
-        feedback.setAttribute('role', 'status');
-        const bookmark = node('input');
-        bookmark.type = 'checkbox';
-        bookmark.checked = saved?.bookmarked ?? false;
-        const bookmarkLabel = node('label', 'Bookmark ');
-        bookmarkLabel.append(bookmark);
-        let pending = false;
-        async function save() {
-          if (pending) return;
-          pending = true;
-          saveButton.disabled = true;
-          try {
-            const result = await api(endpoint, {
-              action: 'progress', bookId: book.id, bookmarked: bookmark.checked, note: note.value
-            });
-            progress.set(book.id, result.progress);
-            feedback.textContent = 'Saved.';
-          } catch (error) {
-            feedback.textContent = error.message;
-          } finally {
-            pending = false;
-            saveButton.disabled = false;
-          }
-        }
-        const saveButton = action('Save bookmark and note', save);
-        const markOpened = async () => {
-          try {
-            const {progress: item} = await api(endpoint, {action: 'reference_opened', bookId: book.id});
-            const existing = progress.get(book.id) || item;
-            progress.set(book.id, {...existing, last_opened: item.last_opened});
-          } catch {
-            feedback.textContent = 'The edition opened, but its reading history could not be saved.';
-          }
-        };
-        source.addEventListener('click', markOpened);
-        const readBook = action(book.pdf_path ? 'Read in app' : 'Edition details', () => {
-          openBook(book, source, readBook);
-          void markOpened();
-        });
-        const noteTools = node('details');
-        noteTools.append(node('summary', 'Bookmark and notes'), noteLabel, bookmarkLabel, saveButton, feedback);
-        entry.append(node('h3', book.title + ' / ' + book.title_hi),
-          node('p', [book.author, book.year, book.category, 'English', book.rights].filter(Boolean).join(' · ')),
-          readBook, noteTools);
-        if (saved?.last_opened) entry.append(node('p', 'Last opened ' + new Date(saved.last_opened).toLocaleString('en-IN')));
-        results.append(entry);
-      }
-    }
-    search.addEventListener('input', render);
-    category.addEventListener('change', render);
-    mode.addEventListener('change', render);
-    render();
-
-    if (data.boericke) repertories.append(renderRepertory(data.boericke, progress, api));
-    if (data.repertory) repertories.append(renderRepertory(data.repertory, progress, api));
-
-    if (data.keynotes?.entries.length) filters.append(renderKeynotes(data.keynotes));
-
-    const reader = card('Compare local editions');
-    const columns = node('div');
-    columns.className = 'phc-reader-columns';
-    reader.append(node('p', 'Open one or two PDFs you have permission to read. Files stay on this device. Find text in searchable PDFs or compare scanned pages visually.'), columns);
-    const clearFirst = window.PHCPdfReader.create('First edition', columns);
-    const clearSecond = window.PHCPdfReader.create('Second edition', columns);
-    tools.append(reader);
-    disposeLibrary = () => {
-      closed = true;
-      clearBook();
-      clearFirst();
-      clearSecond();
-    };
+    root.replaceChildren(renderRepertory(data.repertory, progress, api),
+      renderRepertory(data.boericke, progress, api));
   }
 
   function renderRepertory(index, progress, api) {
@@ -327,39 +148,6 @@
     search.addEventListener('input', render);
     chapter.addEventListener('change', render);
     savedOnly.addEventListener('change', render);
-    render();
-    return panel;
-  }
-
-  function renderKeynotes(index) {
-    const panel = card('Allen’s Keynotes entry index');
-    panel.append(node('p', index.edition + ' · Historical reading'));
-    const search = node('input');
-    search.type = 'search';
-    const label = node('label', 'Find an Allen entry by name');
-    label.append(search);
-    const count = node('p');
-    count.setAttribute('role', 'status');
-    const results = node('ul');
-    const pagination = action('Show more entries', () => { limit += 30; render(); });
-    let limit = 30;
-    function render() {
-      const matches = index.entries.filter(entry => matchesKeynote(entry, search.value));
-      count.textContent = matches.length + ' matching index entries';
-      results.replaceChildren();
-      for (const entry of matches.slice(0, limit)) {
-        const item = node('li');
-        const link = node('a', entry.title + ' · printed p. ' + entry.page);
-        link.href = index.pdf + '#page=' + entry.scanPage;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        item.append(link);
-        results.append(item);
-      }
-      pagination.hidden = matches.length <= limit;
-    }
-    search.addEventListener('input', () => { limit = 30; render(); });
-    panel.append(label, count, results, pagination);
     render();
     return panel;
   }

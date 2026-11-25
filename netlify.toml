@@ -1,5 +1,5 @@
 [build]
-  command = "node scripts/stamp-deploy-context.cjs && node scripts/stage-pdf-reader.cjs && node scripts/stage-reference-books.cjs"
+  command = "node scripts/stamp-deploy-context.cjs"
   publish = "public"
   functions = "netlify/functions"
 

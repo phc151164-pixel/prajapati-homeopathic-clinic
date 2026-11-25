@@ -5,8 +5,7 @@ const assert = require('node:assert/strict');
 const deploy = require('../netlify/lib/deploy-context.cjs');
 deploy.context = 'dev';
 const {handler, enabled} = require('../netlify/handlers/smart-clinic.cjs');
-const {matches, matchesRubric, draftChart, matchesKeynote} = require('../public/assets/smart-clinic.js');
-const catalog = require('../docs/reference-library-catalog.json');
+const {matchesRubric, draftChart} = require('../public/assets/smart-clinic.js');
 const doctor = '11111111-1111-4111-8111-111111111111';
 const visit = '22222222-2222-4222-8222-222222222222';
 const origin = 'https://phc-preview.example';
@@ -16,14 +15,6 @@ const event = (method, query = {}, body, headers = {}) => ({
   body: JSON.stringify(body)
 });
 
-test('historical catalogue supports Hindi, English, Hinglish aliases and translated titles', () => {
-  assert.deepEqual(catalog.filter(book => matches(book, 'बोगर repertori')).map(book => book.id), ['boger']);
-  assert.ok(catalog.some(book => matches(book, 'aushadhi hahnemann')));
-  assert.ok(catalog.some(book => matches(book, 'bönninghausen')));
-  assert.equal(catalog.find(book => matches(book, 'एलन keynotes')).id, 'allen-keynotes');
-  assert.equal(catalog.find(book => matches(book, 'purani bimari')).id, 'hahnemann-chronic-diseases');
-  assert.ok(catalog.every(book => book.content_status === 'external_catalogue_only'));
-});
 
 test('Kent rubric search preserves hierarchy, Hindi and Hinglish aliases, and page provenance', () => {
   const index = require('../docs/kent-repertory-index.json');
@@ -43,14 +34,6 @@ test('case sheet recognizes explicit headings and preserves unclassified wording
   assert.equal(draftChart('Follow-up: keep wording unchanged'), 'Follow-up: keep wording unchanged');
 });
 
-test('Allen index returns name aliases and distinct scan and printed page references', () => {
-  const index = require('../docs/allen-keynotes-index.json');
-  const find = query => index.entries.filter(entry => matchesKeynote(entry, query));
-  assert.equal(find('नक्स वोमिका')[0].title, 'Nux vomica');
-  assert.equal(find('beladona')[0].scanPage, 63);
-  assert.equal(find('Bryonia Alba')[0].page, 66);
-  assert.ok(index.entries.every(entry => entry.scanPage === entry.page + 6));
-});
 
 test('Boericke historical headings support Hindi and Hinglish search', () => {
   const index = require('../docs/boericke-repertory-index.json');
@@ -110,12 +93,13 @@ test('Smart Clinic restricts deployment, authorizes the doctor, and binds writes
     assert.equal(conflict.statusCode, 409);
     assert.doesNotMatch(conflict.body, /Internal detail/);
 
-    const save = await handler(event('POST', {}, {action: 'progress', bookId: 'boger',
+    const save = await handler(event('POST', {}, {action: 'progress', bookId: 'kent-rubric-pressing-cough',
       bookmarked: true, note: 'Private synthetic note', doctorId: visit}));
     assert.equal(save.statusCode, 200);
     assert.equal(progress.doctor_id, doctor);
     assert.equal(save.headers['Cache-Control'], 'no-store');
-    await handler(event('GET', {section: 'library', doctorId: visit}));
+    const library = await handler(event('GET', {section: 'library', doctorId: visit}));
+    assert.deepEqual(Object.keys(JSON.parse(library.body)).sort(), ['boericke', 'progress', 'repertory']);
     assert.equal(requests.at(-1).url.searchParams.get('doctor_id'), 'eq.' + doctor);
     assert.equal((await handler(event('POST', {}, {action: 'progress', bookId: 'kent-rubric-pressing-cough',
       bookmarked: true, note: 'Historical study'}))).statusCode, 200);

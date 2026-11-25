@@ -3,10 +3,9 @@
 const {json, supa} = require('../functions/_common');
 const {identify, sameOrigin} = require('../lib/doctor-auth.cjs');
 const {context} = require('../lib/deploy-context.cjs');
-const catalog = require('../../docs/reference-library-catalog.json');
-const keynotes = require('../../docs/allen-keynotes-index.json');
 const boericke = require('../../docs/boericke-repertory-index.json');
 const repertory = require('../../docs/kent-repertory-index.json');
+const rubricIds = new Set([repertory, boericke].flatMap(index => index.rubrics.map(rubric => rubric.id)));
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const consultationFields = ['history', 'observations', 'follow_up'];
 
@@ -30,7 +29,7 @@ exports.handler = async event => {
       }
       if (q.section === 'library') {
         const progress = await supa('phc_reference_progress?doctor_id=eq.' + user.id + '&select=book_id,bookmarked,note,last_opened');
-        return json(200, {catalog, progress, repertory, boericke, keynotes});
+        return json(200, {progress: progress.filter(row => rubricIds.has(row.book_id)), repertory, boericke});
       }
       return json(400, {error: 'Invalid request.'});
     }
@@ -52,14 +51,11 @@ exports.handler = async event => {
       });
       return json(200, {document});
     }
-    const opening = body.action === 'reference_opened';
     const saving = body.action === 'progress' && typeof body.bookmarked === 'boolean'
       && typeof body.note === 'string' && body.note.length <= 4000;
-    const knownEntry = catalog.some(book => book.id === body.bookId)
-      || (saving && [repertory, boericke].some(index => index.rubrics.some(rubric => rubric.id === body.bookId)));
-    if ((opening || saving) && knownEntry) {
+    if (saving && rubricIds.has(body.bookId)) {
       const key = 'doctor_id=eq.' + user.id + '&book_id=eq.' + body.bookId;
-      const changes = opening ? {last_opened: new Date().toISOString()} : {bookmarked: body.bookmarked, note: body.note};
+      const changes = {bookmarked: body.bookmarked, note: body.note};
       let rows = await supa('phc_reference_progress?' + key, 'PATCH', changes);
       if (!rows.length) {
         try {
