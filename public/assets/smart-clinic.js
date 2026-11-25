@@ -22,6 +22,15 @@
       return heading ? heading + ': ' + label[2].trim() : line;
     }).join('\n');
   }
+  function transcriptDraft(transcript) {
+    // Spoken headings can delimit sections even when recognition returns one line.
+    const labels = /(?:^|[.?!।]\s+|\n+)(chief complaint|duration|patient history|मुख्य शिकायत|अवधि|मरीज का इतिहास)\s*[:：,]?\s+(?=\S)/giu;
+    return draftChart(transcript.replace(labels, (match, heading, offset) => {
+      const prefix = match.slice(0, match.indexOf(heading)).trim();
+      return (offset ? prefix + '\n' : '') + heading + ': ';
+    }));
+  }
+
   function medicineSections(text) {
     const sections = [];
     let current = {heading: 'Overview', text: ''};
@@ -39,7 +48,7 @@
   }
 
   if (typeof module !== 'undefined') {
-    module.exports = {draftChart, medicineSections};
+    module.exports = {draftChart, transcriptDraft, medicineSections};
     return;
   }
 
@@ -89,7 +98,20 @@
         'Last saved version reviewed on ' + new Date(saved.reviewed_at).toLocaleString('en-IN') :
         'Drafts require review by a qualified clinician.');
       const history = fields[1].querySelector('textarea');
-      const voice = dictation(history, ui);
+      const transcript = ui.field('transcriptPreview', 'Editable transcript preview', 'textarea', '');
+      const preview = transcript.querySelector('textarea');
+      preview.removeAttribute('name');
+      const useTranscript = action('Create draft from transcript', () => {
+        const draft = transcriptDraft(preview.value.trim());
+        if (!draft) return ui.message('Add or transcribe some text first.', true, 'editorMessage');
+        const combined = [history.value.trimEnd(), draft].filter(Boolean).join('\n');
+        if (combined.length > history.maxLength) {
+          return ui.message('Shorten the transcript or history before adding this draft.', true, 'editorMessage');
+        }
+        history.value = combined;
+        ui.message('Draft added. Review the wording before saving.', false, 'editorMessage');
+        history.focus();
+      });
       const formatDraft = action('Format labelled transcript', () => {
         const formatted = draftChart(history.value);
         if (formatted.length <= history.maxLength) history.value = formatted;
@@ -110,7 +132,7 @@
         else ui.message('There is not enough room to insert every heading.', true, 'editorMessage');
         history.focus();
       });
-      ui.modal('Consultation document', [detail, ...fields, chart, classical, formatDraft, voice, consultationRecorder()], values => ui.api(endpoint, {
+      ui.modal('Consultation document', [detail, ...fields, chart, classical, formatDraft, consultationRecorder(preview, ui), transcript, useTranscript], values => ui.api(endpoint, {
         action: 'consultation', visitId: visit.id, version: saved?.version || 0,
         history: draftChart(values.history), observations: values.observations, follow_up: values.follow_up,
         consent: values.consent === 'yes', reviewed: values.reviewed === 'yes'
@@ -124,7 +146,7 @@
     }
   }
 
-  function consultationRecorder() {
+  function consultationRecorder(preview, ui) {
     const box = node('details');
     box.append(node('summary', 'Record audio for this session'));
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
@@ -135,6 +157,7 @@
     consent.type = 'checkbox';
     const label = node('label', 'Patient consented to local audio recording ');
     label.append(consent);
+    const voice = recordingTranscription(preview, ui);
     const audio = node('audio');
     audio.controls = true;
     audio.hidden = true;
@@ -156,6 +179,7 @@
     let generation = 0;
     function release() {
       generation++;
+      voice.abort();
       clearTimeout(timer);
       if (recorder && recorder.state !== 'inactive') recorder.stop();
       stream?.getTracks().forEach(track => track.stop());
@@ -176,6 +200,7 @@
     stop.disabled = true;
     const pause = action('Pause recording', () => {
       if (recorder?.state !== 'recording') return;
+      voice.stop();
       recorder.pause();
       freezeDuration();
       pause.disabled = true;
@@ -185,6 +210,7 @@
     const resume = action('Resume recording', () => {
       if (recorder?.state !== 'paused') return;
       recorder.resume();
+      void voice.start(stream.getAudioTracks()[0]);
       startedAt = performance.now();
       clock = setInterval(updateDuration, 1000);
       pause.disabled = false;
@@ -218,6 +244,7 @@
         };
         recorder.onstop = () => {
           if (token !== generation) return;
+          voice.stop();
           clearTimeout(timer);
           captured.getTracks().forEach(track => track.stop());
           start.disabled = false;
@@ -241,6 +268,7 @@
           status.textContent = 'Recording stopped because the microphone became unavailable.';
         };
         recorder.start(1000);
+        void voice.start(captured.getAudioTracks()[0]);
         stop.disabled = pause.disabled = false;
         startedAt = performance.now();
         clock = setInterval(updateDuration, 1000);
@@ -260,82 +288,96 @@
       stop.disabled = true;
       status.textContent = 'Recording cleared.';
     });
-    box.append(node('p', 'Audio stays in this tab and is discarded when you close the form.'), label, start, pause, resume, stop, discard, duration, status, audio);
+    box.append(node('p', 'Audio stays in this tab and is discarded when you close the form.'), label, start, pause, resume, stop, discard, duration, status, audio, voice.box);
     return box;
   }
 
-  function dictation(target, ui) {
+  function recordingTranscription(target, ui) {
     const box = node('div');
     const status = node('p');
     status.setAttribute('role', 'status');
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (typeof Speech?.available !== 'function' || !('processLocally' in Speech.prototype)) {
-      box.append(node('p', 'On-device dictation is unavailable in this browser. You can type your notes.'));
-      return box;
-    }
-    const language = ui.field('voiceLanguage', 'On-device dictation language', 'select', 'hi-IN',
+    const supported = typeof Speech?.available === 'function' && 'processLocally' in Speech.prototype;
+    const language = ui.field('voiceLanguage', 'On-device transcription language', 'select', 'hi-IN',
       [['hi-IN', 'Hindi'], ['en-IN', 'English (India)']]);
-    const consent = consentCheckbox('voiceConsent', 'Patient consented to on-device dictation');
+    const consent = consentCheckbox('voiceConsent', 'Patient consented to on-device transcription');
+    const checkbox = consent.querySelector('input');
+    const select = language.querySelector('select');
     let recognition, generation = 0;
-    const start = action('Dictate patient history', async () => {
-      if (!consent.querySelector('input').checked) {
-        status.textContent = 'Confirm microphone consent before starting.';
-        return;
-      }
+    const stop = () => {
+      if (recognition) recognition.stop();
+      else generation++;
+    };
+    const abort = () => {
+      generation++;
+      recognition?.abort();
+      recognition = null;
+    };
+    checkbox.addEventListener('change', () => {
+      if (checkbox.checked) return;
+      abort();
+      target.value = '';
+      status.textContent = 'Transcript preview cleared.';
+    });
+    async function start(track) {
+      if (!supported || !checkbox.checked || recognition || track?.readyState !== 'live') return;
       const token = ++generation;
-      const lang = language.querySelector('select').value;
-      start.disabled = true;
+      const lang = select.value;
       try {
         const availability = await Speech.available({langs: [lang], processLocally: true});
-        if (token !== generation) return;
+        if (token !== generation || track.readyState !== 'live') return;
         if (availability !== 'available') {
-          status.textContent = 'This device does not have the selected on-device language pack.';
-          start.disabled = false;
+          status.textContent = 'Install the selected language pack before recording with transcription.';
           return;
         }
         recognition = new Speech();
         recognition.processLocally = true;
+        recognition.continuous = true;
         recognition.lang = lang;
         recognition.onresult = event => {
           if (token !== generation) return;
-          const text = Array.from(event.results, result => result[0].transcript).join(' ');
-          target.value = [target.value, text].filter(Boolean).join(' ').slice(0, target.maxLength);
-          status.textContent = 'Check the transcript before saving.';
+          const additions = [];
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) additions.push(event.results[i][0].transcript.trim());
+          }
+          if (additions.length) target.value = [target.value, ...additions].filter(Boolean).join(' ');
         };
-        recognition.onerror = () => { status.textContent = 'Dictation could not continue. You can type your notes.'; };
-        recognition.onend = () => { start.disabled = false; };
-        recognition.start();
-        status.textContent = 'Listening on this device…';
+        recognition.onerror = () => {
+          if (token === generation) status.textContent = 'Transcription stopped. You can still review the audio and type the transcript.';
+        };
+        recognition.onend = () => {
+          if (token === generation) recognition = null;
+        };
+        recognition.start(track);
+        status.textContent = 'Transcribing on this device. Review the transcript before adding it to the case.';
       } catch {
         if (token !== generation) return;
-        status.textContent = 'On-device dictation could not start.';
-        start.disabled = false;
+        abort();
+        status.textContent = 'This browser could not transcribe the recording track.';
       }
-    });
-    stopDictation = () => {
-      generation++;
-      recognition?.abort();
-      recognition = null;
-      start.disabled = false;
-    };
-    box.append(language, consent, start, action('Stop dictation', () => recognition?.stop()));
-    if (typeof Speech.install === 'function') {
-      const install = action('Install selected language pack', async () => {
-        install.disabled = true;
-        try {
-          const lang = language.querySelector('select').value;
-          const installed = await Speech.install({langs: [lang], processLocally: true});
-          status.textContent = installed ? 'Language pack installed.' : 'This browser could not install the selected language pack.';
-        } catch {
-          status.textContent = 'This browser could not install the selected language pack.';
-        } finally {
-          install.disabled = false;
-        }
-      });
-      box.append(install);
+    }
+    stopDictation = abort;
+    if (supported) {
+      box.append(language, consent);
+      if (typeof Speech.install === 'function') {
+        const install = action('Install selected language pack', async () => {
+          install.disabled = true;
+          try {
+            const installed = await Speech.install({langs: [select.value], processLocally: true});
+            status.textContent = installed ? 'Language pack installed.' : 'Language pack installation was unavailable.';
+          } catch {
+            status.textContent = 'Language pack installation was unavailable.';
+          } finally {
+            install.disabled = false;
+          }
+        });
+        box.append(install);
+      }
+    } else {
+      status.textContent = 'On-device transcription is unavailable here. Play the recording and type into the editable transcript preview.';
     }
     box.append(status);
-    return box;
+    return {box, start, stop, abort};
   }
 
   function studyWorkflow() {
@@ -393,7 +435,10 @@
         id: rubric.id,
         label: [rubric.chapter, ...rubric.path].join(' → '),
         terms: rubric.aliases,
-        source: position === 0 ? 'Kent' : 'Boericke'
+        source: position === 0 ? 'Kent' : 'Boericke',
+        chapter: rubric.chapter,
+        page: rubric.page,
+        edition: index.edition
       })));
     const saved = new Map(progress.map(item => [item.book_id, item]));
     const selected = new Set(entries.filter(entry => saved.get(entry.id)?.bookmarked).map(entry => entry.id));
@@ -405,6 +450,12 @@
     label.append(input);
     const results = node('ul');
     const selection = node('ul');
+    const chart = node('table');
+    const header = chart.createTHead().insertRow();
+    for (const label of ['Historical source', 'Chapter', 'Selected entries']) {
+      header.append(node('th', label));
+    }
+    const chartBody = chart.createTBody();
     const status = node('p');
     status.setAttribute('role', 'status');
     let saving = false;
@@ -435,7 +486,7 @@
         normalize(entry.label + ' ' + entry.source + ' ' + entry.terms).includes(term)));
       results.replaceChildren();
       selection.replaceChildren();
-      for (const entry of matching) {
+      for (const entry of matching.slice(0, 40)) {
         const item = node('li');
         const add = action('Add ' + entry.label + ' (' + entry.source + ')', () => {
           selected.add(entry.id);
@@ -443,11 +494,17 @@
           render();
         });
         add.disabled = saving || selected.has(entry.id);
-        item.append(add);
+        item.append(add, node('p', entry.edition + ' · Page ' + entry.page));
         results.append(item);
       }
       if (!matching.length) results.append(node('li', 'No matching rubrics in the current index.'));
+      if (matching.length > 40) results.append(node('li', 'Showing 40 of ' + matching.length + ' matches. Refine your search to see more.'));
+      const groups = new Map();
       for (const entry of entries.filter(entry => selected.has(entry.id))) {
+        const key = entry.source + ' / ' + entry.chapter;
+        const group = groups.get(key) || {source: entry.source, chapter: entry.chapter, count: 0};
+        group.count++;
+        groups.set(key, group);
         const item = node('li');
         const remove = action('Remove ' + entry.label + ' (' + entry.source + ')', () => {
           selected.delete(entry.id);
@@ -455,9 +512,15 @@
           render();
         });
         remove.disabled = saving;
-        item.append(remove);
+        item.append(remove, node('p', entry.edition + ' · Page ' + entry.page));
         selection.append(item);
       }
+      chartBody.replaceChildren();
+      for (const group of groups.values()) {
+        const row = chartBody.insertRow();
+        for (const value of [group.source, group.chapter, group.count]) row.insertCell().textContent = value;
+      }
+      chart.hidden = !selected.size;
       if (!selected.size) selection.append(node('li', 'No rubrics selected.'));
       save.disabled = saving || !entries.some(entry =>
         Boolean(saved.get(entry.id)?.bookmarked) !== selected.has(entry.id));
@@ -465,9 +528,9 @@
     input.addEventListener('input', render);
     panel.append(node('p', entries.length + ' indexed rubrics for historical study.'),
       label, node('h2', 'Search results'), results,
-      node('h2', 'Selected rubrics'), selection, save, status);
+      node('h2', 'Selected rubrics'), selection, chart, save, status);
     render();
-    container.replaceChildren(studyWorkflow(), panel);
+    container.replaceChildren(panel, studyWorkflow());
   }
 
   const medicineNames = new Map(Object.entries({

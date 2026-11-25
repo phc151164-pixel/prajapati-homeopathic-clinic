@@ -8,6 +8,7 @@ const assert = require('node:assert/strict');
 const root = path.resolve(__dirname, '..');
 const publicRoot = path.join(root, 'public');
 const catalog = require(path.join(root,'docs/reference-library-catalog.json'));
+const boericke = require(path.join(root,'docs/boericke-repertory-index.json'));
 const keynotes = require(path.join(root,'docs/allen-keynotes-index.json'));
 const repertory = require(path.join(root,'docs/kent-repertory-index.json'));
 const patientId = '11111111-1111-4111-8111-111111111111';
@@ -33,7 +34,7 @@ const srv = http.createServer(async (req,res) => {
       if (section==='patient') return json({patient,summary:{completed:0,upcoming:1},visits:[{id:visitId,visit_date:'2026-11-25',visit_time:'11:00',kind:'followup',mode:'walkin',state:'planned'}]});
       return json({items:[],bookings:[],counts:{},stats:{},has_more:false});
     }
-    if (section === 'library') return json({catalog,repertory,keynotes,progress:progress?[progress]:[]});
+    if (section === 'library') return json({catalog,repertory,boericke,keynotes,progress:progress?[progress]:[]});
     if (section === 'consultation') return json({document:document||null});
     if (body.action === 'reference_opened') {
       progress = {...progress, book_id: body.bookId, last_opened: new Date().toISOString()};
@@ -74,6 +75,20 @@ const srv = http.createServer(async (req,res) => {
     const pdf=await sample.pdf(); await sample.close();
     const errors=[];
     page.on('pageerror',error=>errors.push(error.message));
+    await page.addInitScript(() => {
+      window.SpeechRecognition = class {
+        get processLocally() { return this.local; }
+        set processLocally(value) { this.local = value; }
+        static async available({processLocally}) { return processLocally ? 'available' : 'unavailable'; }
+        start(track) {
+          if (!this.processLocally || track?.kind !== 'audio') throw new Error('Expected a local audio track');
+          const result = Object.assign([{transcript: 'Chief complaint synthetic note. Duration two days'}], {isFinal: true});
+          this.onresult({resultIndex: 0, results: [result]});
+        }
+        stop() { this.onend(); }
+        abort() { this.onend(); }
+      };
+    });
     await page.goto('http://127.0.0.1:'+srv.address().port+'/admin');
     const nav=async name=>{
       const target=page.locator('#nav').getByRole('button',{name,exact:true});
@@ -82,6 +97,12 @@ const srv = http.createServer(async (req,res) => {
     };
     await page.locator('#appView').waitFor();
     assert.equal(await page.locator('#nav').getByRole('button', {name: 'Repertory', exact: true, includeHidden: true}).count(), 0);
+    await nav('Repertorisation');
+    await page.getByLabel('Search historical rubrics').fill('khansi');
+    await page.getByRole('button', {name: /Add Head → Pain → Pressing → Coughing/}).click();
+    await page.getByRole('cell', {name: 'Kent', exact: true}).waitFor();
+    await page.getByRole('button', {name: 'Save study list'}).click();
+    await page.getByText('Study list saved.').waitFor();
     await nav('Patient records');
     await page.getByRole('button',{name:'Open profile',exact:true}).click();
     await page.getByRole('button',{name:'Consultation document'}).click();
@@ -102,12 +123,17 @@ const srv = http.createServer(async (req,res) => {
     await page.getByRole('button', {name: 'Start recording'}).click();
     await page.getByText('Confirm recording consent before starting.').waitFor();
     await page.getByLabel('Patient consented to local audio recording').check();
+    await page.getByLabel('Patient consented to on-device transcription').check();
     await page.getByRole('button', {name: 'Start recording'}).click();
     await page.getByText('Recording on this device.', {exact: false}).waitFor();
     await page.waitForTimeout(1300);
     await page.getByRole('button', {name: 'Stop recording'}).click();
     await page.locator('audio[src^="blob:"]').waitFor();
-    await page.getByLabel('Patient-reported history').fill('Synthetic history');
+    assert.match(await page.getByLabel('Editable transcript preview').inputValue(), /synthetic note/);
+    await historyField.fill('');
+    await page.getByRole('button', {name: 'Create draft from transcript'}).click();
+    assert.match(await historyField.inputValue(), /Chief complaint: synthetic note/);
+    assert.match(await historyField.inputValue(), /Duration: two days/);
     await page.getByLabel('Patient consented to structured documentation').check();
     await page.locator('#editorSave').click();
     await page.locator('#editor').waitFor({state:'hidden'});
@@ -117,7 +143,7 @@ const srv = http.createServer(async (req,res) => {
     await page.locator('#editorSave').click();
     await page.locator('#editor').waitFor({state:'hidden'});
     assert.ok(document.reviewed_at);
-    assert.equal(document.history,'Synthetic history');
+    assert.match(document.history, /Duration: two days/);
     await page.evaluate(()=>navigator.serviceWorker.ready);
     assert.deepEqual(await page.evaluate(()=>caches.keys()),[]);
     const logout=page.locator('#logout');
@@ -127,6 +153,6 @@ const srv = http.createServer(async (req,res) => {
     assert.equal(await page.locator('#smartLibraryNav').isVisible(),false);
     assert.equal((await page.request.get(new URL('/.netlify/functions/smart-clinic?section=library', page.url()).href)).status(), 401);
     assert.deepEqual(errors,[]);
-    process.stdout.write('Chromium desktop + 390px smoke passed: library, PDF views, persistence, theme, consent/review, worker, logout.\n');
+    process.stdout.write('Chromium desktop + 390px smoke passed: rubric lookup and study chart, recording, mocked local transcription, case draft, review and logout.\n');
   } finally {await browser.close();srv.close();}
 })().catch(error=>{console.error(error);srv.close();process.exitCode=1;});
