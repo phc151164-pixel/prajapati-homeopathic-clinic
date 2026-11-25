@@ -20,6 +20,8 @@ test('historical catalogue supports Hindi, English, Hinglish aliases and transla
   assert.deepEqual(catalog.filter(book => matches(book, 'बोगर repertori')).map(book => book.id), ['boger']);
   assert.ok(catalog.some(book => matches(book, 'aushadhi hahnemann')));
   assert.ok(catalog.some(book => matches(book, 'bönninghausen')));
+  assert.equal(catalog.find(book => matches(book, 'एलन keynotes')).id, 'allen-keynotes');
+  assert.equal(catalog.find(book => matches(book, 'purani bimari')).id, 'hahnemann-chronic-diseases');
   assert.ok(catalog.every(book => book.content_status === 'external_catalogue_only'));
 });
 

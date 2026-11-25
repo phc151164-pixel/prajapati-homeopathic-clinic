@@ -7,6 +7,8 @@
     boger: 'boger repertory repertori lakshan',
     organon: 'organon hahnemann itihas',
     jahr: 'jahr yaar itihas',
+    'allen-keynotes': 'allen keynotes keynote alan elan allen ki keynotes एलन कीनोट',
+    'hahnemann-chronic-diseases': 'hahnemann chronic diseases purani bimari itihas पुरानी बीमारी',
     'materia-medica-pura': 'materia medica aushadhi aushadhiya औषधि'
   };
   const normalize = text => text.normalize('NFC').toLowerCase().replace(/œ/g, 'oe')
@@ -25,6 +27,12 @@
     ['duration', 'Duration'], ['अवधि', 'Duration'],
     ['patient history', 'Patient history'], ['मरीज का इतिहास', 'Patient history']
   ]);
+  const classicalHeadings = [
+    'Chief complaint', 'Onset and duration', 'Location and sensation',
+    'Aggravating and relieving factors', 'Accompanying symptoms',
+    'Sleep, appetite and thirst', 'Patient-reported mood or stress',
+    'Past and family history', 'Current medicines and allergies'
+  ];
   function draftChart(transcript) {
     return transcript.split(/\n/u).map(line => {
       const label = line.match(/^\s*([^:：]+)[:：]\s*(.+)$/u);
@@ -288,7 +296,17 @@
         if (!history.value.trim()) history.value = headings.map(heading => heading + ': ').join('\n');
         history.focus();
       });
-      ui.modal('Consultation document', [detail, ...fields, chart, voice, consultationRecorder(), consultationLookup(ui.api)], values => ui.api(endpoint, {
+      const classical = action('Insert classical case-taking headings', () => {
+        const present = new Set(history.value.split('\n').map(line => normalize(line.split(':')[0]).trim()));
+        const missing = classicalHeadings.filter(heading => !present.has(normalize(heading)));
+        if (!missing.length) return history.focus();
+        const updated = [history.value.trimEnd(), missing.map(heading => heading + ': ').join('\n')]
+          .filter(Boolean).join('\n');
+        if (updated.length <= history.maxLength) history.value = updated;
+        else ui.message('There is not enough room to insert every heading.', true, 'editorMessage');
+        history.focus();
+      });
+      ui.modal('Consultation document', [detail, ...fields, chart, classical, voice, consultationRecorder(), consultationLookup(ui.api)], values => ui.api(endpoint, {
         action: 'consultation', visitId: visit.id, version: saved?.version || 0,
         history: draftChart(values.history), observations: values.observations, follow_up: values.follow_up,
         consent: values.consent === 'yes', reviewed: values.reviewed === 'yes'

@@ -126,7 +126,17 @@ const srv = http.createServer(async (req,res) => {
     await page.getByRole('button',{name:'Open profile',exact:true}).click();
     await page.getByRole('button',{name:'Consultation document'}).click();
     await page.getByRole('button', {name: 'Insert case-sheet headings'}).click();
-    assert.match(await page.getByLabel('Patient-reported history').inputValue(), /Chief complaint:/);
+    const historyField = page.getByLabel('Patient-reported history');
+    assert.match(await historyField.inputValue(), /Chief complaint:/);
+    await historyField.fill('Chief complaint: Synthetic note');
+    const insertClassical = page.getByRole('button', {name: 'Insert classical case-taking headings'});
+    await insertClassical.click();
+    await insertClassical.click();
+    const formatted = await historyField.inputValue();
+    assert.match(formatted, /^Chief complaint: Synthetic note/);
+    assert.match(formatted, /Aggravating and relieving factors:/);
+    assert.equal(formatted.match(/Current medicines and allergies:/g).length, 1);
+
     await page.getByText('Search historical rubrics', {exact: true}).click();
     await page.getByLabel('Historical search terms').fill('khansi');
     await page.getByRole('button', {name: 'Find historical entries'}).click();

@@ -78,5 +78,37 @@
     "content_status": "external_catalogue_only",
     "translation_status": "Hindi catalogue title only; linked edition is the historical English translation",
     "purpose": "historical education only"
+  },
+  {
+    "id": "allen-keynotes",
+    "title": "Allen’s Keynotes and Characteristics",
+    "title_hi": "एलन की कीनोट्स और विशेषताएँ",
+    "author": "Henry Clay Allen",
+    "category": "Materia Medica",
+    "year": "1899",
+    "language": "en",
+    "source": "Library of Congress scan via Wikimedia Commons",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Keynotes_and_characteristics_(IA_keynotescharacte00alle).pdf",
+    "rights": "Public domain scan as marked by Wikimedia Commons",
+    "rights_checked": "2026-11-25",
+    "content_status": "external_catalogue_only",
+    "translation_status": "Hindi catalogue label only",
+    "purpose": "historical education only"
+  },
+  {
+    "id": "hahnemann-chronic-diseases",
+    "title": "Chronic Diseases (historical text)",
+    "title_hi": "हानेमान की क्रॉनिक डिज़ीज़",
+    "author": "Samuel Hahnemann / Charles J. Hempel (translator)",
+    "category": "History",
+    "year": "1845–1846",
+    "language": "en",
+    "source": "Wellcome Collection",
+    "source_url": "https://wellcomecollection.org/works/t2fv7su8",
+    "rights": "Public Domain Mark",
+    "rights_checked": "2026-11-25",
+    "content_status": "external_catalogue_only",
+    "translation_status": "Hindi catalogue label only",
+    "purpose": "historical education only"
   }
 ]
