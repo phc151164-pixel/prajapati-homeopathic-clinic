@@ -130,24 +130,62 @@
     audio.hidden = true;
     const status = node('p');
     status.setAttribute('role', 'status');
-    let recorder, stream, url, timer;
+    let recorder, stream, url, timer, clock, startedAt, capturedMs = 0;
+    const duration = node('p', 'Recorded time 00:00');
+    function updateDuration() {
+      const seconds = Math.floor((capturedMs + (startedAt === undefined ? 0 : performance.now() - startedAt)) / 1000);
+      duration.textContent = 'Recorded time ' + String(Math.floor(seconds / 60)).padStart(2, '0')
+        + ':' + String(seconds % 60).padStart(2, '0');
+    }
+    function freezeDuration() {
+      if (startedAt !== undefined) capturedMs += performance.now() - startedAt;
+      startedAt = undefined;
+      clearInterval(clock);
+      updateDuration();
+    }
     let generation = 0;
     function release() {
       generation++;
       clearTimeout(timer);
-      if (recorder?.state === 'recording') recorder.stop();
+      if (recorder && recorder.state !== 'inactive') recorder.stop();
       stream?.getTracks().forEach(track => track.stop());
       if (url) URL.revokeObjectURL(url);
       url = null;
       audio.pause();
       audio.removeAttribute('src');
       audio.hidden = true;
+      freezeDuration();
+      capturedMs = 0;
+      updateDuration();
+      pause.disabled = resume.disabled = discard.disabled = stop.disabled = true;
     }
     disposeRecording = release;
     const stop = action('Stop recording', () => {
-      if (recorder?.state === 'recording') recorder.stop();
+      if (recorder && recorder.state !== 'inactive') recorder.stop();
     });
     stop.disabled = true;
+    const pause = action('Pause recording', () => {
+      if (recorder?.state !== 'recording') return;
+      recorder.pause();
+      freezeDuration();
+      pause.disabled = true;
+      resume.disabled = false;
+      status.textContent = 'Recording paused.';
+    });
+    const resume = action('Resume recording', () => {
+      if (recorder?.state !== 'paused') return;
+      recorder.resume();
+      startedAt = performance.now();
+      clock = setInterval(updateDuration, 1000);
+      pause.disabled = false;
+      resume.disabled = true;
+      status.textContent = 'Recording on this device.';
+    });
+    const discard = action('Delete recording', () => {
+      release();
+      status.textContent = 'Recording deleted.';
+    });
+    pause.disabled = resume.disabled = discard.disabled = true;
     const start = action('Start recording', async () => {
       if (!consent.checked) {
         status.textContent = 'Confirm recording consent before starting.';
@@ -173,7 +211,8 @@
           clearTimeout(timer);
           captured.getTracks().forEach(track => track.stop());
           start.disabled = false;
-          stop.disabled = true;
+          stop.disabled = pause.disabled = resume.disabled = true;
+          freezeDuration();
           if (!chunks.length) {
             status.textContent = 'No audio was captured.';
             return;
@@ -181,6 +220,7 @@
           url = URL.createObjectURL(new Blob(chunks, {type: recorder.mimeType}));
           audio.src = url;
           audio.hidden = false;
+          discard.disabled = false;
           status.textContent = 'Recording stopped. Playback is available until you close this form.';
         };
         recorder.onerror = () => {
@@ -191,7 +231,9 @@
           status.textContent = 'Recording stopped because the microphone became unavailable.';
         };
         recorder.start(1000);
-        stop.disabled = false;
+        stop.disabled = pause.disabled = false;
+        startedAt = performance.now();
+        clock = setInterval(updateDuration, 1000);
         timer = setTimeout(() => stop.click(), 15 * 60 * 1000);
         status.textContent = 'Recording on this device. Maximum 15 minutes per recording.';
       } catch {
@@ -208,7 +250,7 @@
       stop.disabled = true;
       status.textContent = 'Recording cleared.';
     });
-    box.append(node('p', 'Audio stays in this tab and is discarded when you close the form.'), label, start, stop, status, audio);
+    box.append(node('p', 'Audio stays in this tab and is discarded when you close the form.'), label, start, pause, resume, stop, discard, duration, status, audio);
     return box;
   }
 
