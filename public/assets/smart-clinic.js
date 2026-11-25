@@ -16,8 +16,12 @@
       book.category === 'Repertory' ? 'रिपर्टरी' : '', aliases[book.id]].join(' '));
     return normalize(query).trim().split(/\s+/u).every(term => searchable.includes(term));
   };
+  const matchesRubric = (rubric, query) => {
+    const searchable = normalize([rubric.chapter, ...rubric.path, rubric.aliases].join(' '));
+    return normalize(query).trim().split(/\s+/u).every(term => searchable.includes(term));
+  };
   if (typeof module !== 'undefined') {
-    module.exports = {matches};
+    module.exports = {matches, matchesRubric};
     return;
   }
 
@@ -152,6 +156,8 @@
     mode.addEventListener('change', render);
     render();
 
+    if (data.repertory) root.prepend(renderRepertory(data.repertory, progress, api));
+
     const reader = card('Compare local editions');
     const columns = node('div');
     columns.className = 'phc-reader-columns';
@@ -164,6 +170,82 @@
       clearFirst();
       clearSecond();
     };
+  }
+
+  function renderRepertory(index, progress, api) {
+    const panel = card('Kent Repertory / केंट रिपर्टरी');
+    panel.append(node('p', index.coverage), node('p', index.edition + ' · Historical study'));
+    const search = node('input');
+    search.type = 'search';
+    search.placeholder = 'Pressing, कनपटी, khansi…';
+    const searchLabel = node('label', 'Search rubrics / रूब्रिक खोजें');
+    searchLabel.append(search);
+    const chapter = node('select');
+    chapter.append(node('option', 'All chapters'));
+    for (const name of new Set(index.rubrics.map(rubric => rubric.chapter))) chapter.append(node('option', name));
+    const chapterLabel = node('label', 'Chapter');
+    chapterLabel.append(chapter);
+    const savedOnly = node('input');
+    savedOnly.type = 'checkbox';
+    const savedLabel = node('label', 'Show my study list ');
+    savedLabel.append(savedOnly);
+    const toolbar = node('div');
+    toolbar.className = 'toolbar';
+    toolbar.append(searchLabel, chapterLabel, savedLabel);
+    const count = node('p');
+    count.setAttribute('role', 'status');
+    const results = node('div');
+    panel.append(toolbar, count, results);
+    function render() {
+      const rubrics = index.rubrics.filter(rubric => matchesRubric(rubric, search.value)
+        && (!chapter.selectedIndex || rubric.chapter === chapter.value)
+        && (!savedOnly.checked || progress.get(rubric.id)?.bookmarked));
+      count.textContent = rubrics.length + (rubrics.length === 1 ? ' rubric' : ' rubrics');
+      results.replaceChildren();
+      for (const rubric of rubrics) {
+        const item = node('details');
+        item.className = 'visit';
+        const source = node('a', index.source + ' · printed page ' + rubric.page);
+        source.href = index.pages[rubric.page];
+        source.target = '_blank';
+        source.rel = 'noopener noreferrer';
+        const note = node('textarea');
+        note.maxLength = 4000;
+        note.value = progress.get(rubric.id)?.note || '';
+        const noteLabel = node('label', 'Private study note');
+        noteLabel.append(note);
+        const bookmark = node('input');
+        bookmark.type = 'checkbox';
+        bookmark.checked = progress.get(rubric.id)?.bookmarked ?? false;
+        const bookmarkLabel = node('label', 'Add to my study list ');
+        bookmarkLabel.append(bookmark);
+        const feedback = node('p');
+        feedback.setAttribute('role', 'status');
+        const save = action('Save study entry', async () => {
+          save.disabled = true;
+          try {
+            const {progress: updated} = await api(endpoint, {
+              action: 'progress', bookId: rubric.id, note: note.value, bookmarked: bookmark.checked
+            });
+            progress.set(rubric.id, updated);
+            if (savedOnly.checked && !updated.bookmarked) render();
+            else feedback.textContent = 'Saved.';
+          } catch (error) {
+            feedback.textContent = error.message;
+          } finally {
+            save.disabled = false;
+          }
+        });
+        item.append(node('summary', [rubric.chapter, ...rubric.path].join(' → ')),
+          source, bookmarkLabel, noteLabel, save, feedback);
+        results.append(item);
+      }
+    }
+    search.addEventListener('input', render);
+    chapter.addEventListener('change', render);
+    savedOnly.addEventListener('change', render);
+    render();
+    return panel;
   }
 
   async function consultation(visit, ui) {

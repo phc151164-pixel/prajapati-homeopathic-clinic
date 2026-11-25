@@ -1,0 +1,21 @@
+{
+  "edition": "J. T. Kent, Repertory of the Homoeopathic Materia Medica, 1897–1899",
+  "source": "Wellcome Collection",
+  "rights": "Public Domain Mark",
+  "coverage": "Starter index covering selected Head rubrics from printed pages 195 and 220, volume 1.",
+  "pages": {
+    "195": "https://wellcomecollection.org/works/aguw48nw/items?canvas=201",
+    "220": "https://wellcomecollection.org/works/aguw48nw/items?canvas=226"
+  },
+  "rubrics": [
+    {"id":"kent-rubric-pressing-cough","chapter":"Head","path":["Pain","Pressing","Coughing, while"],"page":195,"aliases":"सिर दर्द दबाव खाँसी खांसी khansi khasi sar dard dabav"},
+    {"id":"kent-rubric-pressing-darkness","chapter":"Head","path":["Pain","Pressing","Darkness, in"],"page":195,"aliases":"सिर दर्द दबाव अंधेरा andhera sar dard dabav"},
+    {"id":"kent-rubric-pressing-dinner","chapter":"Head","path":["Pain","Pressing","Dinner, during"],"page":195,"aliases":"सिर दर्द दबाव खाना khana sar dard dabav"},
+    {"id":"kent-rubric-pressing-reading","chapter":"Head","path":["Pain","Pressing","Reading, while"],"page":195,"aliases":"सिर दर्द दबाव पढ़ते वक्त padhte waqt sar dard dabav"},
+    {"id":"kent-rubric-pressing-sleep","chapter":"Head","path":["Pain","Pressing","Sleep, after"],"page":195,"aliases":"सिर दर्द दबाव नींद के बाद neend sone ke baad sar dard dabav"},
+    {"id":"kent-rubric-tearing-sides-right","chapter":"Head","path":["Pain","Tearing","Sides","Right"],"page":220,"aliases":"सिर दर्द दाहिनी तरफ dahini taraf sar dard"},
+    {"id":"kent-rubric-tearing-sides-left","chapter":"Head","path":["Pain","Tearing","Sides","Left"],"page":220,"aliases":"सिर दर्द बाईं तरफ bain taraf baayi taraf sar dard"},
+    {"id":"kent-rubric-tearing-stooping","chapter":"Head","path":["Pain","Tearing","Stooping"],"page":220,"aliases":"सिर दर्द झुकने पर jhukne par sar dard"},
+    {"id":"kent-rubric-tearing-temples","chapter":"Head","path":["Pain","Tearing","Temples"],"page":220,"aliases":"सिर दर्द कनपटी kanpati sar dard"}
+  ]
+}

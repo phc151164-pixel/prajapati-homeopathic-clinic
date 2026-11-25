@@ -8,6 +8,7 @@ const assert = require('node:assert/strict');
 const root = path.resolve(__dirname, '..');
 const publicRoot = path.join(root, 'public');
 const catalog = require(path.join(root,'docs/reference-library-catalog.json'));
+const repertory = require(path.join(root,'docs/kent-repertory-index.json'));
 const patientId = '11111111-1111-4111-8111-111111111111';
 const visitId = '22222222-2222-4222-8222-222222222222';
 const csp = fs.readFileSync(path.join(root, 'netlify.toml'), 'utf8').match(/Content-Security-Policy = "([^"]+)"/)[1];
@@ -31,7 +32,7 @@ const srv = http.createServer(async (req,res) => {
       if (section==='patient') return json({patient,summary:{completed:0,upcoming:1},visits:[{id:visitId,visit_date:'2026-11-25',visit_time:'11:00',kind:'followup',mode:'walkin',state:'planned'}]});
       return json({items:[],bookings:[],counts:{},stats:{},has_more:false});
     }
-    if (section === 'library') return json({catalog,progress:progress?[progress]:[]});
+    if (section === 'library') return json({catalog,repertory,progress:progress?[progress]:[]});
     if (section === 'consultation') return json({document:document||null});
     if (body.action === 'reference_opened') {
       progress = {...progress, book_id: body.bookId, last_opened: new Date().toISOString()};
@@ -79,7 +80,7 @@ const srv = http.createServer(async (req,res) => {
       await target.click();
     };
     await nav('Reference library');
-    await page.getByRole('searchbox').fill('बोगर repertori');
+    await page.getByLabel('Search titles and authors / शीर्षक और लेखक खोजें').fill('बोगर repertori');
     await page.getByText('1 catalogue entries').waitFor();
     await page.getByLabel('Private reference note').fill('Synthetic reading note');
     await page.getByRole('checkbox',{name:'Bookmark',exact:true}).check();
@@ -94,7 +95,7 @@ const srv = http.createServer(async (req,res) => {
     await nav('Toggle light / dark theme');
     assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
     await nav('Reference library');
-    await page.getByRole('searchbox').fill('Boger');
+    await page.getByLabel('Search titles and authors / शीर्षक और लेखक खोजें').fill('Boger');
     assert.equal(await page.getByLabel('Private reference note').inputValue(),'Synthetic reading note');
     await page.getByRole('combobox', {name: 'Show', exact: true}).selectOption('Recently opened');
     await page.getByText('1 catalogue entries').waitFor();
@@ -112,6 +113,15 @@ const srv = http.createServer(async (req,res) => {
     await page.setViewportSize({width:390,height:844});
     assert.equal(await page.locator('.phc-reader-columns').evaluate(node=>getComputedStyle(node).gridTemplateColumns.split(' ').length),1);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    await page.getByLabel('Search rubrics / रूब्रिक खोजें').fill('Head खाँसी khansi');
+    const rubric = page.locator('details').filter({hasText: 'Head → Pain → Pressing → Coughing, while'});
+    await rubric.locator('summary').click();
+    await rubric.getByLabel('Add to my study list').check();
+    await rubric.getByLabel('Private study note').fill('Synthetic study note');
+    await rubric.getByRole('button', {name: 'Save study entry'}).click();
+    await rubric.getByText('Saved.', {exact: true}).waitFor();
+    await page.getByLabel('Show my study list').check();
+    await rubric.locator('summary').waitFor();
     await nav('Patient records');
     await page.getByRole('button',{name:'Open profile',exact:true}).click();
     await page.getByRole('button',{name:'Consultation document'}).click();
