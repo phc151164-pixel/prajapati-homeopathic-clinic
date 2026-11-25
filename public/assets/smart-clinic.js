@@ -72,21 +72,30 @@
     }
     if (closed) return;
     const progress = new Map(data.progress.map(item => [item.book_id, item]));
-    root.replaceChildren(renderRepertory(data.repertory, progress, api),
-      renderRepertory(data.boericke, progress, api));
+    const editions = [
+      {name: 'Kent', index: data.repertory},
+      {name: 'Boericke', index: data.boericke}
+    ];
+    root.replaceChildren(renderRepertory(editions, progress, api));
   }
 
-  function renderRepertory(index, progress, api) {
-    const panel = card(index.title || 'Kent Repertory / केंट रिपर्टरी');
-    panel.append(node('p', index.coverage), node('p', index.edition + ' · Historical study'));
+  function renderRepertory(editions, progress, api) {
+    const panel = card('PHC Repertory');
+    const entries = editions.flatMap(edition => edition.index.rubrics.map(rubric => ({...edition, rubric})));
+    panel.append(node('p', 'Selected historical rubrics for study.'));
+    const editionFilter = node('select');
+    editionFilter.append(node('option', 'All sources'));
+    editions.forEach(edition => editionFilter.append(node('option', edition.name)));
+    const editionLabel = node('label', 'Source edition');
+    editionLabel.append(editionFilter);
     const search = node('input');
     search.type = 'search';
     search.placeholder = 'Pressing, कनपटी, khansi…';
-    const searchLabel = node('label', index.title ? 'Search Boericke rubrics' : 'Search rubrics / रूब्रिक खोजें');
+    const searchLabel = node('label', 'Search rubrics / रूब्रिक खोजें');
     searchLabel.append(search);
     const chapter = node('select');
     chapter.append(node('option', 'All chapters'));
-    for (const name of new Set(index.rubrics.map(rubric => rubric.chapter))) chapter.append(node('option', name));
+    for (const name of new Set(entries.map(entry => entry.rubric.chapter))) chapter.append(node('option', name));
     const chapterLabel = node('label', 'Chapter');
     chapterLabel.append(chapter);
     const savedOnly = node('input');
@@ -95,18 +104,19 @@
     savedLabel.append(savedOnly);
     const toolbar = node('div');
     toolbar.className = 'toolbar';
-    toolbar.append(searchLabel, chapterLabel, savedLabel);
+    toolbar.append(searchLabel, chapterLabel, editionLabel, savedLabel);
     const count = node('p');
     count.setAttribute('role', 'status');
     const results = node('div');
     panel.append(toolbar, count, results);
     function render() {
-      const rubrics = index.rubrics.filter(rubric => matchesRubric(rubric, search.value)
+      const rubrics = entries.filter(({name, rubric}) => matchesRubric(rubric, search.value)
+        && (!editionFilter.selectedIndex || editionFilter.value === name)
         && (!chapter.selectedIndex || rubric.chapter === chapter.value)
         && (!savedOnly.checked || progress.get(rubric.id)?.bookmarked));
       count.textContent = rubrics.length + (rubrics.length === 1 ? ' rubric' : ' rubrics');
       results.replaceChildren();
-      for (const rubric of rubrics) {
+      for (const {name, index, rubric} of rubrics) {
         const item = node('details');
         item.className = 'visit';
         const source = node('a', index.source + ' · ' + pageLabel(rubric.page));
@@ -140,13 +150,14 @@
             save.disabled = false;
           }
         });
-        item.append(node('summary', [rubric.chapter, ...rubric.path].join(' → ')),
-          source, bookmarkLabel, noteLabel, save, feedback);
+        item.append(node('summary', [rubric.chapter, ...rubric.path].join(' → ') + ' · ' + name),
+          node('p', index.edition), source, bookmarkLabel, noteLabel, save, feedback);
         results.append(item);
       }
     }
     search.addEventListener('input', render);
     chapter.addEventListener('change', render);
+    editionFilter.addEventListener('change', render);
     savedOnly.addEventListener('change', render);
     render();
     return panel;

@@ -81,7 +81,7 @@ const srv = http.createServer(async (req,res) => {
       await target.click();
     };
     await nav('Repertory');
-    await page.getByRole('heading', {name: 'Kent Repertory / केंट रिपर्टरी'}).waitFor();
+    await page.getByRole('heading', {name: 'PHC Repertory'}).waitFor();
     assert.equal(await page.getByRole('button', {name: 'Books', exact: true}).count(), 0);
     await page.getByLabel('Search rubrics / रूब्रिक खोजें').fill('Head खाँसी khansi');
     const rubric = page.locator('details').filter({hasText: 'Head → Pain → Pressing → Coughing, while'});
