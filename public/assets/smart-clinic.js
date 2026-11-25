@@ -355,8 +355,90 @@
     container.replaceChildren(panel);
   }
 
+  function medicines(container) {
+    const panel = node('section');
+    panel.className = 'card';
+    const storageKey = 'phc-boericke-materia-medica';
+    const notice = node('p', 'Historical reference only. This is not a treatment guide.');
+    const picker = node('input');
+    picker.type = 'file';
+    picker.accept = '.json,application/json';
+    const importLabel = node('label', 'Import Boericke medicine data');
+    importLabel.append(picker);
+    const status = node('p');
+    status.setAttribute('role', 'status');
+    const search = node('input');
+    search.type = 'search';
+    const searchLabel = node('label', 'Find medicine by name');
+    searchLabel.append(search);
+    const list = node('ul');
+    const detail = node('article');
+    detail.className = 'card';
+    detail.hidden = true;
+    let entries = [];
+    function load(raw) {
+      const data = JSON.parse(raw);
+      const records = data?.medicines;
+      if (!Array.isArray(records) || records.length === 0 || records.length > 1500 ||
+          records.some(record => typeof record?.name !== 'string' || !record.name.trim() ||
+            record.name.length > 150 || !Number.isInteger(record.page) ||
+            record.page < 1 || record.page > 595 || typeof record.text !== 'string' ||
+            record.text.length > 50000)) throw Error('Choose the Boericke_Medicines.json file.');
+      entries = [...records].sort((a, b) => a.name.localeCompare(b.name, 'en'));
+    }
+    function render() {
+      const query = normalize(search.value).trim();
+      const matching = entries.filter(record => normalize(record.name).includes(query));
+      list.replaceChildren();
+      status.textContent = entries.length ? matching.length + ' historical entries' : 'Import the medicine data file to open the alphabetical list.';
+      for (const record of matching) {
+        const item = node('li');
+        item.append(action(record.name, () => {
+          const title = node('h2', record.name);
+          title.tabIndex = -1;
+          const close = action('Back to medicine list', () => {
+            detail.replaceChildren();
+            detail.hidden = true;
+            searchLabel.hidden = list.hidden = false;
+            search.focus();
+          });
+          detail.replaceChildren(title, node('p', 'Boericke, ninth edition · PDF page ' + record.page), close);
+          for (const paragraph of record.text.split(/\n\s*\n/u)) detail.append(node('p', paragraph));
+          searchLabel.hidden = list.hidden = true;
+          detail.hidden = false;
+          title.focus();
+        }));
+        list.append(item);
+      }
+    }
+    picker.addEventListener('change', async () => {
+      const file = picker.files[0];
+      if (!file) return;
+      try {
+        if (file.size > 4 * 1024 * 1024) throw Error('The file exceeds 4 MB.');
+        const raw = await file.text();
+        load(raw);
+        try { localStorage.setItem(storageKey, raw); } catch {}
+        detail.replaceChildren();
+        detail.hidden = true;
+        searchLabel.hidden = list.hidden = false;
+        render();
+      } catch (error) {
+        status.textContent = error.message;
+      }
+    });
+    search.addEventListener('input', render);
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) load(stored);
+    } catch {}
+    panel.append(notice, importLabel, status, searchLabel, list, detail);
+    container.replaceChildren(panel);
+    render();
+  }
+
   window.PHCSmartClinic = {
-    consultation, repertorisation,
+    consultation, repertorisation, medicines,
     close() {
       consultationRequest++;
       stopDictation();
