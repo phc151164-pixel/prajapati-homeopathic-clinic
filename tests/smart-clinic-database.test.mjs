@@ -45,6 +45,34 @@ test('consultation database enforces authorization, consent, version and review 
     const {rows} = await db.query('SELECT * FROM public.phc_audit_log');
     assert.equal(rows.length, 3);
     assert.ok(rows.every(row => row.entity_id === visit && row.actor === doctor));
+    await db.query(
+      'INSERT INTO public.phc_reference_progress(doctor_id,book_id,bookmarked,note,last_opened) VALUES($1,$2,true,$3,now())',
+      [doctor, 'boger', 'Synthetic reference note']
+    );
+    await save(3, true, true);
+
+    const restored = await PGlite.create({loadDataDir: await db.dumpDataDir('gzip')});
+    try {
+      const {rows: [record]} = await restored.query(
+        'SELECT d.version, d.consent_at, d.reviewed_at FROM public.phc_consultation_documents d JOIN public.phc_visits v ON v.id = d.visit_id WHERE v.id = $1',
+        [visit]
+      );
+      assert.equal(record.version, 4);
+      assert.ok(record.consent_at && record.reviewed_at);
+      assert.equal((await restored.query('SELECT count(*)::integer AS total FROM public.phc_audit_log')).rows[0].total, 4);
+      const {rows: [bookmark]} = await restored.query(
+        'SELECT bookmarked, note, last_opened FROM public.phc_reference_progress WHERE doctor_id = $1 AND book_id = $2',
+        [doctor, 'boger']
+      );
+      assert.equal(bookmark.bookmarked, true);
+      assert.equal(bookmark.note, 'Synthetic reference note');
+      assert.ok(bookmark.last_opened);
+      await restored.exec('SET ROLE authenticated');
+      await assert.rejects(restored.query('SELECT * FROM public.phc_consultation_documents'), {code: '42501'});
+    } finally {
+      await restored.close();
+    }
+
   } finally {
     await db.close();
   }

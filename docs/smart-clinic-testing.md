@@ -9,6 +9,10 @@ The feature lives inside the existing Doctor Dashboard at `/admin.html`. Use the
 - Sign in with an existing authorized test doctor or provision a test Auth user through the Supabase dashboard and add its user ID to `phc_admin_accounts`. Keep Razorpay live credentials, live alerts and WhatsApp production credentials out of this environment.
 - Run `npm ci` and `npm test` with Node 22.13 or newer.
 
+## Repeatable browser smoke test
+
+Install Playwright in a disposable checkout with `npm install --no-save --package-lock=false playwright` and download its Chromium build with `npx playwright install chromium`. Run `node scripts/stage-pdf-reader.cjs`, then `node scripts/smart-clinic-browser-smoke.cjs`. The script runs the actual dashboard UI against a loopback server with synthetic test data and exercises both desktop and 390 px layouts. Set `PHC_TEST_CHROMIUM_PATH` if you already have a compatible Chromium build. Hosted acceptance testing still uses PHC Safety Test.
+
 ## Acceptance checks
 
 | Area | Check |
@@ -32,5 +36,7 @@ Run `python3 scripts/review-hindi-ocr.py edition.pdf review.json new-output-dire
 ## Backup and recovery
 
 Before production consideration, confirm Supabase backup retention and restore support for the clinic's plan. Agree on a maximum acceptable data loss window and restoration time with the clinic owner. Keep database backups encrypted, access-controlled, and out of Git and shared drives. Back up the patient, visit, consultation, audit and reference progress records together to preserve their foreign keys.
+
+The automated suite rehearses a database snapshot restore in an isolated local PostgreSQL-compatible instance with synthetic records. Verify provider retention and perform a separate Supabase restore rehearsal before production.
 
 Test restore in a separate controlled environment with synthetic data. Reapply compatible migrations and verify doctor access, visit links, consent and review metadata, bookmarks, and sample record counts. Document the backup timestamp, restore duration and verification results. Keep outbound payments and messaging disconnected while rehearsing. Review access controls before reopening any restored environment.
