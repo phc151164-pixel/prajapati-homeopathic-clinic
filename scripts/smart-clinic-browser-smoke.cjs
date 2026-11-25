@@ -80,18 +80,8 @@ const srv = http.createServer(async (req,res) => {
       if (!(await target.isVisible())) await page.locator('#dashboardMenu > summary').click();
       await target.click();
     };
-    await nav('Repertory');
-    await page.getByRole('heading', {name: 'PHC Repertory'}).waitFor();
-    assert.equal(await page.getByRole('button', {name: 'Books', exact: true}).count(), 0);
-    await page.getByLabel('Search rubrics / रूब्रिक खोजें').fill('Head खाँसी khansi');
-    const rubric = page.locator('details').filter({hasText: 'Head → Pain → Pressing → Coughing, while'});
-    await rubric.locator('summary').click();
-    await rubric.getByLabel('Add to my study list').check();
-    await rubric.getByLabel('Private study note').fill('Synthetic study note');
-    await rubric.getByRole('button', {name: 'Save study entry'}).click();
-    await rubric.getByText('Saved.', {exact: true}).waitFor();
-    await rubric.locator('xpath=ancestor::section').getByLabel('Show my study list').check();
-    await rubric.locator('summary').waitFor();
+    await page.locator('#appView').waitFor();
+    assert.equal(await page.locator('#nav').getByRole('button', {name: 'Repertory', exact: true, includeHidden: true}).count(), 0);
     await nav('Patient records');
     await page.getByRole('button',{name:'Open profile',exact:true}).click();
     await page.getByRole('button',{name:'Consultation document'}).click();
@@ -107,10 +97,7 @@ const srv = http.createServer(async (req,res) => {
     assert.match(formatted, /Aggravating and relieving factors:/);
     assert.equal(formatted.match(/Current medicines and allergies:/g).length, 1);
 
-    await page.getByText('Search historical rubrics', {exact: true}).click();
-    await page.getByLabel('Historical search terms').fill('khansi');
-    await page.getByRole('button', {name: 'Find historical entries'}).click();
-    await page.getByText('1 matching historical entries').waitFor();
+    assert.equal(await page.getByText('Search historical rubrics', {exact: true}).count(), 0);
     await page.getByText('Record audio for this session', {exact: true}).click();
     await page.getByRole('button', {name: 'Start recording'}).click();
     await page.getByText('Confirm recording consent before starting.').waitFor();

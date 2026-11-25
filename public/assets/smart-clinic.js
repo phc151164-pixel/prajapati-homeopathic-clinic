@@ -4,11 +4,6 @@
   const endpoint = 'smart-clinic';
   const normalize = text => text.normalize('NFC').toLowerCase().replace(/œ/g, 'oe')
     .normalize('NFD').replace(/([a-z])\p{M}+/gu, '$1').normalize('NFC');
-  const matchesRubric = (rubric, query) => {
-    const searchable = normalize([rubric.chapter, ...rubric.path, rubric.aliases].join(' '));
-    return normalize(query).trim().split(/\s+/u).every(term => searchable.includes(term));
-  };
-  const pageLabel = page => typeof page === 'number' ? 'printed page ' + page : page;
   const chartLabels = new Map([
     ['chief complaint', 'Chief complaint'], ['मुख्य शिकायत', 'Chief complaint'],
     ['duration', 'Duration'], ['अवधि', 'Duration'],
@@ -28,11 +23,10 @@
     }).join('\n');
   }
   if (typeof module !== 'undefined') {
-    module.exports = {matchesRubric, draftChart};
+    module.exports = {draftChart};
     return;
   }
 
-  let disposeLibrary = () => {};
   let stopDictation = () => {};
   let disposeRecording = () => {};
   let consultationRequest = 0;
@@ -48,121 +42,6 @@
     element.addEventListener('click', click);
     return element;
   };
-  function card(title) {
-    const element = node('section');
-    element.className = 'card';
-    element.append(node('h2', title));
-    return element;
-  }
-
-  async function library(container, api) {
-    const root = node('div');
-    container.replaceChildren(root);
-    let closed = false;
-    disposeLibrary = () => { closed = true; };
-    const state = node('p', 'Loading repertory…');
-    state.setAttribute('role', 'status');
-    root.append(state);
-    let data;
-    try {
-      data = await api(endpoint + '?section=library');
-    } catch (error) {
-      if (!closed) state.textContent = error.message;
-      return;
-    }
-    if (closed) return;
-    const progress = new Map(data.progress.map(item => [item.book_id, item]));
-    const editions = [
-      {name: 'Kent', index: data.repertory},
-      {name: 'Boericke', index: data.boericke}
-    ];
-    root.replaceChildren(renderRepertory(editions, progress, api));
-  }
-
-  function renderRepertory(editions, progress, api) {
-    const panel = card('PHC Repertory');
-    const entries = editions.flatMap(edition => edition.index.rubrics.map(rubric => ({...edition, rubric})));
-    panel.append(node('p', 'Selected historical rubrics for study.'));
-    const editionFilter = node('select');
-    editionFilter.append(node('option', 'All sources'));
-    editions.forEach(edition => editionFilter.append(node('option', edition.name)));
-    const editionLabel = node('label', 'Source edition');
-    editionLabel.append(editionFilter);
-    const search = node('input');
-    search.type = 'search';
-    search.placeholder = 'Pressing, कनपटी, khansi…';
-    const searchLabel = node('label', 'Search rubrics / रूब्रिक खोजें');
-    searchLabel.append(search);
-    const chapter = node('select');
-    chapter.append(node('option', 'All chapters'));
-    for (const name of new Set(entries.map(entry => entry.rubric.chapter))) chapter.append(node('option', name));
-    const chapterLabel = node('label', 'Chapter');
-    chapterLabel.append(chapter);
-    const savedOnly = node('input');
-    savedOnly.type = 'checkbox';
-    const savedLabel = node('label', 'Show my study list ');
-    savedLabel.append(savedOnly);
-    const toolbar = node('div');
-    toolbar.className = 'toolbar';
-    toolbar.append(searchLabel, chapterLabel, editionLabel, savedLabel);
-    const count = node('p');
-    count.setAttribute('role', 'status');
-    const results = node('div');
-    panel.append(toolbar, count, results);
-    function render() {
-      const rubrics = entries.filter(({name, rubric}) => matchesRubric(rubric, search.value)
-        && (!editionFilter.selectedIndex || editionFilter.value === name)
-        && (!chapter.selectedIndex || rubric.chapter === chapter.value)
-        && (!savedOnly.checked || progress.get(rubric.id)?.bookmarked));
-      count.textContent = rubrics.length + (rubrics.length === 1 ? ' rubric' : ' rubrics');
-      results.replaceChildren();
-      for (const {name, index, rubric} of rubrics) {
-        const item = node('details');
-        item.className = 'visit';
-        const source = node('a', index.source + ' · ' + pageLabel(rubric.page));
-        source.href = index.pages[rubric.page];
-        source.target = '_blank';
-        source.rel = 'noopener noreferrer';
-        const note = node('textarea');
-        note.maxLength = 4000;
-        note.value = progress.get(rubric.id)?.note || '';
-        const noteLabel = node('label', 'Private study note');
-        noteLabel.append(note);
-        const bookmark = node('input');
-        bookmark.type = 'checkbox';
-        bookmark.checked = progress.get(rubric.id)?.bookmarked ?? false;
-        const bookmarkLabel = node('label', 'Add to my study list ');
-        bookmarkLabel.append(bookmark);
-        const feedback = node('p');
-        feedback.setAttribute('role', 'status');
-        const save = action('Save study entry', async () => {
-          save.disabled = true;
-          try {
-            const {progress: updated} = await api(endpoint, {
-              action: 'progress', bookId: rubric.id, note: note.value, bookmarked: bookmark.checked
-            });
-            progress.set(rubric.id, updated);
-            if (savedOnly.checked && !updated.bookmarked) render();
-            else feedback.textContent = 'Saved.';
-          } catch (error) {
-            feedback.textContent = error.message;
-          } finally {
-            save.disabled = false;
-          }
-        });
-        item.append(node('summary', [rubric.chapter, ...rubric.path].join(' → ') + ' · ' + name),
-          node('p', index.edition), source, bookmarkLabel, noteLabel, save, feedback);
-        results.append(item);
-      }
-    }
-    search.addEventListener('input', render);
-    chapter.addEventListener('change', render);
-    editionFilter.addEventListener('change', render);
-    savedOnly.addEventListener('change', render);
-    render();
-    return panel;
-  }
-
   async function consultation(visit, ui) {
     const request = ++consultationRequest;
     try {
@@ -205,7 +84,7 @@
         else ui.message('There is not enough room to insert every heading.', true, 'editorMessage');
         history.focus();
       });
-      ui.modal('Consultation document', [detail, ...fields, chart, classical, formatDraft, voice, consultationRecorder(), consultationLookup(ui.api)], values => ui.api(endpoint, {
+      ui.modal('Consultation document', [detail, ...fields, chart, classical, formatDraft, voice, consultationRecorder()], values => ui.api(endpoint, {
         action: 'consultation', visitId: visit.id, version: saved?.version || 0,
         history: draftChart(values.history), observations: values.observations, follow_up: values.follow_up,
         consent: values.consent === 'yes', reviewed: values.reviewed === 'yes'
@@ -217,44 +96,6 @@
     } catch (error) {
       if (request === consultationRequest) ui.message(error.message, true);
     }
-  }
-
-  function consultationLookup(api) {
-    const box = node('details');
-    box.append(node('summary', 'Search historical rubrics'));
-    const input = node('input');
-    input.type = 'search';
-    const label = node('label', 'Historical search terms');
-    label.append(input);
-    const results = node('ul');
-    const status = node('p');
-    status.setAttribute('role', 'status');
-    let index;
-    const search = action('Find historical entries', async () => {
-      if (!input.value.trim()) return;
-      search.disabled = true;
-      try {
-        index ||= (await api(endpoint + '?section=library')).repertory;
-        const entries = index.rubrics.filter(rubric => matchesRubric(rubric, input.value));
-        results.replaceChildren();
-        for (const rubric of entries.slice(0, 15)) {
-          const item = node('li');
-          const link = node('a', [rubric.chapter, ...rubric.path].join(' → ') + ' · ' + pageLabel(rubric.page));
-          link.href = index.pages[rubric.page];
-          link.target = '_blank';
-          link.rel = 'noopener noreferrer';
-          item.append(link);
-          results.append(item);
-        }
-        status.textContent = entries.length + ' matching historical entries';
-      } catch {
-        status.textContent = 'The historical index is unavailable.';
-      } finally {
-        search.disabled = false;
-      }
-    });
-    box.append(label, search, status, results);
-    return box;
   }
 
   function consultationRecorder() {
@@ -431,11 +272,9 @@
   }
 
   window.PHCSmartClinic = {
-    library, consultation,
+    consultation,
     close() {
       consultationRequest++;
-      disposeLibrary();
-      disposeLibrary = () => {};
       stopDictation();
       disposeRecording();
       disposeRecording = () => {};

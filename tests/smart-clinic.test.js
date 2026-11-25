@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const deploy = require('../netlify/lib/deploy-context.cjs');
 deploy.context = 'dev';
 const {handler, enabled} = require('../netlify/handlers/smart-clinic.cjs');
-const {matchesRubric, draftChart} = require('../public/assets/smart-clinic.js');
+const {draftChart} = require('../public/assets/smart-clinic.js');
 const doctor = '11111111-1111-4111-8111-111111111111';
 const visit = '22222222-2222-4222-8222-222222222222';
 const origin = 'https://phc-preview.example';
@@ -16,17 +16,6 @@ const event = (method, query = {}, body, headers = {}) => ({
 });
 
 
-test('Kent rubric search preserves hierarchy, Hindi and Hinglish aliases, and page provenance', () => {
-  const index = require('../docs/kent-repertory-index.json');
-  const find = query => index.rubrics.filter(rubric => matchesRubric(rubric, query)).map(rubric => rubric.id);
-  assert.deepEqual(find('Head pressing khansi'), ['kent-rubric-pressing-cough']);
-  assert.deepEqual(find('कनपटी'), ['kent-rubric-tearing-temples']);
-  assert.deepEqual(find('Mind यात्रा safar'), ['kent-rubric-mind-travel']);
-  assert.deepEqual(find('behoshi रात'), ['kent-rubric-mind-unconscious-night']);
-  assert.deepEqual(find('Sides Right'), ['kent-rubric-tearing-sides-right']);
-  assert.equal(new Set(index.rubrics.map(rubric => rubric.id)).size, index.rubrics.length);
-  assert.ok(index.rubrics.every(rubric => new URL(index.pages[rubric.page]).hostname === 'wellcomecollection.org'));
-});
 
 test('case sheet recognizes explicit headings and preserves unclassified wording', () => {
   assert.equal(draftChart('मुख्य शिकायत: Synthetic sample\nDuration: 2 days\nUnclassified text'),
@@ -35,12 +24,6 @@ test('case sheet recognizes explicit headings and preserves unclassified wording
 });
 
 
-test('Boericke historical headings support Hindi and Hinglish search', () => {
-  const index = require('../docs/boericke-repertory-index.json');
-  assert.deepEqual(index.rubrics.filter(r => matchesRubric(r, 'खुजली scalp')).map(r => r.id), ['boericke-rubric-scalp-itching']);
-  assert.deepEqual(index.rubrics.filter(r => matchesRubric(r, 'chakkar')).map(r => r.id), ['boericke-rubric-vertigo']);
-  assert.ok(index.rubrics.every(r => index.pages[r.page]));
-});
 
 test('Smart Clinic restricts deployment, authorizes the doctor, and binds writes to the session', async t => {
   const settings = {PHC_SMART_CLINIC_ENABLED: 'true', PHC_ENVIRONMENT: 'staging', PHC_DASHBOARD_ENABLED: 'true', CONTEXT: 'dev',
