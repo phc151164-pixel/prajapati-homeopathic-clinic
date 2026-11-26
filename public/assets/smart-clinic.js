@@ -439,8 +439,8 @@
       target.dispatchEvent(new Event('input'));
       status.textContent = 'Transcript preview cleared.';
     });
-    async function prepare() {
-      if (!supported || !checkbox.checked) return true;
+    async function prepare(installOnly = false) {
+      if (!supported || (!installOnly && !checkbox.checked)) return true;
       const options = {langs: [select.value], processLocally: true};
       try {
         let availability = await Speech.available(options);
@@ -449,11 +449,18 @@
           await Speech.install(options);
           availability = await Speech.available(options);
         }
-        if (!checkbox.checked) return false;
-        if (availability === 'available') return true;
-        status.textContent = availability === 'downloading'
-          ? 'Language pack is downloading. Start recording again when it is ready.'
-          : 'On-device transcription is unavailable for this language on this browser. Choose another language or untick transcription consent to record audio only.';
+        if (!installOnly && !checkbox.checked) return false;
+        const languageName = options.langs[0] === 'hi-IN' ? 'Hindi' : 'English (India)';
+        if (availability === 'available') {
+          status.textContent = languageName + ' is ready for on-device transcription.';
+          return true;
+        }
+        const messages = {
+          downloading: 'The language pack is downloading. Wait and check again.',
+          downloadable: 'Chrome offers this language pack, but the download did not finish. Check your connection and try again.',
+          unavailable: languageName + ' on-device transcription is unavailable in this Chrome installation.'
+        };
+        status.textContent = messages[availability] || 'Chrome returned an unknown language pack status.';
       } catch {
         status.textContent = 'Could not prepare on-device transcription. Check the language pack and try again.';
       }
@@ -506,12 +513,7 @@
         const install = action('Install selected language pack', async () => {
           install.disabled = true;
           try {
-            const installed = await Speech.install({langs: [select.value], processLocally: true});
-            const available = installed && await Speech.available({langs: [select.value], processLocally: true});
-            status.textContent = available === 'available' ? 'Language pack installed. Start recording to transcribe.'
-              : 'The selected language pack is not ready on this browser.';
-          } catch {
-            status.textContent = 'Language pack installation was unavailable.';
+            await prepare(true);
           } finally {
             install.disabled = false;
           }
