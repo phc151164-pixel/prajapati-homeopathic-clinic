@@ -346,6 +346,10 @@
       const token = generation;
       start.disabled = true;
       try {
+        if (!await voice.prepare() || token !== generation) {
+          if (token === generation) start.disabled = false;
+          return;
+        }
         const captured = await navigator.mediaDevices.getUserMedia({audio: true});
         if (token !== generation) {
           captured.getTracks().forEach(track => track.stop());
@@ -435,6 +439,26 @@
       target.dispatchEvent(new Event('input'));
       status.textContent = 'Transcript preview cleared.';
     });
+    async function prepare() {
+      if (!supported || !checkbox.checked) return true;
+      const options = {langs: [select.value], processLocally: true};
+      try {
+        let availability = await Speech.available(options);
+        if (availability === 'downloadable' && typeof Speech.install === 'function') {
+          status.textContent = 'Installing the language pack. Recording will start when it is ready.';
+          await Speech.install(options);
+          availability = await Speech.available(options);
+        }
+        if (!checkbox.checked) return false;
+        if (availability === 'available') return true;
+        status.textContent = availability === 'downloading'
+          ? 'Language pack is downloading. Start recording again when it is ready.'
+          : 'On-device transcription is unavailable for this language on this browser. Choose another language or untick transcription consent to record audio only.';
+      } catch {
+        status.textContent = 'Could not prepare on-device transcription. Check the language pack and try again.';
+      }
+      return false;
+    }
     async function start(track) {
       if (!supported || !checkbox.checked || recognition || track?.readyState !== 'live') return;
       const token = ++generation;
@@ -483,7 +507,9 @@
           install.disabled = true;
           try {
             const installed = await Speech.install({langs: [select.value], processLocally: true});
-            status.textContent = installed ? 'Language pack installed.' : 'Language pack installation was unavailable.';
+            const available = installed && await Speech.available({langs: [select.value], processLocally: true});
+            status.textContent = available === 'available' ? 'Language pack installed. Start recording to transcribe.'
+              : 'The selected language pack is not ready on this browser.';
           } catch {
             status.textContent = 'Language pack installation was unavailable.';
           } finally {
@@ -496,7 +522,7 @@
       status.textContent = 'On-device transcription is unavailable here. Play the recording and type into the editable transcript preview.';
     }
     box.append(status);
-    return {box, start, stop, abort};
+    return {box, prepare, start, stop, abort};
   }
 
   function studyWorkflow() {
