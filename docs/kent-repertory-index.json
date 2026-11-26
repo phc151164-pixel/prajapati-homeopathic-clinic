@@ -32,7 +32,14 @@
         "Darkness, in"
       ],
       "page": 195,
-      "aliases": "सिर दर्द दबाव अंधेरा andhera sar dard dabav"
+      "aliases": "सिर दर्द दबाव अंधेरा andhera sar dard dabav",
+      "historicalMedicines": [
+        {
+          "abbreviation": "Sil.",
+          "name": "Silicea",
+          "grade": null
+        }
+      ]
     },
     {
       "id": "kent-rubric-pressing-dinner",
@@ -43,7 +50,14 @@
         "Dinner, during"
       ],
       "page": 195,
-      "aliases": "सिर दर्द दबाव खाना khana sar dard dabav"
+      "aliases": "सिर दर्द दबाव खाना khana sar dard dabav",
+      "historicalMedicines": [
+        {
+          "abbreviation": "Pall.",
+          "name": "Palladium",
+          "grade": null
+        }
+      ]
     },
     {
       "id": "kent-rubric-pressing-reading",
@@ -54,7 +68,29 @@
         "Reading, while"
       ],
       "page": 195,
-      "aliases": "सिर दर्द दबाव पढ़ते वक्त padhte waqt sar dard dabav"
+      "aliases": "सिर दर्द दबाव पढ़ते वक्त padhte waqt sar dard dabav",
+      "historicalMedicines": [
+        {
+          "abbreviation": "Bell.",
+          "name": "Belladonna",
+          "grade": null
+        },
+        {
+          "abbreviation": "Cocc.",
+          "name": "Cocculus indicus",
+          "grade": null
+        },
+        {
+          "abbreviation": "Helon.",
+          "name": "Helonias dioica",
+          "grade": null
+        },
+        {
+          "abbreviation": "Lyc.",
+          "name": "Lycopodium clavatum",
+          "grade": null
+        }
+      ]
     },
     {
       "id": "kent-rubric-pressing-sleep",
