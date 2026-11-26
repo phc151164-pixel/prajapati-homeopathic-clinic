@@ -83,6 +83,26 @@
     element.addEventListener('click', click);
     return element;
   };
+  function historicalMedicineReference(medicines, pageUrl) {
+    if (!medicines?.length) return node('p', 'Medicine entries have not been verified for this rubric.');
+    const details = node('details');
+    details.append(node('summary', 'Historical medicine entries'));
+    const list = node('ul');
+    for (const {name, abbreviation, grade} of medicines) {
+      list.append(node('li', name + ' (' + abbreviation + ') · ' +
+        (grade == null ? 'Grade unverified' : 'Source grade ' + grade)));
+    }
+    details.append(list);
+    if (pageUrl) {
+      const link = node('a', 'View source scan');
+      link.href = pageUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      details.append(link);
+    }
+    return details;
+  }
+
   function consentCheckbox(name, text, checked = false) {
     const label = node('label', text);
     const input = node('input');
@@ -151,13 +171,18 @@
                 const path = [rubric.chapter, ...rubric.path].join(' → ');
                 const words = normalize(path + ' ' + rubric.aliases);
                 return terms.split(' ').every(term => words.includes(term))
-                  ? [path + ' · ' + source + ' · ' + rubric.page] : [];
+                  ? [{label: path + ' · ' + source + ' · ' + rubric.page,
+                    medicines: rubric.historicalMedicines, pageUrl: index.pages[rubric.page]}] : [];
               }));
             const row = body.insertRow();
             for (const value of [excerpt, terms]) row.insertCell().textContent = value;
             const cell = row.insertCell();
             const candidates = node('ul');
-            for (const match of matches.slice(0, 5)) candidates.append(node('li', match));
+            for (const match of matches.slice(0, 5)) {
+              const item = node('li', match.label);
+              item.append(historicalMedicineReference(match.medicines, match.pageUrl));
+              candidates.append(item);
+            }
             if (!matches.length) candidates.append(node('li', 'No match in the current index.'));
             if (matches.length > 5) candidates.append(node('li', (matches.length - 5) + ' more matches in rubric review.'));
             cell.append(candidates);
@@ -532,7 +557,9 @@
         source: position === 0 ? 'Kent' : 'Boericke',
         chapter: rubric.chapter,
         page: rubric.page,
-        edition: index.edition
+        edition: index.edition,
+        medicines: rubric.historicalMedicines,
+        pageUrl: index.pages[rubric.page]
       })));
     const sessionStudy = transcript !== undefined;
     const saved = new Map((sessionStudy ? [] : progress).map(item => [item.book_id, item]));
@@ -641,7 +668,8 @@
           render();
         });
         remove.disabled = saving;
-        item.append(remove, node('p', entry.edition + ' · Page ' + entry.page));
+        item.append(remove, node('p', entry.edition + ' · Page ' + entry.page),
+          historicalMedicineReference(entry.medicines, entry.pageUrl));
         selection.append(item);
       }
       chartBody.replaceChildren();
