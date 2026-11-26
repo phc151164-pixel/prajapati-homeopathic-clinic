@@ -117,6 +117,60 @@
       const transcript = ui.field('transcriptPreview', 'Editable transcript preview', 'textarea', '');
       const preview = transcript.querySelector('textarea');
       preview.removeAttribute('name');
+      const liveChart = node('div');
+      liveChart.setAttribute('aria-label', 'Live historical study chart');
+      const liveStatus = node('p');
+      liveStatus.setAttribute('role', 'status');
+      let liveIndex;
+      let chartVersion = 0;
+      async function updateLiveChart() {
+        const version = ++chartVersion;
+        const text = preview.value.trim();
+        liveChart.replaceChildren();
+        liveStatus.textContent = '';
+        if (!text) return;
+        try {
+          liveIndex ||= ui.api(endpoint + '?section=library').catch(error => {
+            liveIndex = undefined;
+            throw error;
+          });
+          const {repertory, boericke} = await liveIndex;
+          if (version !== chartVersion || !preview.isConnected) return;
+          const table = node('table');
+          const header = table.createTHead().insertRow();
+          for (const heading of ['Spoken excerpt', 'English symptom terms', 'Historical rubric candidates']) {
+            header.append(node('th', heading));
+          }
+          const body = table.createTBody();
+          const excerpts = [...new Set(text.split(/[.!?।;\n]+/u).map(part => part.trim()).filter(Boolean))];
+          for (const excerpt of excerpts.slice(-30)) {
+            const terms = englishSearchTerms(excerpt);
+            if (!terms) continue;
+            const matches = [[repertory, 'Kent'], [boericke, 'Boericke']].flatMap(([index, source]) =>
+              index.rubrics.flatMap(rubric => {
+                const path = [rubric.chapter, ...rubric.path].join(' → ');
+                const words = normalize(path + ' ' + rubric.aliases);
+                return terms.split(' ').every(term => words.includes(term))
+                  ? [path + ' · ' + source + ' · ' + rubric.page] : [];
+              }));
+            const row = body.insertRow();
+            for (const value of [excerpt, terms]) row.insertCell().textContent = value;
+            const cell = row.insertCell();
+            const candidates = node('ul');
+            for (const match of matches.slice(0, 5)) candidates.append(node('li', match));
+            if (!matches.length) candidates.append(node('li', 'No match in the current index.'));
+            if (matches.length > 5) candidates.append(node('li', (matches.length - 5) + ' more matches in rubric review.'));
+            cell.append(candidates);
+          }
+          if (body.rows.length) liveChart.append(table);
+          liveStatus.textContent = body.rows.length
+            ? 'Draft suggestions. Review each excerpt and rubric before using it in your study chart.'
+            : 'No supported symptom terms recognized yet.';
+        } catch (error) {
+          if (version === chartVersion) liveStatus.textContent = error.message;
+        }
+      }
+      preview.addEventListener('input', updateLiveChart);
       const study = node('div');
       const studyStatus = node('p');
       studyStatus.setAttribute('role', 'status');
@@ -168,7 +222,7 @@
         else ui.message('There is not enough room to insert every heading.', true, 'editorMessage');
         history.focus();
       });
-      ui.modal('Consultation document', [detail, ...fields, chart, classical, formatDraft, consultationRecorder(preview, ui), transcript, useTranscript, openStudy, studyStatus, study], values => ui.api(endpoint, {
+      ui.modal('Consultation document', [detail, ...fields, chart, classical, formatDraft, consultationRecorder(preview, ui), transcript, ui.el('h3', 'Live symptom and rubric draft'), liveStatus, liveChart, useTranscript, openStudy, studyStatus, study], values => ui.api(endpoint, {
         action: 'consultation', visitId: visit.id, version: saved?.version || 0,
         history: draftChart(values.history), observations: values.observations, follow_up: values.follow_up,
         consent: values.consent === 'yes', reviewed: values.reviewed === 'yes'
@@ -353,6 +407,7 @@
       if (checkbox.checked) return;
       abort();
       target.value = '';
+      target.dispatchEvent(new Event('input'));
       status.textContent = 'Transcript preview cleared.';
     });
     async function start(track) {
@@ -376,7 +431,10 @@
           for (let i = event.resultIndex; i < event.results.length; i++) {
             if (event.results[i].isFinal) additions.push(event.results[i][0].transcript.trim());
           }
-          if (additions.length) target.value = [target.value, ...additions].filter(Boolean).join(' ');
+          if (additions.length) {
+            target.value = [target.value, ...additions].filter(Boolean).join('\n');
+            target.dispatchEvent(new Event('input'));
+          }
         };
         recognition.onerror = () => {
           if (token === generation) status.textContent = 'Transcription stopped. You can still review the audio and type the transcript.';
