@@ -138,6 +138,30 @@ const srv = http.createServer(async (req,res) => {
     await page.getByRole('button', {name: 'Find matching rubrics'}).click();
     await page.getByRole('button', {name: /Add Head → Pain → Pressing → Coughing/}).click();
     await page.getByRole('cell', {name: 'Kent', exact: true}).waitFor();
+    await page.evaluate(() => {
+      window.SpeechRecognition.available = async () => 'unavailable';
+      const OriginalWorker = window.Worker;
+      window.Worker = class {
+        constructor(url, options) {
+          if (!url.endsWith('/phc-transcription-worker.js')) return new OriginalWorker(url, options);
+        }
+        postMessage({samples, language}) {
+          if (!(samples instanceof Float32Array) || !samples.length || language !== 'hindi') {
+            throw new Error('Expected decoded Hindi recording');
+          }
+          queueMicrotask(() => this.onmessage({data: {text: 'खाँसी के समय सिर में दर्द'}}));
+        }
+        terminate() {}
+      };
+    });
+    await page.getByRole('button', {name: 'Start recording'}).click();
+    await page.getByText('PHC transcription will run on this device', {exact: false}).waitFor();
+    await page.waitForTimeout(1300);
+    await page.getByRole('button', {name: 'Stop recording'}).click();
+    await page.getByText('Transcript ready. Review it before saving.').waitFor();
+    assert.match(await page.getByLabel('Editable transcript preview').inputValue(), /सिर में दर्द/);
+    await page.getByLabel('Live historical study chart').getByText(/Pressing → Coughing, while/).waitFor();
+    await page.getByLabel('Editable transcript preview').fill('Chief complaint sar dard khansi. Duration two days');
     await historyField.fill('');
     await page.getByRole('button', {name: 'Create draft from transcript'}).click();
     assert.match(await historyField.inputValue(), /Chief complaint: sar dard khansi/);
