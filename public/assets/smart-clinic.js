@@ -31,6 +31,22 @@
     }));
   }
 
+  const symptomVocabulary = [
+    [/सिर (?:में )?दर्द|(?:sar|sir) (?:me(?:in)? )?dard|headache/giu, 'head pain'],
+    [/खाँसी|खांसी|खासी|kha?nsi|khasi|cough(?:ing)?/giu, 'cough'],
+    [/दबाव|dabav|dabaav|pressing/giu, 'pressing'],
+    [/दाहिनी तरफ|दाईं तरफ|dahini taraf|right side/giu, 'right'],
+    [/बाईं तरफ|baayi taraf|bain taraf|left side/giu, 'left'],
+    [/झुकने पर|jhukne par|stooping/giu, 'stooping'],
+    [/कनपटी|kanpati|temples?/giu, 'temples'],
+    [/अंधेरा|अँधेरा|andhera|darkness/giu, 'darkness']
+  ];
+  function englishSearchTerms(text) {
+    if (/(?:नहीं|नही|बिना)|\b(?:no|not|never|without|nahi|nahin|nhi)\b/iu.test(text)) return '';
+    return symptomVocabulary.filter(([pattern]) => text.search(pattern) !== -1)
+      .map(([, words]) => words).join(' ');
+  }
+
   function medicineSections(text) {
     const sections = [];
     let current = {heading: 'Overview', text: ''};
@@ -48,7 +64,7 @@
   }
 
   if (typeof module !== 'undefined') {
-    module.exports = {draftChart, transcriptDraft, medicineSections};
+    module.exports = {draftChart, transcriptDraft, englishSearchTerms, medicineSections};
     return;
   }
 
@@ -475,20 +491,30 @@
       const excerptList = node('ul');
       const symptom = node('input');
       const symptomLabel = node('label', 'Review and edit symptom wording');
+      const english = node('input');
+      const englishLabel = node('label', 'English rubric search terms');
+      englishLabel.append(english);
+      const translate = () => {
+        english.value = englishSearchTerms(symptom.value);
+      };
+      symptom.addEventListener('input', translate);
       symptomLabel.append(symptom);
       const excerpts = [...new Set(transcript.split(/[.!?।;\n]+/u).map(text => text.trim()).filter(Boolean))];
       for (const excerpt of excerpts.slice(0, 30)) {
         const item = node('li');
         item.append(action(excerpt, () => {
           symptom.value = excerpt;
+          translate();
           symptom.focus();
         }));
         excerptList.append(item);
       }
       review.append(node('h3', 'Review transcript excerpts'),
         node('p', 'Choose an excerpt and keep only the confirmed symptom words. Check for negation and who reported the symptom.'),
-        excerptList, symptomLabel, action('Find matching rubrics', () => {
-          input.value = symptom.value.trim();
+        excerptList, symptomLabel,
+        node('p', 'English suggestions cover common indexed terms. Check the meaning before searching.'),
+        englishLabel, action('Find matching rubrics', () => {
+          input.value = english.value.trim() || symptom.value.trim();
           render();
         }));
     }
