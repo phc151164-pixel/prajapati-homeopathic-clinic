@@ -88,9 +88,9 @@
     const details = node('details');
     details.append(node('summary', 'Historical medicine entries'));
     const list = node('ul');
-    for (const {name, abbreviation, grade} of medicines) {
+    for (const {name, abbreviation, grade, type} of medicines) {
       list.append(node('li', name + ' (' + abbreviation + ') · ' +
-        (grade == null ? 'Grade unverified' : 'Source grade ' + grade)));
+        (grade == null ? 'Grade unverified' : 'Grade ' + grade + ' (' + type + ')')));
     }
     details.append(list);
     if (pageUrl) {
