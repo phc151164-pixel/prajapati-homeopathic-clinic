@@ -38,3 +38,8 @@
   [headers.values]
     Content-Type = "application/manifest+json"
     Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/assets/phc-transcription-worker.js"
+  [headers.values]
+    Content-Security-Policy = "default-src 'none'; script-src 'self' https://cdn.jsdelivr.net 'wasm-unsafe-eval'; connect-src https://cdn.jsdelivr.net https://huggingface.co https://*.huggingface.co https://*.hf.co; worker-src 'none'"
