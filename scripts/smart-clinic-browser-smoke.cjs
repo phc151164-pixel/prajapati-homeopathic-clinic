@@ -82,7 +82,7 @@ const srv = http.createServer(async (req,res) => {
         static async available({processLocally}) { return processLocally ? 'available' : 'unavailable'; }
         start(track) {
           if (!this.processLocally || track?.kind !== 'audio') throw new Error('Expected a local audio track');
-          const result = Object.assign([{transcript: 'Chief complaint synthetic note. Duration two days'}], {isFinal: true});
+          const result = Object.assign([{transcript: 'Chief complaint sar dard khansi. Duration two days'}], {isFinal: true});
           this.onresult({resultIndex: 0, results: [result]});
         }
         stop() { this.onend(); }
@@ -126,12 +126,13 @@ const srv = http.createServer(async (req,res) => {
     await page.getByLabel('Patient consented to on-device transcription').check();
     await page.getByRole('button', {name: 'Start recording'}).click();
     await page.getByText('Recording on this device.', {exact: false}).waitFor();
+    await page.getByLabel('Live historical study chart').getByText(/Pressing → Coughing, while/).waitFor();
     await page.waitForTimeout(1300);
     await page.getByRole('button', {name: 'Stop recording'}).click();
     await page.locator('audio[src^="blob:"]').waitFor();
-    assert.match(await page.getByLabel('Editable transcript preview').inputValue(), /synthetic note/);
+    assert.match(await page.getByLabel('Editable transcript preview').inputValue(), /sar dard khansi/);
     await page.getByRole('button', {name: 'Review symptoms and find rubrics'}).click();
-    await page.getByRole('button', {name: 'Chief complaint synthetic note', exact: true}).click();
+    await page.getByRole('button', {name: 'Chief complaint sar dard khansi', exact: true}).click();
     await page.getByLabel('Review and edit symptom wording').fill('sar dard khansi');
     assert.equal(await page.getByLabel('English rubric search terms').inputValue(), 'head pain cough');
     await page.getByRole('button', {name: 'Find matching rubrics'}).click();
@@ -139,7 +140,7 @@ const srv = http.createServer(async (req,res) => {
     await page.getByRole('cell', {name: 'Kent', exact: true}).waitFor();
     await historyField.fill('');
     await page.getByRole('button', {name: 'Create draft from transcript'}).click();
-    assert.match(await historyField.inputValue(), /Chief complaint: synthetic note/);
+    assert.match(await historyField.inputValue(), /Chief complaint: sar dard khansi/);
     assert.match(await historyField.inputValue(), /Duration: two days/);
     await page.getByLabel('Patient consented to structured documentation').check();
     await page.locator('#editorSave').click();
