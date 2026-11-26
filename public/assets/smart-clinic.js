@@ -373,7 +373,9 @@
             status.textContent = 'No audio was captured.';
             return;
           }
-          url = URL.createObjectURL(new Blob(chunks, {type: recorder.mimeType}));
+          const recording = new Blob(chunks, {type: recorder.mimeType});
+          url = URL.createObjectURL(recording);
+          void voice.transcribeRecording(recording);
           audio.src = url;
           audio.hidden = false;
           discard.disabled = false;
@@ -422,13 +424,15 @@
     const consent = consentCheckbox('voiceConsent', 'Patient consented to on-device transcription');
     const checkbox = consent.querySelector('input');
     const select = language.querySelector('select');
-    let recognition, generation = 0;
+    let recognition, worker, fallbackLanguage, generation = 0;
     const stop = () => {
       if (recognition) recognition.stop();
       else generation++;
     };
     const abort = () => {
       generation++;
+      worker?.terminate();
+      worker = null;
       recognition?.abort();
       recognition = null;
     };
@@ -440,7 +444,14 @@
       status.textContent = 'Transcript preview cleared.';
     });
     async function prepare(installOnly = false) {
-      if (!supported || (!installOnly && !checkbox.checked)) return true;
+      if (!installOnly) fallbackLanguage = undefined;
+      if (!installOnly && !checkbox.checked) return true;
+      const useFallback = () => {
+        if (!installOnly && checkbox.checked) fallbackLanguage = select.value === 'hi-IN' ? 'hindi' : 'english';
+        status.textContent = 'PHC transcription will run on this device after you stop recording. The first run downloads model files.';
+        return true;
+      };
+      if (!supported) return useFallback();
       const options = {langs: [select.value], processLocally: true};
       try {
         let availability = await Speech.available(options);
@@ -460,14 +471,16 @@
           downloadable: 'Chrome offers this language pack, but the download did not finish. Check your connection and try again.',
           unavailable: languageName + ' on-device transcription is unavailable in this Chrome installation.'
         };
+        if (!installOnly) return useFallback();
         status.textContent = messages[availability] || 'Chrome returned an unknown language pack status.';
       } catch {
+        if (!installOnly) return useFallback();
         status.textContent = 'Could not prepare on-device transcription. Check the language pack and try again.';
       }
       return false;
     }
     async function start(track) {
-      if (!supported || !checkbox.checked || recognition || track?.readyState !== 'live') return;
+      if (fallbackLanguage || !supported || !checkbox.checked || recognition || track?.readyState !== 'live') return;
       const token = ++generation;
       const lang = select.value;
       try {
@@ -506,9 +519,54 @@
         status.textContent = 'This browser could not transcribe the recording track.';
       }
     }
+    async function transcribeRecording(recording) {
+      if (!fallbackLanguage || !checkbox.checked) return;
+      const token = generation;
+      let context;
+      status.textContent = 'Preparing the recording and loading the on-device model…';
+      try {
+        context = new AudioContext({sampleRate: 16000});
+        const buffer = await context.decodeAudioData(await recording.arrayBuffer());
+        const offline = new OfflineAudioContext(1, Math.ceil(buffer.duration * 16000), 16000);
+        const source = offline.createBufferSource();
+        source.buffer = buffer;
+        source.connect(offline.destination);
+        source.start();
+        const samples = (await offline.startRendering()).getChannelData(0);
+        if (token !== generation || !checkbox.checked) return;
+        worker = new Worker('/assets/phc-transcription-worker.js', {type: 'module'});
+        const fail = () => {
+          if (token !== generation) return;
+          worker?.terminate();
+          worker = null;
+          status.textContent = 'PHC could not load the model or transcribe this audio. The recording is still available for playback.';
+        };
+        worker.onerror = fail;
+        worker.onmessage = ({data}) => {
+          if (token !== generation) return;
+          if (data.processing) {
+            status.textContent = 'Transcribing locally…';
+            return;
+          }
+          if (data.failed) return fail();
+          worker.terminate();
+          worker = null;
+          if (data.text) {
+            target.value = data.text;
+            target.dispatchEvent(new Event('input'));
+          }
+          status.textContent = data.text ? 'Transcript ready. Review it before saving.' : 'No speech recognized.';
+        };
+        worker.postMessage({samples, language: fallbackLanguage}, [samples.buffer]);
+      } catch {
+        if (token === generation) status.textContent = 'Could not decode or process the recorded audio.';
+      } finally {
+        if (context) await context.close().catch(() => {});
+      }
+    }
     stopDictation = abort;
+    box.append(language, consent);
     if (supported) {
-      box.append(language, consent);
       if (typeof Speech.install === 'function') {
         const install = action('Install selected language pack', async () => {
           install.disabled = true;
@@ -521,10 +579,10 @@
         box.append(install);
       }
     } else {
-      status.textContent = 'On-device transcription is unavailable here. Play the recording and type into the editable transcript preview.';
+      status.textContent = 'PHC can transcribe the audio on this device after recording stops.';
     }
     box.append(status);
-    return {box, prepare, start, stop, abort};
+    return {box, prepare, start, stop, abort, transcribeRecording};
   }
 
   function studyWorkflow() {
