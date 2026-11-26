@@ -9,7 +9,8 @@
     "scan 98": "https://wellcomecollection.org/works/aguw48nw/items?canvas=98&page=17&shouldScrollToCanvas=true",
     "scan 17": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Repertory_of_the_homoeopathic_materia_medica_%28electronic_resource%29_%28IA_b20416234_001%29.pdf#page=17",
     "scan 18": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Repertory_of_the_homoeopathic_materia_medica_%28electronic_resource%29_%28IA_b20416234_001%29.pdf#page=18",
-    "scan 19": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Repertory_of_the_homoeopathic_materia_medica_%28electronic_resource%29_%28IA_b20416234_001%29.pdf#page=19"
+    "scan 19": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Repertory_of_the_homoeopathic_materia_medica_%28electronic_resource%29_%28IA_b20416234_001%29.pdf#page=19",
+    "194–195": "https://wellcomecollection.org/works/aguw48nw/items?canvas=200"
   },
   "rubrics": [
     {
@@ -20,8 +21,112 @@
         "Pressing",
         "Coughing, while"
       ],
-      "page": 195,
-      "aliases": "सिर दर्द दबाव खाँसी खांसी khansi khasi sar dard dabav"
+      "page": "194–195",
+      "aliases": "सिर दर्द दबाव खाँसी खांसी khansi khasi sar dard dabav",
+      "historicalMedicines": [
+        {
+          "abbreviation": "Acon.",
+          "name": "Aconitum napellus",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "alumn.",
+          "name": "Alumen",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "arn.",
+          "name": "Arnica montana",
+          "grade": 2,
+          "type": "Italic"
+        },
+        {
+          "abbreviation": "Bry.",
+          "name": "Bryonia alba",
+          "grade": 3,
+          "type": "Bold"
+        },
+        {
+          "abbreviation": "chel.",
+          "name": "Chelidonium majus",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "coc-c.",
+          "name": "Coccus cacti",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "con.",
+          "name": "Conium maculatum",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "hep.",
+          "name": "Hepar sulphuris calcareum",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "kreos.",
+          "name": "Kreosotum",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "nit-ac.",
+          "name": "Nitricum acidum",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "petr.",
+          "name": "Petroleum",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "phos.",
+          "name": "Phosphorus",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "ruta.",
+          "name": "Ruta graveolens",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "sars.",
+          "name": "Sarsaparilla",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "sep.",
+          "name": "Sepia",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "spig.",
+          "name": "Spigelia",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "verb.",
+          "name": "Verbascum",
+          "grade": 1,
+          "type": "Roman"
+        }
+      ]
     },
     {
       "id": "kent-rubric-pressing-darkness",
@@ -37,7 +142,8 @@
         {
           "abbreviation": "Sil.",
           "name": "Silicea",
-          "grade": null
+          "grade": 1,
+          "type": "Roman"
         }
       ]
     },
@@ -55,7 +161,8 @@
         {
           "abbreviation": "Pall.",
           "name": "Palladium",
-          "grade": null
+          "grade": 1,
+          "type": "Roman"
         }
       ]
     },
@@ -73,22 +180,26 @@
         {
           "abbreviation": "Bell.",
           "name": "Belladonna",
-          "grade": null
+          "grade": 1,
+          "type": "Roman"
         },
         {
           "abbreviation": "Cocc.",
           "name": "Cocculus indicus",
-          "grade": null
+          "grade": 1,
+          "type": "Roman"
         },
         {
           "abbreviation": "Helon.",
           "name": "Helonias dioica",
-          "grade": null
+          "grade": 1,
+          "type": "Roman"
         },
         {
           "abbreviation": "Lyc.",
           "name": "Lycopodium clavatum",
-          "grade": null
+          "grade": 1,
+          "type": "Roman"
         }
       ]
     },
