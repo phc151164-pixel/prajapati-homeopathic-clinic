@@ -393,8 +393,8 @@
         stop.disabled = pause.disabled = false;
         startedAt = performance.now();
         clock = setInterval(updateDuration, 1000);
-        timer = setTimeout(() => stop.click(), 15 * 60 * 1000);
-        status.textContent = 'Recording on this device. Maximum 15 minutes per recording.';
+        timer = setTimeout(() => stop.click(), voice.limit);
+        status.textContent = 'Recording on this device. Maximum ' + (voice.limit === 25000 ? '25 seconds for Saaras testing.' : '15 minutes per recording.');
       } catch {
         if (token !== generation) return;
         release();
@@ -423,6 +423,9 @@
       [['hi-IN', 'Hindi'], ['en-IN', 'English (India)']]);
     const consent = consentCheckbox('voiceConsent', 'Patient consented to on-device transcription');
     const checkbox = consent.querySelector('input');
+    const sarvamConsent = consentCheckbox('sarvamConsent', 'Use Saaras v4 for this synthetic test clip. Audio will be sent to Sarvam.');
+    const sarvam = sarvamConsent.querySelector('input');
+    let useSarvam = false;
     const select = language.querySelector('select');
     let recognition, worker, fallbackLanguage, generation = 0;
     const stop = () => {
@@ -444,7 +447,11 @@
       status.textContent = 'Transcript preview cleared.';
     });
     async function prepare(installOnly = false) {
-      if (!installOnly) fallbackLanguage = undefined;
+      if (!installOnly) {
+        fallbackLanguage = undefined;
+        useSarvam = sarvam.checked;
+        if (useSarvam) return true;
+      }
       if (!installOnly && !checkbox.checked) return true;
       const useFallback = () => {
         if (!installOnly && checkbox.checked) fallbackLanguage = select.value === 'hi-IN' ? 'hindi' : 'english';
@@ -480,7 +487,7 @@
       return false;
     }
     async function start(track) {
-      if (fallbackLanguage || !supported || !checkbox.checked || recognition || track?.readyState !== 'live') return;
+      if (useSarvam || fallbackLanguage || !supported || !checkbox.checked || recognition || track?.readyState !== 'live') return;
       const token = ++generation;
       const lang = select.value;
       try {
@@ -520,6 +527,27 @@
       }
     }
     async function transcribeRecording(recording) {
+      if (useSarvam) {
+        if (!sarvam.checked) return;
+        const token = generation;
+        status.textContent = 'Transcribing test clip with Saaras v4…';
+        try {
+          const bytes = new Uint8Array(await recording.arrayBuffer());
+          const chunks = [];
+          for (let i = 0; i < bytes.length; i += 8192) chunks.push(String.fromCharCode(...bytes.subarray(i, i + 8192)));
+          if (token !== generation || !sarvam.checked) return;
+          const {text} = await ui.api(endpoint + '?section=transcription', {
+            consent: true, mime: recording.type.split(';')[0], audio: btoa(chunks.join(''))
+          });
+          if (token !== generation || !sarvam.checked) return;
+          target.value = text;
+          target.dispatchEvent(new Event('input'));
+          status.textContent = text ? 'Saaras transcript ready for review.' : 'Saaras returned an empty transcript.';
+        } catch (error) {
+          if (token === generation) status.textContent = error.message;
+        }
+        return;
+      }
       if (!fallbackLanguage || !checkbox.checked) return;
       const token = generation;
       let context;
@@ -565,7 +593,7 @@
       }
     }
     stopDictation = abort;
-    box.append(language, consent);
+    box.append(language, consent, sarvamConsent);
     if (supported) {
       if (typeof Speech.install === 'function') {
         const install = action('Install selected language pack', async () => {
@@ -582,7 +610,7 @@
       status.textContent = 'PHC can transcribe the audio on this device after recording stops.';
     }
     box.append(status);
-    return {box, prepare, start, stop, abort, transcribeRecording};
+    return {box, prepare, start, stop, abort, transcribeRecording, get limit() { return useSarvam ? 25000 : 900000; }};
   }
 
   function studyWorkflow() {
