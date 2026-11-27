@@ -342,6 +342,10 @@
         status.textContent = 'Confirm recording consent before starting.';
         return;
       }
+      if (url) {
+        status.textContent = 'A recording is already available. Delete it before starting another. Your transcript will stay in the preview.';
+        return;
+      }
       release();
       const token = generation;
       start.disabled = true;
@@ -545,7 +549,7 @@
           source.connect(offline.destination);
           source.start();
           const samples = (await offline.startRendering()).getChannelData(0);
-          const transcripts = [];
+          let receivedText = false;
           const chunkSize = 25 * 16000;
           for (let offset = 0; offset < samples.length; offset += chunkSize) {
             if (token !== generation || !sarvam.checked) return;
@@ -570,14 +574,12 @@
             });
             if (token !== generation || !sarvam.checked) return;
             if (text.trim()) {
-              transcripts.push(text.trim());
-              target.value = transcripts.join(' ');
+              receivedText = true;
+              target.value = [target.value.trimEnd(), text.trim()].filter(Boolean).join('\n');
             }
           }
-          const text = transcripts.join(' ');
-          target.value = text;
           target.dispatchEvent(new Event('input'));
-          status.textContent = text ? 'Saaras transcript ready for review.' : 'Saaras returned an empty transcript.';
+          status.textContent = receivedText ? 'Saaras transcript ready for review.' : 'Saaras returned an empty transcript.';
         } catch (error) {
           if (token === generation) {
             status.textContent = error.message + (target.value ? ' Review the text already available before saving.' : '');
