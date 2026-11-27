@@ -58,5 +58,11 @@ exports.handler=async event=>{
    return withSession(json(200,{message:'Password changed. Please sign in again.'}),null);
   }
   return json(400,{error:'Unknown action'});
- }catch{return withRecoveryCookie(withSession(json(401,{error:'Sign-in failed or the session expired. Check your credentials or recovery link.'}),null),null);}
+ }catch(error){
+  if(b.action==='login'){
+   if(error.authCode==='invalid_credentials')return withSession(json(401,{error:'The email or password was rejected by the sign-in service.'}),null);
+   if(error.status===429)return json(429,{error:'Too many sign-in attempts. Wait before trying again.'});
+   return json(503,{error:'The sign-in service could not complete login on this deployment.'});
+  }
+  return withRecoveryCookie(withSession(json(401,{error:'Sign-in failed or the session expired. Check your credentials or recovery link.'}),null),null);}
 };
