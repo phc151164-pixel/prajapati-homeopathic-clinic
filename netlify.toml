@@ -1,7 +1,10 @@
 [build]
-  command = "node scripts/stamp-deploy-context.cjs"
+  command = "node scripts/stamp-deploy-context.cjs && node scripts/build-transcription.cjs"
   publish = "public"
   functions = "netlify/functions"
+
+[build.environment]
+  ONNXRUNTIME_NODE_INSTALL_CUDA = "skip"
 
 [functions]
   node_bundler = "esbuild"
@@ -40,6 +43,6 @@
     Cache-Control = "no-cache"
 
 [[headers]]
-  for = "/assets/phc-transcription-worker.js"
+  for = "/assets/phc-transcription-worker-local.js"
   [headers.values]
-    Content-Security-Policy = "default-src 'none'; script-src 'self' https://cdn.jsdelivr.net 'wasm-unsafe-eval'; connect-src https://cdn.jsdelivr.net https://huggingface.co https://*.huggingface.co https://*.hf.co; worker-src 'none'"
+    Content-Security-Policy = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self' https://huggingface.co https://*.huggingface.co https://*.hf.co; worker-src 'none'"
