@@ -394,7 +394,7 @@
         startedAt = performance.now();
         clock = setInterval(updateDuration, 1000);
         timer = setTimeout(() => stop.click(), voice.limit);
-        status.textContent = 'Recording on this device. Maximum ' + (voice.limit === 25000 ? '25 seconds for Saaras testing.' : '15 minutes per recording.');
+        status.textContent = 'Recording on this device. Maximum ' + (voice.limit === 120000 ? '2 minutes for Saaras testing.' : '15 minutes per recording.');
       } catch {
         if (token !== generation) return;
         release();
@@ -532,14 +532,46 @@
         const token = generation;
         status.textContent = 'Transcribing test clip with Saaras v4…';
         try {
-          const bytes = new Uint8Array(await recording.arrayBuffer());
-          const chunks = [];
-          for (let i = 0; i < bytes.length; i += 8192) chunks.push(String.fromCharCode(...bytes.subarray(i, i + 8192)));
-          if (token !== generation || !sarvam.checked) return;
-          const {text} = await ui.api(endpoint + '?section=transcription', {
-            consent: true, mime: recording.type.split(';')[0], audio: btoa(chunks.join(''))
-          });
-          if (token !== generation || !sarvam.checked) return;
+          const context = new AudioContext();
+          let decoded;
+          try {
+            decoded = await context.decodeAudioData(await recording.arrayBuffer());
+          } finally {
+            await context.close();
+          }
+          const offline = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
+          const source = offline.createBufferSource();
+          source.buffer = decoded;
+          source.connect(offline.destination);
+          source.start();
+          const samples = (await offline.startRendering()).getChannelData(0);
+          const transcripts = [];
+          const chunkSize = 25 * 16000;
+          for (let offset = 0; offset < samples.length; offset += chunkSize) {
+            if (token !== generation || !sarvam.checked) return;
+            status.textContent = 'Saaras is transcribing part ' + (offset / chunkSize + 1) +
+              ' of ' + Math.ceil(samples.length / chunkSize) + '…';
+            const part = samples.subarray(offset, offset + chunkSize);
+            const buffer = new ArrayBuffer(44 + part.length * 2);
+            const view = new DataView(buffer);
+            for (const [position, tag] of [[0, 'RIFF'], [8, 'WAVE'], [12, 'fmt '], [36, 'data']]) {
+              for (let i = 0; i < tag.length; i++) view.setUint8(position + i, tag.charCodeAt(i));
+            }
+            for (const [position, value] of [[4, buffer.byteLength - 8], [16, 16], [24, 16000], [28, 32000], [40, part.length * 2]]) {
+              view.setUint32(position, value, true);
+            }
+            for (const [position, value] of [[20, 1], [22, 1], [32, 2], [34, 16]]) view.setUint16(position, value, true);
+            part.forEach((value, i) => view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, value)) * 32767, true));
+            const bytes = new Uint8Array(buffer);
+            const blocks = [];
+            for (let i = 0; i < bytes.length; i += 8192) blocks.push(String.fromCharCode(...bytes.subarray(i, i + 8192)));
+            const {text} = await ui.api(endpoint + '?section=transcription', {
+              consent: true, mime: 'audio/wav', audio: btoa(blocks.join(''))
+            });
+            if (token !== generation || !sarvam.checked) return;
+            if (text.trim()) transcripts.push(text.trim());
+          }
+          const text = transcripts.join(' ');
           target.value = text;
           target.dispatchEvent(new Event('input'));
           status.textContent = text ? 'Saaras transcript ready for review.' : 'Saaras returned an empty transcript.';
@@ -610,7 +642,7 @@
       status.textContent = 'PHC can transcribe the audio on this device after recording stops.';
     }
     box.append(status);
-    return {box, prepare, start, stop, abort, transcribeRecording, get limit() { return useSarvam ? 25000 : 900000; }};
+    return {box, prepare, start, stop, abort, transcribeRecording, get limit() { return useSarvam ? 120000 : 900000; }};
   }
 
   function studyWorkflow() {
@@ -724,6 +756,7 @@
       header.append(node('th', label));
     }
     const chartBody = chart.createTBody();
+    const gradeChart = node('div');
     const status = node('p');
     status.setAttribute('role', 'status');
     let saving = false;
@@ -792,6 +825,25 @@
         for (const value of [group.source, group.chapter, group.count]) row.insertCell().textContent = value;
       }
       chart.hidden = !selected.size;
+      gradeChart.replaceChildren();
+      const chosen = entries.filter(entry => selected.has(entry.id));
+      if (chosen.length) {
+        const table = node('table');
+        const heading = table.createTHead().insertRow();
+        for (const label of ['Historical rubric', 'Medicine', 'Source grade']) heading.append(node('th', label));
+        const body = table.createTBody();
+        for (const entry of chosen) {
+          const graded = (entry.medicines || []).filter(medicine => Number.isInteger(medicine.grade));
+          graded.sort((a, b) => b.grade - a.grade || a.name.localeCompare(b.name));
+          for (const medicine of graded.length ? graded : [null]) {
+            const row = body.insertRow();
+            row.insertCell().textContent = entry.label + ' · ' + entry.source + ' · ' + entry.page;
+            row.insertCell().textContent = medicine?.name || 'No verified grades available';
+            row.insertCell().textContent = medicine?.grade ?? '—';
+          }
+        }
+        gradeChart.append(node('h3', 'Historical medicine grade chart'), table);
+      }
       if (!selected.size) selection.append(node('li', 'No rubrics selected.'));
       save.disabled = saving || !entries.some(entry =>
         Boolean(saved.get(entry.id)?.bookmarked) !== selected.has(entry.id));
@@ -799,7 +851,7 @@
     input.addEventListener('input', render);
     panel.append(node('p', entries.length + ' indexed rubrics for historical study.'),
       review, label, node('h2', 'Search results'), results,
-      node('h2', 'Selected rubrics'), selection, chart);
+      node('h2', 'Selected rubrics'), selection, chart, gradeChart);
     if (!sessionStudy) panel.append(save, status);
     render();
     container.replaceChildren(panel);
