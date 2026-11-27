@@ -53,3 +53,8 @@
 .phc-workspace-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .65rem; margin-top: .85rem; }
 .phc-workspace-grid button { min-height: 4rem; overflow-wrap: anywhere; }
 @media(max-width: 450px) { .phc-workspace-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+
+.phc-repertory-ocr summary,
+.phc-repertory-ocr h3 { font-size: 1.3rem; font-weight: 750; }
+.phc-repertory-ocr strong { font-size: 1.12em; font-weight: 750; }
+.phc-repertory-ocr p { overflow-wrap: anywhere; }
