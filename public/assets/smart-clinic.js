@@ -317,6 +317,7 @@
       if (recorder?.state !== 'recording') return;
       voice.stop();
       recorder.pause();
+      clearTimeout(timer);
       freezeDuration();
       pause.disabled = true;
       resume.disabled = false;
@@ -325,6 +326,7 @@
     const resume = action('Resume recording', () => {
       if (recorder?.state !== 'paused') return;
       recorder.resume();
+      timer = setTimeout(() => stop.click(), Math.max(0, voice.limit - capturedMs));
       void voice.start(stream.getAudioTracks()[0]);
       startedAt = performance.now();
       clock = setInterval(updateDuration, 1000);
@@ -1135,3 +1137,4 @@
   };
   window.addEventListener('pagehide', () => window.PHCSmartClinic.close());
 })();
+
