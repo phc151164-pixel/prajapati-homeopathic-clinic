@@ -655,6 +655,83 @@
     return {box, prepare, start, stop, abort, transcribeRecording, get limit() { return useSarvam ? 40 * 60 * 1000 : 900000; }};
   }
 
+  function kentPrivateReader() {
+    const box = node('details');
+    const picker = node('input');
+    picker.type = 'file';
+    picker.accept = '.html,text/html';
+    const label = node('label', 'Choose Kent_Repertory_Formatted.html');
+    label.append(picker);
+    const search = node('input');
+    search.type = 'search';
+    const searchLabel = node('label', 'Search your Kent reference');
+    searchLabel.append(search);
+    const status = node('p');
+    status.setAttribute('role', 'status');
+    const results = node('div');
+    let lines = [];
+    function copy(source, target) {
+      for (const child of source.childNodes) {
+        if (child.nodeType === 3) {
+          target.append(child.textContent);
+          continue;
+        }
+        const tag = child.nodeName.toLowerCase();
+        if (!['span', 'strong', 'i', 'br'].includes(tag)) continue;
+        const item = node(tag);
+        const color = child.getAttribute('style')?.match(/^color:(#[a-f0-9]{6})$/i);
+        if (tag === 'span' && color) item.style.color = color[1];
+        copy(child, item);
+        target.append(item);
+      }
+    }
+    function render() {
+      results.replaceChildren();
+      const query = normalize(search.value).trim();
+      if (!query || !lines.length) return;
+      const matches = lines.filter(line => line.text.includes(query));
+      status.textContent = matches.length + ' matching passages. Showing up to 30.';
+      for (const match of matches.slice(0, 30)) {
+        const passage = node('p');
+        copy(match.paragraph, passage);
+        const result = node('article');
+        result.className = 'card';
+        result.style.backgroundColor = '#fff';
+        result.style.color = '#000';
+        result.append(node('h3', match.page), passage);
+        results.append(result);
+      }
+    }
+    search.addEventListener('input', render);
+    picker.addEventListener('change', async () => {
+      lines = [];
+      results.replaceChildren();
+      const file = picker.files[0];
+      if (!file) return;
+      status.textContent = 'Reading your local reference…';
+      try {
+        if (file.size > 25 * 1024 * 1024) throw Error('Choose a formatted Kent file under 25 MB.');
+        const template = node('template');
+        template.innerHTML = await file.text();
+        const pages = template.content.querySelectorAll('section[id^="page-"]');
+        if (!pages.length) throw Error('Choose the formatted Kent reference file.');
+        for (const page of pages) {
+          for (const paragraph of page.querySelectorAll('p')) {
+            lines.push({page: 'PDF page ' + page.id.slice(5), paragraph, text: normalize(paragraph.textContent)});
+          }
+        }
+        status.textContent = pages.length + ' pages loaded. Enter a heading or phrase.';
+        render();
+      } catch (error) {
+        status.textContent = error.message;
+      }
+    });
+    box.append(node('summary', 'Kent Repertory · Private formatted reference'),
+      node('p', 'Open your formatted copy to search the original text with its colours, bold and italics. The file stays in this tab.'),
+      label, searchLabel, status, results);
+    return box;
+  }
+
   function boerickeOcrReader() {
     const reader = node('details');
     reader.className = 'phc-repertory-ocr';
@@ -972,7 +1049,7 @@
     if (!sessionStudy) panel.append(save, status);
     render();
     container.replaceChildren(panel);
-    if (!sessionStudy) container.prepend(boerickeOcrReader(), studyWorkflow());
+    if (!sessionStudy) container.prepend(kentPrivateReader(), boerickeOcrReader(), studyWorkflow());
   }
 
   const medicineNames = new Map(Object.entries({
