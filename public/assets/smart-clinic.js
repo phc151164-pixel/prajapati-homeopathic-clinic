@@ -653,6 +653,61 @@
     return {box, prepare, start, stop, abort, transcribeRecording, get limit() { return useSarvam ? 40 * 60 * 1000 : 900000; }};
   }
 
+  function boerickeOcrReader() {
+    const reader = node('details');
+    const status = node('p');
+    status.setAttribute('role', 'status');
+    const search = node('input');
+    search.type = 'search';
+    const label = node('label', 'Search the Boericke repertory OCR');
+    label.append(search);
+    const results = node('div');
+    let lines;
+    function render() {
+      if (!lines) return;
+      const query = normalize(search.value).trim();
+      results.replaceChildren();
+      if (!query) {
+        status.textContent = 'Search a heading or phrase, or open the full OCR below.';
+        return;
+      }
+      const matches = lines.filter(line => normalize(line).includes(query));
+      status.textContent = matches.length + ' matching lines' + (matches.length > 60 ? '. Showing the first 60.' : '.');
+      for (const match of matches.slice(0, 60)) results.append(node('p', match));
+    }
+    search.addEventListener('input', render);
+    const full = node('details');
+    full.append(node('summary', 'Read full repertory and index'));
+    full.addEventListener('toggle', () => {
+      if (!full.open || !lines || full.children.length > 1) return;
+      for (let start = 0; start < lines.length; start += 100) {
+        full.append(node('pre', lines.slice(start, start + 100).join('\n')));
+      }
+    });
+    reader.append(node('summary', 'Boericke Repertory · Full OCR'),
+      node('p', 'Oscar E. Boericke · Ninth edition, 1927 · Historical reference. OCR may contain errors. Printed grades require scan verification.'),
+      label, status, results, full);
+    let loading = false;
+    reader.addEventListener('toggle', async () => {
+      if (!reader.open || lines || loading) return;
+      loading = true;
+      full.hidden = true;
+      status.textContent = 'Loading repertory OCR…';
+      try {
+        const response = await fetch('/assets/boericke-repertory-1927-ocr.txt');
+        if (!response.ok) throw Error('Could not load the repertory OCR.');
+        lines = (await response.text()).split('\n');
+        full.hidden = false;
+        render();
+      } catch {
+        status.textContent = 'Could not load the repertory OCR. Close and reopen this section to retry.';
+      } finally {
+        loading = false;
+      }
+    });
+    return reader;
+  }
+
   function studyWorkflow() {
     const guide = node('details');
     guide.className = 'card';
@@ -863,7 +918,7 @@
     if (!sessionStudy) panel.append(save, status);
     render();
     container.replaceChildren(panel);
-    if (!sessionStudy) container.append(studyWorkflow());
+    if (!sessionStudy) container.prepend(boerickeOcrReader(), studyWorkflow());
   }
 
   const medicineNames = new Map(Object.entries({
