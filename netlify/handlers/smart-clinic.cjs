@@ -39,10 +39,31 @@ exports.handler = async event => {
     }
     if (event.httpMethod !== 'POST') return json(405, {error: 'Method not allowed.'});
     if (!sameOrigin(event)) return json(403, {error: 'Request origin not allowed.'});
-    if (Buffer.byteLength(event.body || '') > (q.section === 'medicines' ? 2000000 : 38000)) return json(413, {error: 'Request too large.'});
+    if (Buffer.byteLength(event.body || '') > (['medicines', 'transcription'].includes(q.section) ? 2000000 : 38000)) return json(413, {error: 'Request too large.'});
     let body;
     try { body = JSON.parse(event.body); } catch { return json(400, {error: 'Invalid request.'}); }
     if (!body || typeof body !== 'object') return json(400, {error: 'Invalid request.'});
+    if (q.section === 'transcription') {
+      const formats = {'audio/webm': 'webm', 'audio/mp4': 'mp4', 'audio/ogg': 'ogg'};
+      if (body.consent !== true || !Object.hasOwn(formats, body.mime) ||
+          typeof body.audio !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(body.audio)) {
+        return json(400, {error: 'Confirm cloud transcription consent and supply a test recording.'});
+      }
+      const key = process.env.PHC_SARVAM_API_KEY;
+      if (!key) return json(503, {error: 'Saaras v4 needs a server API key before it can transcribe.'});
+      const form = new FormData();
+      form.append('file', new Blob([Buffer.from(body.audio, 'base64')], {type: body.mime}), 'recording.' + formats[body.mime]);
+      form.append('model', 'saaras:v4');
+      form.append('language_code', 'hi-IN');
+      form.append('mode', 'codemix');
+      const response = await fetch('https://api.sarvam.ai/speech-to-text', {
+        method: 'POST', headers: {'api-subscription-key': key}, body: form, signal: AbortSignal.timeout(20000)
+      });
+      if (!response.ok) return json(502, {error: 'Saaras could not transcribe the clip. Check the provider configuration and clip length.'});
+      const result = await response.json();
+      if (typeof result.transcript !== 'string') return json(502, {error: 'Saaras returned no transcript.'});
+      return json(200, {text: result.transcript});
+    }
     if (q.section === 'medicines') {
       const records = body.medicines;
       if (!Array.isArray(records) || !records.length || records.length > 1500 ||
