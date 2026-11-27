@@ -656,7 +656,7 @@
   function boerickeOcrReader() {
     const reader = node('details');
     reader.className = 'phc-repertory-ocr';
-    // Visually checked against the uploaded scan, printed page 553.
+    // Visually checked against the uploaded scan, printed pages 553–554.
     const verifiedItalics = new Map([
       ['AWKWARD', ['Apis', 'Bov.', 'Nat. m.']],
       ['CATALEPSY', ['Acon.', 'Can. ind.', 'Crot. casc.', 'morph.', 'Mosch.', 'Op.']],
@@ -665,14 +665,26 @@
       ['Rapid answering', ['Lach.']],
       ['Slow answering, relapses', ['Helleb.', 'Phos. ac.']]
     ]);
-    function formattedLine(line) {
+    const secondPageItalics = new Map([
+      ['Epileptic', ['Be//.', 'Cupr. ac.', 'CEnanibe', 'Sil.']],
+      ['Masturbatic', ['Agn.', 'Phos. ac.', 'Staph.']],
+      ['Senile', ['Aur. iod.', 'Bar. c.', 'Phos.']],
+      ['Syphilitic', ['Kali iod.']],
+      ['Jealousy', ['Lach.']],
+      ['Joy, excessive', ['Coff.']],
+      ['Shame, mortification, reserved displeasure', ['Staph.']],
+      ['Downward motion, falling', ['Bor.', 'Sanic.']],
+      ['Motion', ['Bry.']],
+      ['Music', ['Acon.', 'Ambra.', 'Nat. c.', 'Sab.']]
+    ]);
+    function formattedLine(line, index) {
       const trimmed = line.trim();
       if (/^[A-Z][A-Z ,&()'’-]{2,65}$/u.test(trimmed)) return node('h3', line);
       const split = line.match(/^(.{2,105}?)([—–]|:\s)(.*)$/u);
       const paragraph = node('p');
       if (split && /\p{L}/u.test(split[1])) {
         paragraph.append(node('strong', split[1]), split[2]);
-        const words = verifiedItalics.get(split[1].trim()) || [];
+        const words = (index < 22 ? verifiedItalics : index < 51 ? secondPageItalics : null)?.get(split[1].trim()) || [];
         let offset = 0;
         for (const word of words) {
           const start = split[3].indexOf(word, offset);
@@ -702,9 +714,9 @@
         status.textContent = 'Search a heading or phrase, or open the full OCR below.';
         return;
       }
-      const matches = lines.filter(line => normalize(line).includes(query));
+      const matches = lines.flatMap((line, index) => normalize(line).includes(query) ? [{line, index}] : []);
       status.textContent = matches.length + ' matching lines' + (matches.length > 60 ? '. Showing the first 60.' : '.');
-      for (const match of matches.slice(0, 60)) results.append(formattedLine(match));
+      for (const {line, index} of matches.slice(0, 60)) results.append(formattedLine(line, index));
     }
     search.addEventListener('input', render);
     const full = node('details');
@@ -712,9 +724,9 @@
     full.addEventListener('toggle', () => {
       if (!full.open || !lines || full.children.length > 1) return;
       const content = document.createDocumentFragment();
-      for (const line of lines) {
-        if (line.trim()) content.append(formattedLine(line));
-      }
+      lines.forEach((line, index) => {
+        if (line.trim()) content.append(formattedLine(line, index));
+      });
       full.append(content);
     });
     const original = node('a', 'Read the original scan with printed italics');
