@@ -655,6 +655,19 @@
 
   function boerickeOcrReader() {
     const reader = node('details');
+    reader.className = 'phc-repertory-ocr';
+    function formattedLine(line) {
+      const trimmed = line.trim();
+      if (/^[A-Z][A-Z ,&()'’-]{2,65}$/u.test(trimmed)) return node('h3', line);
+      const split = line.match(/^(.{2,105}?)([—–]|:\s)(.*)$/u);
+      const paragraph = node('p');
+      if (split && /\p{L}/u.test(split[1])) {
+        paragraph.append(node('strong', split[1]), split[2] + split[3]);
+      } else {
+        paragraph.textContent = line;
+      }
+      return paragraph;
+    }
     const status = node('p');
     status.setAttribute('role', 'status');
     const search = node('input');
@@ -673,16 +686,18 @@
       }
       const matches = lines.filter(line => normalize(line).includes(query));
       status.textContent = matches.length + ' matching lines' + (matches.length > 60 ? '. Showing the first 60.' : '.');
-      for (const match of matches.slice(0, 60)) results.append(node('p', match));
+      for (const match of matches.slice(0, 60)) results.append(formattedLine(match));
     }
     search.addEventListener('input', render);
     const full = node('details');
     full.append(node('summary', 'Read full repertory and index'));
     full.addEventListener('toggle', () => {
       if (!full.open || !lines || full.children.length > 1) return;
-      for (let start = 0; start < lines.length; start += 100) {
-        full.append(node('pre', lines.slice(start, start + 100).join('\n')));
+      const content = document.createDocumentFragment();
+      for (const line of lines) {
+        if (line.trim()) content.append(formattedLine(line));
       }
+      full.append(content);
     });
     reader.append(node('summary', 'Boericke Repertory · Full OCR'),
       node('p', 'Oscar E. Boericke · Ninth edition, 1927 · Historical reference. OCR may contain errors. Printed grades require scan verification.'),
