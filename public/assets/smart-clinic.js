@@ -534,7 +534,7 @@
         source.start();
         const samples = (await offline.startRendering()).getChannelData(0);
         if (token !== generation || !checkbox.checked) return;
-        worker = new Worker('/assets/phc-transcription-worker.js', {type: 'module'});
+        worker = new Worker('/assets/phc-transcription-worker-local.js', {type: 'module'});
         const fail = reason => {
           if (token !== generation) return;
           worker?.terminate();
