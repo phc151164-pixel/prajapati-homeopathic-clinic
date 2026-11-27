@@ -699,7 +699,14 @@
       }
       full.append(content);
     });
+    const original = node('a', 'Read the original scan with printed italics');
+    original.href = 'https://archive.org/details/materiamedicawit0000will/page/553/mode/2up';
+    original.target = '_blank';
+    original.rel = 'noopener noreferrer';
+    const source = node('p');
+    source.append(original);
     reader.append(node('summary', 'Boericke Repertory · Full OCR'),
+      source,
       node('p', 'Oscar E. Boericke · Ninth edition, 1927 · Historical reference. OCR may contain errors. Printed grades require scan verification.'),
       label, status, results, full);
     let loading = false;
