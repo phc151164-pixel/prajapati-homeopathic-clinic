@@ -656,13 +656,31 @@
   function boerickeOcrReader() {
     const reader = node('details');
     reader.className = 'phc-repertory-ocr';
+    // Visually checked against the uploaded scan, printed page 553.
+    const verifiedItalics = new Map([
+      ['AWKWARD', ['Apis', 'Bov.', 'Nat. m.']],
+      ['CATALEPSY', ['Acon.', 'Can. ind.', 'Crot. casc.', 'morph.', 'Mosch.', 'Op.']],
+      ['COMPREHENSION —Easy', ['Coff.']],
+      ['Coma Vigil', ['Hyos.']],
+      ['Rapid answering', ['Lach.']],
+      ['Slow answering, relapses', ['Helleb.', 'Phos. ac.']]
+    ]);
     function formattedLine(line) {
       const trimmed = line.trim();
       if (/^[A-Z][A-Z ,&()'’-]{2,65}$/u.test(trimmed)) return node('h3', line);
       const split = line.match(/^(.{2,105}?)([—–]|:\s)(.*)$/u);
       const paragraph = node('p');
       if (split && /\p{L}/u.test(split[1])) {
-        paragraph.append(node('strong', split[1]), split[2] + split[3]);
+        paragraph.append(node('strong', split[1]), split[2]);
+        const words = verifiedItalics.get(split[1].trim()) || [];
+        let offset = 0;
+        for (const word of words) {
+          const start = split[3].indexOf(word, offset);
+          if (start === -1) continue;
+          paragraph.append(split[3].slice(offset, start), node('i', word));
+          offset = start + word.length;
+        }
+        paragraph.append(split[3].slice(offset));
       } else {
         paragraph.textContent = line;
       }
@@ -707,7 +725,7 @@
     source.append(original);
     reader.append(node('summary', 'Boericke Repertory · Full OCR'),
       source,
-      node('p', 'Oscar E. Boericke · Ninth edition, 1927 · Historical reference. OCR may contain errors. Printed grades require scan verification.'),
+      node('p', 'Oscar E. Boericke · Ninth edition, 1927 · Historical reference. OCR may contain errors. Italics are shown where checked against printed page 553.'),
       label, status, results, full);
     let loading = false;
     reader.addEventListener('toggle', async () => {
