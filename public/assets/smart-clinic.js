@@ -451,7 +451,7 @@
         status.textContent = 'PHC transcription will run on this device after you stop recording. The first run downloads model files.';
         return true;
       };
-      if (!supported) return useFallback();
+      if (!supported || (!installOnly && select.value === 'hi-IN')) return useFallback();
       const options = {langs: [select.value], processLocally: true};
       try {
         let availability = await Speech.available(options);
@@ -525,7 +525,7 @@
       let context;
       status.textContent = 'Preparing the recording and loading the on-device model…';
       try {
-        context = new AudioContext({sampleRate: 16000});
+        context = new AudioContext();
         const buffer = await context.decodeAudioData(await recording.arrayBuffer());
         const offline = new OfflineAudioContext(1, Math.ceil(buffer.duration * 16000), 16000);
         const source = offline.createBufferSource();
@@ -535,20 +535,20 @@
         const samples = (await offline.startRendering()).getChannelData(0);
         if (token !== generation || !checkbox.checked) return;
         worker = new Worker('/assets/phc-transcription-worker.js', {type: 'module'});
-        const fail = () => {
+        const fail = reason => {
           if (token !== generation) return;
           worker?.terminate();
           worker = null;
-          status.textContent = 'PHC could not load the model or transcribe this audio. The recording is still available for playback.';
+          status.textContent = reason + ' The recording is still available for playback.';
         };
-        worker.onerror = fail;
+        worker.onerror = () => fail('Could not start the local transcription engine.');
         worker.onmessage = ({data}) => {
           if (token !== generation) return;
           if (data.processing) {
             status.textContent = 'Transcribing locally…';
             return;
           }
-          if (data.failed) return fail();
+          if (data.failed) return fail(data.failed === 'download' ? 'Could not download or initialize the Hindi speech model.' : 'The local speech model could not process this recording.');
           worker.terminate();
           worker = null;
           if (data.text) {
