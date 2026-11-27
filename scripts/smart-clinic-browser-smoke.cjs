@@ -124,6 +124,7 @@ const srv = http.createServer(async (req,res) => {
     await page.getByText('Confirm recording consent before starting.').waitFor();
     await page.getByLabel('Patient consented to local audio recording').check();
     await page.getByLabel('Patient consented to on-device transcription').check();
+    await page.getByLabel('On-device transcription language').selectOption('en-IN');
     await page.getByRole('button', {name: 'Start recording'}).click();
     await page.getByText('Recording on this device.', {exact: false}).waitFor();
     await page.getByLabel('Live historical study chart').getByText(/Pressing → Coughing, while/).waitFor();
@@ -139,6 +140,7 @@ const srv = http.createServer(async (req,res) => {
     await page.getByRole('button', {name: /Add Head → Pain → Pressing → Coughing/}).click();
     await page.getByRole('cell', {name: 'Kent', exact: true}).waitFor();
     await page.evaluate(() => {
+      // Hindi uses the app model independently of Chrome pack availability.
       window.SpeechRecognition.available = async () => 'unavailable';
       const OriginalWorker = window.Worker;
       window.Worker = class {
@@ -154,7 +156,9 @@ const srv = http.createServer(async (req,res) => {
         terminate() {}
       };
     });
+    await page.getByLabel('On-device transcription language').selectOption('hi-IN');
     await page.getByRole('button', {name: 'Start recording'}).click();
+    
     await page.getByText('PHC transcription will run on this device', {exact: false}).waitFor();
     await page.waitForTimeout(1300);
     await page.getByRole('button', {name: 'Stop recording'}).click();
