@@ -394,7 +394,7 @@
         startedAt = performance.now();
         clock = setInterval(updateDuration, 1000);
         timer = setTimeout(() => stop.click(), voice.limit);
-        status.textContent = 'Recording on this device. Maximum ' + (voice.limit === 120000 ? '2 minutes for Saaras testing.' : '15 minutes per recording.');
+        status.textContent = 'Recording on this device. Maximum ' + (voice.limit / 60000) + ' minutes per recording.';
       } catch {
         if (token !== generation) return;
         release();
@@ -569,14 +569,20 @@
               consent: true, mime: 'audio/wav', audio: btoa(blocks.join(''))
             });
             if (token !== generation || !sarvam.checked) return;
-            if (text.trim()) transcripts.push(text.trim());
+            if (text.trim()) {
+              transcripts.push(text.trim());
+              target.value = transcripts.join(' ');
+            }
           }
           const text = transcripts.join(' ');
           target.value = text;
           target.dispatchEvent(new Event('input'));
           status.textContent = text ? 'Saaras transcript ready for review.' : 'Saaras returned an empty transcript.';
         } catch (error) {
-          if (token === generation) status.textContent = error.message;
+          if (token === generation) {
+            status.textContent = error.message + (target.value ? ' Review the text already available before saving.' : '');
+            target.dispatchEvent(new Event('input'));
+          }
         }
         return;
       }
@@ -642,7 +648,7 @@
       status.textContent = 'PHC can transcribe the audio on this device after recording stops.';
     }
     box.append(status);
-    return {box, prepare, start, stop, abort, transcribeRecording, get limit() { return useSarvam ? 120000 : 900000; }};
+    return {box, prepare, start, stop, abort, transcribeRecording, get limit() { return useSarvam ? 40 * 60 * 1000 : 900000; }};
   }
 
   function studyWorkflow() {
