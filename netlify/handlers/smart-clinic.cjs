@@ -44,7 +44,7 @@ exports.handler = async event => {
     try { body = JSON.parse(event.body); } catch { return json(400, {error: 'Invalid request.'}); }
     if (!body || typeof body !== 'object') return json(400, {error: 'Invalid request.'});
     if (q.section === 'transcription') {
-      const formats = {'audio/webm': 'webm', 'audio/mp4': 'mp4', 'audio/ogg': 'ogg'};
+      const formats = {'audio/wav': 'wav', 'audio/webm': 'webm', 'audio/mp4': 'mp4', 'audio/ogg': 'ogg'};
       if (body.consent !== true || !Object.hasOwn(formats, body.mime) ||
           typeof body.audio !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(body.audio)) {
         return json(400, {error: 'Confirm cloud transcription consent and supply a test recording.'});
