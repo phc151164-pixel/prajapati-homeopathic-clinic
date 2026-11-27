@@ -20,7 +20,7 @@ async function auth(path,method='GET',body,token){
  if(!key)throw Error('configuration');
  const r=await fetch(base.origin+'/auth/v1/'+path,{method,headers:{apikey:key,...(token?{Authorization:'Bearer '+token}:{}),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(12000)});
  let data={};try{data=await r.json();}catch{}
- if(!r.ok)throw Object.assign(Error('Authentication failed'),{status:r.status});
+ if(!r.ok)throw Object.assign(Error('Authentication failed'),{status:r.status, authCode:data.error_code});
  return data;
 }
 async function member(token){
