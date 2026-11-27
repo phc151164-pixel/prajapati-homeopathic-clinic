@@ -35,6 +35,14 @@ const srv = http.createServer(async (req,res) => {
       return json({items:[],bookings:[],counts:{},stats:{},has_more:false});
     }
     if (section === 'library') return json({catalog,repertory,boericke,keynotes,progress:progress?[progress]:[]});
+    if (section === 'transcription') {
+      assert.equal(body.consent, true);
+      assert.equal(body.mime, 'audio/wav');
+      const wav = Buffer.from(body.audio, 'base64');
+      assert.equal(wav.toString('ascii', 0, 4), 'RIFF');
+      assert.ok(wav.readUInt32LE(40) <= 800000);
+      return json({text: wav.readUInt32LE(40) === 800000 ? 'पहला हिस्सा' : 'दूसरा हिस्सा'});
+    }
     if (section === 'consultation') return json({document:document||null});
     if (body.action === 'reference_opened') {
       progress = {...progress, book_id: body.bookId, last_opened: new Date().toISOString()};
@@ -145,7 +153,7 @@ const srv = http.createServer(async (req,res) => {
       const OriginalWorker = window.Worker;
       window.Worker = class {
         constructor(url, options) {
-          if (!url.endsWith('/phc-transcription-worker.js')) return new OriginalWorker(url, options);
+          if (!url.endsWith('/phc-transcription-worker-local.js')) return new OriginalWorker(url, options);
         }
         postMessage({samples, language}) {
           if (!(samples instanceof Float32Array) || !samples.length || language !== 'hindi') {
@@ -156,6 +164,7 @@ const srv = http.createServer(async (req,res) => {
         terminate() {}
       };
     });
+    await page.getByRole('button', {name: 'Delete recording'}).click();
     await page.getByLabel('On-device transcription language').selectOption('hi-IN');
     await page.getByRole('button', {name: 'Start recording'}).click();
     
@@ -165,6 +174,23 @@ const srv = http.createServer(async (req,res) => {
     await page.getByText('Transcript ready. Review it before saving.').waitFor();
     assert.match(await page.getByLabel('Editable transcript preview').inputValue(), /सिर में दर्द/);
     await page.getByLabel('Live historical study chart').getByText(/Pressing → Coughing, while/).waitFor();
+    await page.getByRole('button', {name: 'Delete recording'}).click();
+    await page.getByLabel(/Use Saaras v4 for this synthetic test clip/).check();
+    const transcript = page.getByLabel('Editable transcript preview');
+    await transcript.fill('Existing draft');
+    await page.getByRole('button', {name: 'Start recording'}).click();
+    await page.getByText(/Maximum 40 minutes per recording/).waitFor();
+    await page.getByRole('button', {name: 'Pause recording'}).click();
+    await page.getByText('Recording paused.', {exact:true}).waitFor();
+    await page.getByRole('button', {name: 'Resume recording'}).click();
+    await page.waitForTimeout(27000);
+    await page.getByRole('button', {name: 'Stop recording'}).click();
+    await page.getByText('Saaras transcript ready for review.').waitFor();
+    assert.equal(await transcript.inputValue(), 'Existing draft\nपहला हिस्सा\nदूसरा हिस्सा');
+    const playback = page.locator('audio[src^="blob:"]');
+    const playbackUrl = await playback.getAttribute('src');
+    await page.getByRole('button', {name: 'Start recording'}).click();
+    assert.equal(await playback.getAttribute('src'), playbackUrl);
     await page.getByLabel('Editable transcript preview').fill('Chief complaint sar dard khansi. Duration two days');
     await historyField.fill('');
     await page.getByRole('button', {name: 'Create draft from transcript'}).click();
