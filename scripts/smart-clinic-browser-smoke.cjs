@@ -91,7 +91,7 @@ const srv = http.createServer(async (req,res) => {
         static async available({processLocally}) { return processLocally ? 'available' : 'unavailable'; }
         start(track) {
           if (!this.processLocally || track?.kind !== 'audio') throw new Error('Expected a local audio track');
-          const result = Object.assign([{transcript: 'Chief complaint sar dard hai aur khansi bhi hai. Duration two days'}], {isFinal: true});
+          const result = Object.assign([{transcript: 'Chief complaint sar dard hai aur khansi bhi hai aur ghutne mein dard hai. Duration two days'}], {isFinal: true});
           this.onresult({resultIndex: 0, results: [result]});
         }
         stop() { this.onend(); }
@@ -139,6 +139,9 @@ const srv = http.createServer(async (req,res) => {
     const liveStudy = page.getByLabel('Live historical study chart');
     await liveStudy.getByRole('row').filter({hasText:'Chief complaint sar dard hai'}).getByText('head pain', {exact:true}).waitFor();
     await liveStudy.getByRole('row').filter({hasText:'khansi bhi hai'}).getByText('cough', {exact:true}).waitFor();
+    const kneeRow = liveStudy.getByRole('row').filter({hasText:'ghutne mein dard hai'});
+    await kneeRow.getByText('pain knee', {exact:true}).waitFor();
+    await kneeRow.getByText('Import the full Private Kent index on this browser to search Extremities.').waitFor();
     await page.waitForTimeout(1300);
     await page.getByRole('button', {name: 'Stop recording'}).click();
     await page.locator('audio[src^="blob:"]').waitFor();
@@ -165,6 +168,13 @@ const srv = http.createServer(async (req,res) => {
       const coughRubric = page.getByRole('button', {name:/^Add Cough →/}).first();
       await coughRubric.click();
       await page.getByRole('row').filter({hasText:/Cough →.*PDF page/}).getByRole('cell', {name:/^[123]$/}).first().waitFor();
+      const knee = kneeRow.getByRole('button', {name:/^Extremities → PAIN → Knee ·/i});
+      await knee.waitFor();
+      await knee.click();
+      assert.equal(await page.getByLabel('English rubric search terms').inputValue(), 'pain knee');
+      await page.getByRole('button', {name:/^Add Extremities → PAIN → Knee \(Kent\)$/i}).click();
+      await page.getByRole('row').filter({hasText:/Extremities → PAIN → Knee · Kent · PDF page 3058/i})
+        .getByRole('cell', {name:/^[123]$/}).first().waitFor();
       const search = page.getByLabel('Search historical rubrics');
       await search.fill('head pain pressing coughing while');
       await page.getByRole('button', {name: /Add Head → PAIN, headache in general → Pressing .* → coughing, while/}).click();
@@ -236,7 +246,7 @@ const srv = http.createServer(async (req,res) => {
     const playbackUrl = await playback.getAttribute('src');
     await page.getByRole('button', {name: 'Start recording'}).click();
     assert.equal(await playback.getAttribute('src'), playbackUrl);
-    await page.getByLabel('Editable transcript preview').fill('Chief complaint sar dard hai aur khansi bhi hai. Duration two days');
+    await page.getByLabel('Editable transcript preview').fill('Chief complaint sar dard hai aur khansi bhi hai aur ghutne mein dard hai. Duration two days');
     await historyField.fill('');
     await page.getByRole('button', {name: 'Create draft from transcript'}).click();
     assert.match(await historyField.inputValue(), /Chief complaint: sar dard hai aur khansi bhi hai/);

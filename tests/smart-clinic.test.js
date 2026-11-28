@@ -127,3 +127,25 @@ test('independent transcript complaints search different chapters and linked wor
     assert.deepEqual(contexts(input), [{terms:'', chapter:''}]);
   }
 });
+
+
+test('Head, Cough and Extremities are separate in a mixed consultation transcript', () => {
+  const {transcriptExcerpts, rubricSearchContext} = require('../public/assets/smart-clinic.js');
+  const contexts = text => transcriptExcerpts(text).map(rubricSearchContext);
+  assert.deepEqual(contexts('माथे में दर्द है, रात में सूखी खाँसी है और दाहिने घुटने में दर्द है।'), [
+    {chapter:'Head', terms:'head pain forehead'},
+    {chapter:'Cough', terms:'cough dry night', broaderTerms:'cough dry'},
+    {chapter:'Extremities', terms:'pain knee right', broaderTerms:'pain knee'}
+  ]);
+  assert.deepEqual(contexts('sir mein dard hai aur khansi hai aur haath sunn hai'), [
+    {chapter:'Head', terms:'head pain'},
+    {chapter:'Cough', terms:'cough'},
+    {chapter:'Extremities', terms:'numbness hand'}
+  ]);
+  assert.deepEqual(contexts('Headache, wet cough and swelling in the left ankle'), [
+    {chapter:'Head', terms:'head pain'},
+    {chapter:'Cough', terms:'cough loose'},
+    {chapter:'Extremities', terms:'swelling ankle left', broaderTerms:'swelling ankle'}
+  ]);
+  assert.deepEqual(contexts('घुटने में दर्द नहीं है।'), [{chapter:'', terms:''}]);
+});

@@ -49,6 +49,45 @@
     [/जलन|\bjalan\b|burning/giu, 'burning'],
     [/बुखार|\bbukhar\b|fever/giu, 'fever']
   ];
+  const extremityLocations = [
+    [/घुटन[ाेों]|\b(?:ghutn[ae]|ghutan[ae]|knees?)\b/iu, 'knee'],
+    [/टखन[ाेों]|\b(?:takhn[ae]|ankles?)\b/iu, 'ankle'],
+    [/कोहन[ीि]|\b(?:kohni|elbows?)\b/iu, 'elbow'],
+    [/कलाई|कलाइ|\b(?:kalai|wrists?)\b/iu, 'wrist'],
+    [/कंध[ाेों]|कन्ध[ाेों]|\b(?:kandh[ae]|shoulders?)\b/iu, 'shoulder'],
+    [/जांघ|जाँघ|\b(?:jaangh|jangh|thighs?)\b/iu, 'thigh'],
+    [/पिंडल[ीि]|\b(?:pindli|calves|calf)\b/iu, 'calf'],
+    [/एड़[ीि]|एड[ीि]|\b(?:edi|aedi|heels?)\b/iu, 'heel'],
+    [/तलव[ाेों]|\b(?:talw[ae]|soles?)\b/iu, 'sole'],
+    [/उंगली|उँगली|अंगुली|उंगलि|उँगलि|\b(?:ungli|ungliyan|fingers?)\b/iu, 'fingers'],
+    [/हाथ|\b(?:haath|hath|hands?)\b/iu, 'hand'],
+    [/बांह|बाँह|बाजू|\b(?:baazu|bazu|arms?)\b/iu, 'arm'],
+    [/\b(?:foot|feet)\b/iu, 'foot'],
+    [/पैर|पाँव|पांव|टांग|टाँग|\b(?:pair|paon|paanv|taang|tang|legs?)\b/iu, 'leg']
+  ];
+  const regionalSymptoms = [
+    [/दर्द|पीड़ा|\b(?:dard|pain(?:ful)?|ache[sd]?|aching|hurts?)\b/iu, 'pain'],
+    [/सूजन|सुजन|\b(?:sujan|soojan|swelling|swollen)\b/iu, 'swelling'],
+    [/सुन्न|\b(?:sunn|numb(?:ness)?)\b/iu, 'numbness'],
+    [/झनझन|झुनझुन|\b(?:jhanjhan\w*|tingl\w*)\b/iu, 'tingling'],
+    [/अकड़|अकड|जकड़|\b(?:akad\w*|jakad\w*|stiff(?:ness)?)\b/iu, 'stiffness'],
+    [/ऐंठन|मरोड़|\b(?:ainthan|cramp(?:s|ing)?)\b/iu, 'cramping'],
+    [/कमज़ोरी|कमजोरी|\b(?:kamzori|kamjori|weak(?:ness)?)\b/iu, 'weakness']
+  ];
+  const headLocations = [
+    [/माथ[ाे]|\b(?:math[ae]|maath[ae]|forehead)\b/iu, 'forehead'],
+    [/कनपटी|\b(?:kanpati|temples?)\b/iu, 'temples'],
+    [/स[िे]र\s+के\s+पीछे|\b(?:back of (?:the )?head|(?:sir|sar) ke (?:peechhe|piche)|occiput)\b/iu, 'occiput'],
+  ];
+  const coughQualifiers = [
+    [/सूख[ीि]|\b(?:dry|sookhi|sukhi)\b/iu, 'dry'],
+    [/बलगम|कफ|\b(?:balgam|phlegm|wet|productive)\b/iu, 'loose'],
+    [/रात|\b(?:raat|rat|night)\b/iu, 'night'],
+    [/सुबह|\b(?:subah|morning)\b/iu, 'morning'],
+    [/शाम|\b(?:shaam|sham|evening)\b/iu, 'evening'],
+  ];
+  const hasHead = /स[िे]र|\b(?:head|sir|seer|sar)\b/iu;
+  const findTerms = (rules, text) => rules.filter(([pattern]) => pattern.test(text)).map(([, label]) => label);
   const negation = /(?:नहीं|नही|बिना)|\b(?:no|not|never|without|nahi|nahin|nhi)\b/iu;
   const clauseBoundary = /\s*(?:[,，]|(?<![\p{L}\p{M}])(?:and|aur|और|तथा|or(?=\s+[^,]+\bbhi\b))(?![\p{L}\p{M}]))\s*/iu;
   const symptomTerms = new Set(['head pain', 'cough', 'nausea', 'vomiting', 'diarrh', 'constipation', 'vertigo', 'thirst', 'fever']);
@@ -56,7 +95,12 @@
     return symptomVocabulary.filter(([pattern]) => text.search(pattern) !== -1);
   }
 
-  const hasSymptom = part => detectedTerms(part).some(([, term]) => symptomTerms.has(term));
+  function hasSymptom(text) {
+    if (detectedTerms(text).some(([, term]) => symptomTerms.has(term))) return true;
+    return findTerms(regionalSymptoms, text).length > 0 &&
+      (hasHead.test(text) || findTerms(headLocations, text).length > 0 ||
+        findTerms(extremityLocations, text).length > 0);
+  }
   const relativeClause = /^(?:when|while|during|with)\b|^(?:जब|जैसे ही)\s/u;
   function transcriptExcerpts(text) {
     const excerpts = [];
@@ -84,15 +128,37 @@
   function rubricSearchContext(text) {
     if (negation.test(text)) return {terms: '', chapter: ''};
     const matches = detectedTerms(text);
-    const head = matches.some(([, , chapter]) => chapter === 'Head');
+    const location = findTerms(extremityLocations, text)[0];
+    const regional = findTerms(regionalSymptoms, text);
+    const headParts = findTerms(headLocations, text);
+    const head = matches.some(([, , chapter]) => chapter === 'Head') ||
+      regional.includes('pain') && (hasHead.test(text) || headParts.length > 0);
     const cough = matches.some(([, , chapter]) => chapter === 'Cough');
-    const linked = /(?:ख[ााँ]+सी|खाँसने|खांसने)\s*(?:के समय|के दौरान|पर|से)|\b(?:khansi|khasi)\s+(?:ke samay|ke dauran|par|se)\b|\b(?:when|while|on|during|with)\s+coughing\b|\b(?:when|while)\s+(?:i\s+)?cough\b/iu.test(text);
-    // A list without a clear separator or timing relationship needs review.
-    if (head && cough && !linked) return {terms: '', chapter: ''};
-    return {
-      terms: matches.map(([, words]) => words).join(' '),
-      chapter: head ? 'Head' : cough ? 'Cough' : ''
-    };
+    const limbs = Boolean(location && regional.length);
+    const linked = /(?:ख[ााँ]+सी|खाँसने|खांसने)\s*(?:के समय|के दौरान|पर|से)|\b(?:khansi|khasi|cough)\s+(?:ke samay|ke dauran|par|se)\b|\b(?:when|while|on|during|with)\s+coughing\b|\b(?:when|while)\s+(?:i\s+)?cough\b/iu.test(text);
+    // Ambiguous mentions need review before they become a combined search.
+    if ((head && cough && !linked) || (limbs && (head || cough))) return {terms: '', chapter: ''};
+    if (limbs) {
+      const root = [regional[0], location];
+      const side = findTerms([
+        [/दाहिन[ेीा]|दाएँ|दाएं|दाय[ेीं]|\b(?:right|dahin[aei]|daay[aein]+)\b/iu, 'right'],
+        [/बाएँ|बाएं|बाय[ेीं]|\b(?:left|baay[aein]+|bain)\b/iu, 'left']
+      ], text);
+      return {terms: [...root, ...side].join(' '), chapter: 'Extremities',
+        ...(side.length ? {broaderTerms: root.join(' ')} : {})};
+    }
+    const terms = matches.map(([, words]) => words);
+    if (head) {
+      return {terms: [...new Set(['head pain', ...terms.filter(term => term !== 'cough' || linked), ...headParts])].join(' '),
+        chapter: 'Head'};
+    }
+    if (cough) {
+      const qualifiers = findTerms(coughQualifiers, text);
+      return {terms: ['cough', ...qualifiers].join(' '), chapter: 'Cough',
+        ...(qualifiers.length > 1 ? {broaderTerms: ['cough', qualifiers[0]].join(' ')} : {})};
+    }
+    return {terms: terms.join(' '), chapter: ''};
+
   }
 
   function englishSearchTerms(text) {
@@ -163,7 +229,7 @@
   function openKent() {
     if (!kentAccount || !window.DecompressionStream || !window.indexedDB || !window.Worker) return Promise.resolve();
     if (kentReady) return kentReady;
-    kentWorker = new Worker('/assets/kent-index-worker.js?v=2');
+    kentWorker = new Worker('/assets/kent-index-worker.js?v=3');
     kentWorker.onmessage = ({data}) => {
       const pending = kentPending.get(data.id);
       if (!pending) return;
@@ -226,18 +292,21 @@
     await openKent().catch(() => {});
     const usePrivateKent = kentCount > 0;
     const usable = usePrivateKent ? entries.filter(entry => entry.source !== 'Kent') : entries;
-    const privateMatches = usePrivateKent
-      ? await kentRequest('search', {queries: queries.map(({query, chapter}) => ({query, chapter, limit}))}) : [];
+    const lookup = usePrivateKent ? queries.flatMap(({query, chapter, broaderTerms}) =>
+      [query, broaderTerms || ''].map(term => ({query: term, chapter, limit}))) : [];
+    const privateMatches = lookup.length ? await kentRequest('search', {queries: lookup}) : [];
     return queries.map(({query, chapter}, index) => {
       const terms = normalize(query).trim().split(/\s+/u);
       const fallback = query.trim() ? usable.filter(entry =>
         (!chapter || normalize(entry.chapter) === normalize(chapter)) && terms.every(term => entry.words.includes(term))) : [];
-      const local = privateMatches[index];
+      const exact = privateMatches[index * 2];
+      const broader = !exact?.total && !fallback.length && Boolean(privateMatches[index * 2 + 1]?.total);
+      const local = broader ? privateMatches[index * 2 + 1] : exact;
       const matches = (local?.matches || []).map(rubric => ({
         ...rubric, source: 'Kent',
         edition: 'Private Kent reference', pageLabel: 'PDF page ' + rubric.page, privateKent: true
       }));
-      return {total: (local?.total || 0) + fallback.length,
+      return {total: (local?.total || 0) + fallback.length, broader, fullKent: usePrivateKent,
         matches: [...matches, ...fallback.slice(0, limit)].slice(0, limit)};
     });
   }
@@ -384,7 +453,9 @@
         }
         try {
           const entries = studyEntries(await library());
-          const matches = await historicalMatches(entries, excerpts.map(({terms, chapter}) => ({query: terms, chapter})), 5);
+          const matches = await historicalMatches(entries, excerpts.map(({terms, chapter, broaderTerms}) => ({
+            query: terms, chapter, broaderTerms
+          })), 5);
           if (version !== chartVersion || !preview.isConnected) return;
           const table = node('table');
           table.className = 'kent-study-table';
@@ -393,11 +464,12 @@
             header.append(node('th', heading));
           }
           const body = table.createTBody();
-          for (const [i, {excerpt, terms}] of excerpts.entries()) {
+          for (const [i, {excerpt, terms, chapter}] of excerpts.entries()) {
             const row = body.insertRow();
             for (const value of [excerpt, terms]) row.insertCell().textContent = value;
             const candidates = node('ul');
-            const {matches: rubrics, total} = matches[i];
+            const {matches: rubrics, total, broader, fullKent} = matches[i];
+            if (broader) candidates.append(node('li', 'Broader source rubrics. Check the missing qualifier.'));
             for (const rubric of rubrics) {
               const item = node('li');
               item.append(action(rubric.label + ' · ' + rubric.source + ' · ' + rubric.pageLabel, async () => {
@@ -410,7 +482,9 @@
               }));
               candidates.append(item);
             }
-            if (!rubrics.length) candidates.append(node('li', 'No matching rubric.'));
+            if (!rubrics.length) candidates.append(node('li', !fullKent && ['Cough', 'Extremities'].includes(chapter)
+              ? 'Import the full Private Kent index on this browser to search ' + chapter + '.'
+              : 'No matching source rubric. Review the excerpt or revise the search terms.'));
             if (total > rubrics.length) candidates.append(node('li', total + ' matches in rubric review.'));
             row.insertCell().append(candidates);
           }
@@ -1152,11 +1226,12 @@
     const symptom = node('input');
     const english = node('input');
     let reviewChapter = '';
+    let reviewBroaderTerms;
     const reviewNotice = node('p');
     reviewNotice.setAttribute('role', 'status');
     async function reviewExcerpt(excerpt, terms = englishSearchTerms(excerpt), preferredId) {
       symptom.value = excerpt;
-      reviewChapter = rubricSearchContext(excerpt).chapter;
+      ({chapter: reviewChapter, broaderTerms: reviewBroaderTerms} = rubricSearchContext(excerpt));
       reviewNotice.textContent = '';
       english.value = terms;
       input.value = terms;
@@ -1181,9 +1256,10 @@
       const englishLabel = node('label', 'English rubric search terms');
       englishLabel.append(english);
       symptom.addEventListener('input', () => {
-        const {terms, chapter} = rubricSearchContext(symptom.value);
+        const {terms, chapter, broaderTerms} = rubricSearchContext(symptom.value);
         english.value = terms;
         reviewChapter = chapter;
+        reviewBroaderTerms = broaderTerms;
         reviewNotice.textContent = '';
       });
       symptomLabel.append(symptom);
@@ -1194,6 +1270,7 @@
             reviewNotice.textContent = 'Choose one symptom excerpt at a time for rubric search.';
             return;
           }
+          if (english.value.trim() !== englishSearchTerms(symptom.value)) reviewBroaderTerms = undefined;
           input.value = english.value.trim() || symptom.value.trim();
           void renderResults();
         }), reviewNotice);
@@ -1244,7 +1321,8 @@
       }
       results.append(node('li', 'Searching historical rubrics…'));
       try {
-        const [{matches, total}] = await historicalMatches(entries, [{query, chapter: reviewChapter}], 40);
+        const [{matches, total, broader, fullKent}] = await historicalMatches(entries,
+          [{query, chapter: reviewChapter, broaderTerms: reviewBroaderTerms}], 40);
         if (request !== version) return;
         if (preferredId) matches.sort((a, b) => Number(b.id === preferredId) - Number(a.id === preferredId));
         results.replaceChildren();
@@ -1273,7 +1351,10 @@
           item.append(add, node('p', entry.edition + ' · ' + entry.pageLabel));
           results.append(item);
         }
-        if (!total) results.append(node('li', 'No matching rubrics in the current index.'));
+        if (broader) results.prepend(node('li', 'Broader source rubrics. Check the missing qualifier.'));
+        if (!total) results.append(node('li', !fullKent && ['Cough', 'Extremities'].includes(reviewChapter)
+          ? 'Import the full Private Kent index on this browser to search ' + reviewChapter + '.'
+          : 'No matching rubrics in the current index.'));
         if (total > matches.length) results.append(node('li', 'Showing ' + matches.length + ' of ' + total + ' matches. Refine your search to see more.'));
       } catch (error) {
         if (request === version) results.replaceChildren(node('li', error.message));
@@ -1332,6 +1413,7 @@
     }
     input.addEventListener('input', () => {
       reviewChapter = '';
+      reviewBroaderTerms = undefined;
       version++;
       clearTimeout(searchTimer);
       searchTimer = setTimeout(renderResults, 180);

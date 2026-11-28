@@ -97,7 +97,9 @@ function search(queries) {
     if (!terms.length || !rubrics) return {total: 0, matches: []};
     const matches = [];
     for (const {rubric, words, title, chapter} of rubrics.values()) {
-      if ((chapterFilter && chapter !== chapterFilter) || !terms.every(term => words.includes(term))) continue;
+      if (chapterFilter && chapter !== chapterFilter) continue;
+      const searchable = chapterFilter ? chapter + ' ' + title : words;
+      if (!terms.every(term => searchable.includes(term))) continue;
       const relevance = terms.reduce((score, term) =>
         score + (chapter === term ? 4 : title.includes(term) ? 2 : 0), 0);
       matches.push({rubric, relevance});
