@@ -91,7 +91,7 @@ const srv = http.createServer(async (req,res) => {
         static async available({processLocally}) { return processLocally ? 'available' : 'unavailable'; }
         start(track) {
           if (!this.processLocally || track?.kind !== 'audio') throw new Error('Expected a local audio track');
-          const result = Object.assign([{transcript: 'Chief complaint sar dard khansi. Duration two days'}], {isFinal: true});
+          const result = Object.assign([{transcript: 'Chief complaint sar dard hai aur khansi bhi hai. Duration two days'}], {isFinal: true});
           this.onresult({resultIndex: 0, results: [result]});
         }
         stop() { this.onend(); }
@@ -136,15 +136,16 @@ const srv = http.createServer(async (req,res) => {
     await page.getByLabel('On-device transcription language').selectOption('en-IN');
     await page.getByRole('button', {name: 'Start recording'}).click();
     await page.getByText('Recording on this device.', {exact: false}).waitFor();
-    await page.getByLabel('Live historical study chart').getByText(/Pressing → Coughing, while/).waitFor();
+    const liveStudy = page.getByLabel('Live historical study chart');
+    await liveStudy.getByRole('row').filter({hasText:'Chief complaint sar dard hai'}).getByText('head pain', {exact:true}).waitFor();
+    await liveStudy.getByRole('row').filter({hasText:'khansi bhi hai'}).getByText('cough', {exact:true}).waitFor();
     await page.waitForTimeout(1300);
     await page.getByRole('button', {name: 'Stop recording'}).click();
     await page.locator('audio[src^="blob:"]').waitFor();
-    assert.match(await page.getByLabel('Editable transcript preview').inputValue(), /sar dard khansi/);
+    assert.match(await page.getByLabel('Editable transcript preview').inputValue(), /sar dard hai aur khansi bhi hai/);
     await page.getByRole('button', {name: 'Review symptoms and find rubrics'}).click();
-    await page.getByRole('button', {name: 'Chief complaint sar dard khansi', exact: true}).click();
-    await page.getByLabel('Review and edit symptom wording').fill('sar dard khansi');
-    assert.equal(await page.getByLabel('English rubric search terms').inputValue(), 'head pain cough');
+    await page.getByRole('button', {name: 'Chief complaint sar dard hai', exact: true}).click();
+    assert.equal(await page.getByLabel('English rubric search terms').inputValue(), 'head pain');
     await page.getByRole('button', {name: 'Find matching rubrics'}).click();
     await page.getByRole('button', {name: /Add Head → Pain → Pressing → Coughing/}).click();
     await page.getByRole('cell', {name: 'Kent', exact: true}).waitFor();
@@ -153,13 +154,25 @@ const srv = http.createServer(async (req,res) => {
       const picker = page.getByLabel('Choose reconciled Kent JSONL.GZ');
       await picker.setInputFiles(kentFile);
       await page.getByText('64,273 Kent rubrics available on this browser.').waitFor();
+      const coughRow = liveStudy.getByRole('row').filter({hasText:'khansi bhi hai'});
+      await coughRow.getByRole('button', {name:/^Cough →/}).first().waitFor();
+      assert.equal(await coughRow.getByRole('button', {name:/^Head →/}).count(), 0);
+      const headRow = liveStudy.getByRole('row').filter({hasText:'Chief complaint sar dard hai'});
+      await headRow.getByRole('button', {name:/^Head →/}).first().waitFor();
+      assert.equal(await headRow.getByRole('button', {name:/^Cough →/}).count(), 0);
+      await page.getByRole('button', {name:'khansi bhi hai', exact:true}).click();
+      assert.equal(await page.getByLabel('English rubric search terms').inputValue(), 'cough');
+      const coughRubric = page.getByRole('button', {name:/^Add Cough →/}).first();
+      await coughRubric.click();
+      await page.getByRole('row').filter({hasText:/Cough →.*PDF page/}).getByRole('cell', {name:/^[123]$/}).first().waitFor();
       const search = page.getByLabel('Search historical rubrics');
       await search.fill('head pain pressing coughing while');
       await page.getByRole('button', {name: /Add Head → PAIN, headache in general → Pressing .* → coughing, while/}).click();
       const grade = page.getByRole('row').filter({hasText: 'Bryonia Alba'});
       await grade.getByRole('cell', {name: '3', exact: true}).waitFor();
-      await page.getByText('Show PDF source excerpt', {exact: true}).click();
-      const excerpt = page.locator('.kent-source-excerpt').filter({hasText: 'Bry.'});
+      const pressing = page.getByRole('button', {name:/^Remove Head → .*Pressing .*coughing, while/}).locator('..');
+      await pressing.getByText('Show PDF source excerpt', {exact:true}).click();
+      const excerpt = pressing.locator('.kent-source-excerpt').filter({hasText: 'Bry.'});
       await excerpt.locator('strong').filter({hasText: 'Bry.'}).waitFor();
       const originalColour = await excerpt.locator('strong').filter({hasText: 'Bry.'}).evaluate(el => getComputedStyle(el).color);
       assert.equal(originalColour, 'rgb(255, 0, 0)');
@@ -167,8 +180,9 @@ const srv = http.createServer(async (req,res) => {
       await page.getByRole('button', {name: /Add Head → BOILING sensation/}).first().click();
       const ungraded = page.getByRole('row').filter({hasText: /PDF page 280.*Aconitum Napellus/i});
       await ungraded.getByRole('cell', {name: '—', exact: true}).waitFor();
-      await page.getByText('Show PDF source excerpt', {exact: true}).last().click();
-      const black = page.locator('.kent-source-excerpt strong').filter({hasText: 'Acon.'});
+      const boiling = page.getByRole('button', {name:/^Remove Head → BOILING sensation/}).locator('..');
+      await boiling.getByText('Show PDF source excerpt', {exact:true}).click();
+      const black = boiling.locator('.kent-source-excerpt strong').filter({hasText:'Acon.'});
       await black.waitFor();
       assert.equal(await black.evaluate(el => getComputedStyle(el).color), 'rgb(0, 0, 0)');
     }
@@ -222,10 +236,10 @@ const srv = http.createServer(async (req,res) => {
     const playbackUrl = await playback.getAttribute('src');
     await page.getByRole('button', {name: 'Start recording'}).click();
     assert.equal(await playback.getAttribute('src'), playbackUrl);
-    await page.getByLabel('Editable transcript preview').fill('Chief complaint sar dard khansi. Duration two days');
+    await page.getByLabel('Editable transcript preview').fill('Chief complaint sar dard hai aur khansi bhi hai. Duration two days');
     await historyField.fill('');
     await page.getByRole('button', {name: 'Create draft from transcript'}).click();
-    assert.match(await historyField.inputValue(), /Chief complaint: sar dard khansi/);
+    assert.match(await historyField.inputValue(), /Chief complaint: sar dard hai aur khansi bhi hai/);
     assert.match(await historyField.inputValue(), /Duration: two days/);
     await page.getByLabel('Patient consented to structured documentation').check();
     await page.locator('#editorSave').click();

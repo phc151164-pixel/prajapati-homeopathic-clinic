@@ -103,3 +103,27 @@ test('medicine view separates source headings and preserves continuation text', 
     {heading: 'Head', text: 'Another section'}
   ]);
 });
+
+
+test('independent transcript complaints search different chapters and linked wording stays together', () => {
+  const {transcriptExcerpts, rubricSearchContext} = require('../public/assets/smart-clinic.js');
+  const contexts = text => transcriptExcerpts(text).map(rubricSearchContext);
+  for (const input of [
+    'सिर में दर्द है और खाँसी भी है।',
+    'seer mein dard hai or cough bhi hai',
+    'sar dard hai aur khansi bhi hai',
+    'I have a headache and a cough.',
+    'Headache, cough',
+  ]) {
+    assert.deepEqual(contexts(input), [
+      {terms: 'head pain', chapter: 'Head'}, {terms: 'cough', chapter: 'Cough'},
+    ]);
+  }
+  assert.deepEqual(contexts('खाँसी के समय सिर में दर्द और दबाव'), [
+    {terms:'head pain cough pressing', chapter:'Head'},
+  ]);
+  assert.deepEqual(contexts('headache when I cough'), [{terms:'head pain cough', chapter:'Head'}]);
+  for (const input of ['No headache and cough', 'headache or cough', 'sar dard khansi']) {
+    assert.deepEqual(contexts(input), [{terms:'', chapter:''}]);
+  }
+});

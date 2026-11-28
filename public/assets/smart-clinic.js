@@ -32,8 +32,8 @@
   }
 
   const symptomVocabulary = [
-    [/सिर (?:में )?दर्द|(?:sar|sir) (?:me(?:in)? )?dard|headache/giu, 'head pain'],
-    [/खाँसी|खांसी|खासी|kha?nsi|khasi|cough(?:ing)?/giu, 'cough'],
+    [/स[िे]र\s+(?:में\s+)?दर्द|\b(?:sar|sir|seer)\s+(?:me(?:in)?\s+)?dard\b|\bheadache\b/giu, 'head pain', 'Head'],
+    [/खाँसी|खांसी|खासी|\b(?:khansi|khasi|khaansi|khaasi|cough(?:ing)?)\b/giu, 'cough', 'Cough'],
     [/दबाव|dabav|dabaav|pressing/giu, 'pressing'],
     [/दाहिनी तरफ|दाईं तरफ|dahini taraf|right side/giu, 'right'],
     [/बाईं तरफ|baayi taraf|bain taraf|left side/giu, 'left'],
@@ -49,10 +49,54 @@
     [/जलन|\bjalan\b|burning/giu, 'burning'],
     [/बुखार|\bbukhar\b|fever/giu, 'fever']
   ];
+  const negation = /(?:नहीं|नही|बिना)|\b(?:no|not|never|without|nahi|nahin|nhi)\b/iu;
+  const clauseBoundary = /\s*(?:[,，]|(?<![\p{L}\p{M}])(?:and|aur|और|तथा|or(?=\s+[^,]+\bbhi\b))(?![\p{L}\p{M}]))\s*/iu;
+  const symptomTerms = new Set(['head pain', 'cough', 'nausea', 'vomiting', 'diarrh', 'constipation', 'vertigo', 'thirst', 'fever']);
+  function detectedTerms(text) {
+    return symptomVocabulary.filter(([pattern]) => text.search(pattern) !== -1);
+  }
+
+  const hasSymptom = part => detectedTerms(part).some(([, term]) => symptomTerms.has(term));
+  const relativeClause = /^(?:when|while|during|with)\b|^(?:जब|जैसे ही)\s/u;
+  function transcriptExcerpts(text) {
+    const excerpts = [];
+    for (const sentence of text.split(/[.!?।;\n]+/u).map(part => part.trim()).filter(Boolean)) {
+      // A qualifier such as “and pressure” belongs to the preceding symptom.
+      // Keep negated lists together so an uncertain negation cannot turn into an affirmed symptom.
+      if (negation.test(sentence)) {
+        excerpts.push(sentence);
+        continue;
+      }
+      let cursor = 0;
+      for (const boundary of sentence.matchAll(new RegExp(clauseBoundary, 'giu'))) {
+        const before = sentence.slice(cursor, boundary.index).trim();
+        const after = sentence.slice(boundary.index + boundary[0].length).split(clauseBoundary)[0].trim();
+        if (!relativeClause.test(normalize(after)) && hasSymptom(before) && hasSymptom(after)) {
+          excerpts.push(before);
+          cursor = boundary.index + boundary[0].length;
+        }
+      }
+      excerpts.push(sentence.slice(cursor).trim());
+    }
+    return [...new Set(excerpts)];
+  }
+
+  function rubricSearchContext(text) {
+    if (negation.test(text)) return {terms: '', chapter: ''};
+    const matches = detectedTerms(text);
+    const head = matches.some(([, , chapter]) => chapter === 'Head');
+    const cough = matches.some(([, , chapter]) => chapter === 'Cough');
+    const linked = /(?:ख[ााँ]+सी|खाँसने|खांसने)\s*(?:के समय|के दौरान|पर|से)|\b(?:khansi|khasi)\s+(?:ke samay|ke dauran|par|se)\b|\b(?:when|while|on|during|with)\s+coughing\b|\b(?:when|while)\s+(?:i\s+)?cough\b/iu.test(text);
+    // A list without a clear separator or timing relationship needs review.
+    if (head && cough && !linked) return {terms: '', chapter: ''};
+    return {
+      terms: matches.map(([, words]) => words).join(' '),
+      chapter: head ? 'Head' : cough ? 'Cough' : ''
+    };
+  }
+
   function englishSearchTerms(text) {
-    if (/(?:नहीं|नही|बिना)|\b(?:no|not|never|without|nahi|nahin|nhi)\b/iu.test(text)) return '';
-    return symptomVocabulary.filter(([pattern]) => text.search(pattern) !== -1)
-      .map(([, words]) => words).join(' ');
+    return rubricSearchContext(text).terms;
   }
 
   function medicineSections(text) {
@@ -72,7 +116,7 @@
   }
 
   if (typeof module !== 'undefined') {
-    module.exports = {draftChart, transcriptDraft, englishSearchTerms, medicineSections};
+    module.exports = {draftChart, transcriptDraft, englishSearchTerms, transcriptExcerpts, rubricSearchContext, medicineSections};
     return;
   }
 
@@ -119,7 +163,7 @@
   function openKent() {
     if (!kentAccount || !window.DecompressionStream || !window.indexedDB || !window.Worker) return Promise.resolve();
     if (kentReady) return kentReady;
-    kentWorker = new Worker('/assets/kent-index-worker.js');
+    kentWorker = new Worker('/assets/kent-index-worker.js?v=2');
     kentWorker.onmessage = ({data}) => {
       const pending = kentPending.get(data.id);
       if (!pending) return;
@@ -183,10 +227,11 @@
     const usePrivateKent = kentCount > 0;
     const usable = usePrivateKent ? entries.filter(entry => entry.source !== 'Kent') : entries;
     const privateMatches = usePrivateKent
-      ? await kentRequest('search', {queries: queries.map(query => ({query, limit}))}) : [];
-    return queries.map((query, index) => {
+      ? await kentRequest('search', {queries: queries.map(({query, chapter}) => ({query, chapter, limit}))}) : [];
+    return queries.map(({query, chapter}, index) => {
       const terms = normalize(query).trim().split(/\s+/u);
-      const fallback = query.trim() ? usable.filter(entry => terms.every(term => entry.words.includes(term))) : [];
+      const fallback = query.trim() ? usable.filter(entry =>
+        (!chapter || normalize(entry.chapter) === normalize(chapter)) && terms.every(term => entry.words.includes(term))) : [];
       const local = privateMatches[index];
       const matches = (local?.matches || []).map(rubric => ({
         ...rubric, source: 'Kent',
@@ -330,8 +375,8 @@
         liveChart.replaceChildren();
         liveStatus.textContent = '';
         if (!text) return;
-        const excerpts = [...new Set(text.split(/[.!?।;\n]+/u).map(part => part.trim()).filter(Boolean))]
-          .map(excerpt => ({excerpt, terms: englishSearchTerms(excerpt)}))
+        const excerpts = transcriptExcerpts(text)
+          .map(excerpt => ({excerpt, ...rubricSearchContext(excerpt)}))
           .filter(({terms}) => terms).slice(-30);
         if (!excerpts.length) {
           liveStatus.textContent = 'No supported symptom terms recognized yet. You can review the transcript and search for a rubric.';
@@ -339,7 +384,7 @@
         }
         try {
           const entries = studyEntries(await library());
-          const matches = await historicalMatches(entries, excerpts.map(({terms}) => terms), 5);
+          const matches = await historicalMatches(entries, excerpts.map(({terms, chapter}) => ({query: terms, chapter})), 5);
           if (version !== chartVersion || !preview.isConnected) return;
           const table = node('table');
           table.className = 'kent-study-table';
@@ -1106,15 +1151,20 @@
     });
     const symptom = node('input');
     const english = node('input');
+    let reviewChapter = '';
+    const reviewNotice = node('p');
+    reviewNotice.setAttribute('role', 'status');
     async function reviewExcerpt(excerpt, terms = englishSearchTerms(excerpt), preferredId) {
       symptom.value = excerpt;
+      reviewChapter = rubricSearchContext(excerpt).chapter;
+      reviewNotice.textContent = '';
       english.value = terms;
       input.value = terms;
       await renderResults(preferredId);
     }
     function refreshTranscript() {
       if (!sessionStudy) return;
-      const excerpts = [...new Set(transcript().split(/[.!?।;\n]+/u).map(text => text.trim()).filter(Boolean))];
+      const excerpts = transcriptExcerpts(transcript());
       excerptList.replaceChildren();
       moreExcerpts.hidden = excerpts.length <= excerptLimit;
       for (const excerpt of excerpts.slice(0, excerptLimit)) {
@@ -1130,14 +1180,23 @@
       const symptomLabel = node('label', 'Review and edit symptom wording');
       const englishLabel = node('label', 'English rubric search terms');
       englishLabel.append(english);
-      symptom.addEventListener('input', () => { english.value = englishSearchTerms(symptom.value); });
+      symptom.addEventListener('input', () => {
+        const {terms, chapter} = rubricSearchContext(symptom.value);
+        english.value = terms;
+        reviewChapter = chapter;
+        reviewNotice.textContent = '';
+      });
       symptomLabel.append(symptom);
       review.append(node('h3', 'Review transcript excerpts'),
         node('p', 'Choose an excerpt and confirm what the patient reported before adding a rubric.'),
         excerptList, moreExcerpts, symptomLabel, englishLabel, action('Find matching rubrics', () => {
+          if (transcriptExcerpts(symptom.value).length > 1) {
+            reviewNotice.textContent = 'Choose one symptom excerpt at a time for rubric search.';
+            return;
+          }
           input.value = english.value.trim() || symptom.value.trim();
           void renderResults();
-        }));
+        }), reviewNotice);
     }
     const selection = node('ul');
     const chart = node('table');
@@ -1185,7 +1244,7 @@
       }
       results.append(node('li', 'Searching historical rubrics…'));
       try {
-        const [{matches, total}] = await historicalMatches(entries, [query], 40);
+        const [{matches, total}] = await historicalMatches(entries, [{query, chapter: reviewChapter}], 40);
         if (request !== version) return;
         if (preferredId) matches.sort((a, b) => Number(b.id === preferredId) - Number(a.id === preferredId));
         results.replaceChildren();
@@ -1272,6 +1331,7 @@
         Boolean(saved.get(entry.id)?.bookmarked) !== selected.has(entry.id));
     }
     input.addEventListener('input', () => {
+      reviewChapter = '';
       version++;
       clearTimeout(searchTimer);
       searchTimer = setTimeout(renderResults, 180);

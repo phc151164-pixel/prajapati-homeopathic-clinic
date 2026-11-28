@@ -91,12 +91,13 @@ async function storage(mode, blob) {
 }
 
 function search(queries) {
-  return queries.map(({query, limit}) => {
+  return queries.map(({query, chapter: preferredChapter, limit}) => {
+    const chapterFilter = preferredChapter ? normalize(preferredChapter) : '';
     const terms = [...new Set(normalize(query).match(/[\p{L}\p{M}\d]+/gu) || [])];
     if (!terms.length || !rubrics) return {total: 0, matches: []};
     const matches = [];
     for (const {rubric, words, title, chapter} of rubrics.values()) {
-      if (!terms.every(term => words.includes(term))) continue;
+      if ((chapterFilter && chapter !== chapterFilter) || !terms.every(term => words.includes(term))) continue;
       const relevance = terms.reduce((score, term) =>
         score + (chapter === term ? 4 : title.includes(term) ? 2 : 0), 0);
       matches.push({rubric, relevance});
