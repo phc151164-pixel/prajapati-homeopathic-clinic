@@ -13,6 +13,14 @@ The feature lives inside the existing Doctor Dashboard at `/admin.html`. Use the
 
 Install Playwright in a disposable checkout with `npm install --no-save --package-lock=false playwright` and download its Chromium build with `npx playwright install chromium`. Run `node scripts/stage-pdf-reader.cjs`, then `node scripts/smart-clinic-browser-smoke.cjs`. The script runs the actual dashboard UI against a loopback server with synthetic test data and exercises both desktop and 390 px layouts. Set `PHC_TEST_CHROMIUM_PATH` if you already have a compatible Chromium build. Hosted acceptance testing still uses PHC Safety Test.
 
+## Private Kent repertorisation
+
+In the doctor dashboard, open **Repertorisation** or the consultation document. Open **Private Kent index** and choose the reconciled `Kent_Repertory_Remaining_Reconciled.jsonl.gz`. The index is stored for that doctor in the current browser. Refreshing the dashboard restores it. Import once on each browser that needs the full index. The uploaded file and historical rubric searches stay on the device.
+
+With a synthetic patient, record a short Hindi, English or Hinglish clip after ticking the applicable consent boxes. After transcription, choose an excerpt, review its wording, and add the matching historical rubric. Check the displayed PDF page, source typography and grade. The chart is for historical reference and shows a dash for an unverified grade. A chart stays in the consultation form until it is closed.
+
+To run the browser smoke test against the full index, set `PHC_TEST_KENT_FILE` to the private file path. The test uses fake microphone input and synthetic transcription responses. It verifies the import, transcript-to-rubric flow, source colours, an ungraded entry, restoration after refresh and the mobile-width layout.
+
 ## Acceptance checks
 
 | Area | Check |

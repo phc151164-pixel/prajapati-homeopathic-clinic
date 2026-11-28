@@ -39,7 +39,15 @@
     [/बाईं तरफ|baayi taraf|bain taraf|left side/giu, 'left'],
     [/झुकने पर|jhukne par|stooping/giu, 'stooping'],
     [/कनपटी|kanpati|temples?/giu, 'temples'],
-    [/अंधेरा|अँधेरा|andhera|darkness/giu, 'darkness']
+    [/अंधेरा|अँधेरा|andhera|darkness/giu, 'darkness'],
+    [/मतली|जी मिचल|matli|jee michal|\bnausea\b/giu, 'nausea'],
+    [/उल्टी|उलटी|\bulti\b|vomit(?:ing)?/giu, 'vomiting'],
+    [/दस्त|\bdast\b|diarrh[oe]+a/giu, 'diarrh'],
+    [/कब्ज़?|\bkabz\b|constipation/giu, 'constipation'],
+    [/चक्कर|\bchakkar\b|dizz(?:y|iness)|vertigo/giu, 'vertigo'],
+    [/प्यास|प्‍यास|\bpyaas\b|thirst/giu, 'thirst'],
+    [/जलन|\bjalan\b|burning/giu, 'burning'],
+    [/बुखार|\bbukhar\b|fever/giu, 'fever']
   ];
   function englishSearchTerms(text) {
     if (/(?:नहीं|नही|बिना)|\b(?:no|not|never|without|nahi|nahin|nhi)\b/iu.test(text)) return '';
@@ -83,6 +91,153 @@
     element.addEventListener('click', click);
     return element;
   };
+  let kentAccount, kentWorker, kentReady;
+  let kentCount = 0;
+  let kentMessage = 0;
+  const kentPending = new Map();
+  const kentDetails = new Map();
+  function closeKent() {
+    kentWorker?.terminate();
+    kentWorker = kentReady = undefined;
+    kentCount = 0;
+    kentDetails.clear();
+    for (const {reject} of kentPending.values()) reject(Error('The Kent index was closed.'));
+    kentPending.clear();
+  }
+  function kentRequest(action, data = {}) {
+    return new Promise((resolve, reject) => {
+      const id = ++kentMessage;
+      kentPending.set(id, {resolve, reject});
+      try {
+        kentWorker.postMessage({...data, id, action});
+      } catch (error) {
+        kentPending.delete(id);
+        reject(error);
+      }
+    });
+  }
+  function openKent() {
+    if (!kentAccount || !window.DecompressionStream || !window.indexedDB || !window.Worker) return Promise.resolve();
+    if (kentReady) return kentReady;
+    kentWorker = new Worker('/assets/kent-index-worker.js');
+    kentWorker.onmessage = ({data}) => {
+      const pending = kentPending.get(data.id);
+      if (!pending) return;
+      kentPending.delete(data.id);
+      if (data.error) pending.reject(Error(data.error));
+      else pending.resolve(data.result);
+    };
+    kentWorker.onerror = closeKent;
+    kentReady = kentRequest('open', {account: kentAccount}).then(({count}) => {
+      kentCount = count;
+    });
+    return kentReady;
+  }
+
+  function kentImport(onChange) {
+    const box = node('details');
+    const picker = node('input');
+    picker.type = 'file';
+    picker.accept = '.gz,application/gzip';
+    const label = node('label', 'Choose reconciled Kent JSONL.GZ');
+    label.append(picker);
+    const status = node('p');
+    status.setAttribute('role', 'status');
+    const showCount = () => {
+      status.textContent = kentCount ? kentCount.toLocaleString('en-IN') + ' Kent rubrics available on this browser.'
+        : 'Import the reconciled Kent index to search the complete set.';
+    };
+    void openKent().then(() => {
+      if (kentWorker) showCount();
+      else {
+        picker.disabled = true;
+        status.textContent = 'Private Kent import is unavailable in this browser.';
+      }
+    }).catch(error => { status.textContent = error.message; });
+    picker.addEventListener('change', async () => {
+      const file = picker.files[0];
+      if (!file) return;
+      picker.disabled = true;
+      status.textContent = 'Checking the Kent index…';
+      try {
+        await openKent().catch(() => {});
+        const {count} = await kentRequest('import', {file});
+        kentCount = count;
+        kentDetails.clear();
+        showCount();
+        onChange();
+      } catch (error) {
+        status.textContent = error.message;
+      } finally {
+        picker.disabled = false;
+        picker.value = '';
+      }
+    });
+    box.append(node('summary', 'Private Kent index'), status,
+      node('p', 'Import once on this browser. The index and rubric searches stay on this device.'), label);
+    return box;
+  }
+
+  async function historicalMatches(entries, queries, limit) {
+    await openKent().catch(() => {});
+    const usePrivateKent = kentCount > 0;
+    const usable = usePrivateKent ? entries.filter(entry => entry.source !== 'Kent') : entries;
+    const privateMatches = usePrivateKent
+      ? await kentRequest('search', {queries: queries.map(query => ({query, limit}))}) : [];
+    return queries.map((query, index) => {
+      const terms = normalize(query).trim().split(/\s+/u);
+      const fallback = query.trim() ? usable.filter(entry => terms.every(term => entry.words.includes(term))) : [];
+      const local = privateMatches[index];
+      const matches = (local?.matches || []).map(rubric => ({
+        ...rubric, source: 'Kent',
+        edition: 'Private Kent reference', pageLabel: 'PDF page ' + rubric.page, privateKent: true
+      }));
+      return {total: (local?.total || 0) + fallback.length,
+        matches: [...matches, ...fallback.slice(0, limit)].slice(0, limit)};
+    });
+  }
+
+  function studyEntries({repertory, boericke}) {
+    return [repertory, boericke].flatMap((index, i) => index.rubrics.map(rubric => {
+      const label = [rubric.chapter, ...rubric.path].join(' → ');
+      const source = i === 0 ? 'Kent' : 'Boericke';
+      return {...rubric, label, source, edition: index.edition, pageLabel: 'Page ' + rubric.page,
+        words: normalize(label + ' ' + source + ' ' + rubric.aliases),
+        medicines: rubric.historicalMedicines, pageUrl: index.pages[rubric.page]};
+    }));
+  }
+
+  async function loadRubric(entry) {
+    if (!entry.privateKent) return entry;
+    if (!kentDetails.has(entry.id)) {
+      if (kentDetails.size >= 25) kentDetails.delete(kentDetails.keys().next().value);
+      kentDetails.set(entry.id, kentRequest('details', {rubricId: entry.id}).catch(error => {
+        kentDetails.delete(entry.id);
+        throw error;
+      }));
+    }
+    return {...entry, ...await kentDetails.get(entry.id)};
+  }
+
+  function sourceExcerpt(lines) {
+    const box = node('details');
+    box.append(node('summary', 'Show PDF source excerpt'));
+    for (const line of lines) {
+      const passage = node('p');
+      passage.className = 'kent-source-excerpt';
+      passage.append(node('small', 'PDF page ' + line.pdfPage), node('br'));
+      for (const span of line.spans) {
+        const run = node(span.bold ? 'strong' : 'span');
+        const color = span.displayColor || span.color;
+        if (/^#[a-f0-9]{6}$/i.test(color)) run.style.color = color;
+        run.append(span.italic ? node('em', span.text) : document.createTextNode(span.text));
+        passage.append(run);
+      }
+      box.append(passage);
+    }
+    return box;
+  }
+
   function historicalMedicineReference(medicines, pageUrl) {
     if (!medicines?.length) return node('p', 'Medicine entries have not been verified for this rubric.');
     const details = node('details');
@@ -143,71 +298,108 @@
       liveStatus.setAttribute('role', 'status');
       let liveIndex;
       let chartVersion = 0;
+      let liveTimer;
+      const selection = new Map();
+      let studyPanel, studyLoading;
+      const study = node('div');
+      const studyStatus = node('p');
+      studyStatus.setAttribute('role', 'status');
+      async function library() {
+        liveIndex ||= ui.api(endpoint + '?section=library').catch(error => {
+          liveIndex = undefined;
+          throw error;
+        });
+        return liveIndex;
+      }
+      async function showStudy() {
+        if (studyPanel) {
+          studyPanel.refreshTranscript();
+          return studyPanel;
+        }
+        studyLoading ||= (async () => {
+          const data = await library();
+          if (!preview.isConnected) return;
+          studyPanel = await repertorisation(study, ui.api, () => preview.value, {data, selection});
+          return studyPanel;
+        })().finally(() => { studyLoading = undefined; });
+        return studyLoading;
+      }
       async function updateLiveChart() {
         const version = ++chartVersion;
         const text = preview.value.trim();
         liveChart.replaceChildren();
         liveStatus.textContent = '';
         if (!text) return;
+        const excerpts = [...new Set(text.split(/[.!?।;\n]+/u).map(part => part.trim()).filter(Boolean))]
+          .map(excerpt => ({excerpt, terms: englishSearchTerms(excerpt)}))
+          .filter(({terms}) => terms).slice(-30);
+        if (!excerpts.length) {
+          liveStatus.textContent = 'No supported symptom terms recognized yet. You can review the transcript and search for a rubric.';
+          return;
+        }
         try {
-          liveIndex ||= ui.api(endpoint + '?section=library').catch(error => {
-            liveIndex = undefined;
-            throw error;
-          });
-          const {repertory, boericke} = await liveIndex;
+          const entries = studyEntries(await library());
+          const matches = await historicalMatches(entries, excerpts.map(({terms}) => terms), 5);
           if (version !== chartVersion || !preview.isConnected) return;
           const table = node('table');
+          table.className = 'kent-study-table';
           const header = table.createTHead().insertRow();
           for (const heading of ['Spoken excerpt', 'English symptom terms', 'Historical rubric candidates']) {
             header.append(node('th', heading));
           }
           const body = table.createTBody();
-          const excerpts = [...new Set(text.split(/[.!?।;\n]+/u).map(part => part.trim()).filter(Boolean))];
-          for (const excerpt of excerpts.slice(-30)) {
-            const terms = englishSearchTerms(excerpt);
-            if (!terms) continue;
-            const matches = [[repertory, 'Kent'], [boericke, 'Boericke']].flatMap(([index, source]) =>
-              index.rubrics.flatMap(rubric => {
-                const path = [rubric.chapter, ...rubric.path].join(' → ');
-                const words = normalize(path + ' ' + rubric.aliases);
-                return terms.split(' ').every(term => words.includes(term))
-                  ? [{label: path + ' · ' + source + ' · ' + rubric.page,
-                    medicines: rubric.historicalMedicines, pageUrl: index.pages[rubric.page]}] : [];
-              }));
+          for (const [i, {excerpt, terms}] of excerpts.entries()) {
             const row = body.insertRow();
             for (const value of [excerpt, terms]) row.insertCell().textContent = value;
-            const cell = row.insertCell();
             const candidates = node('ul');
-            for (const match of matches.slice(0, 5)) {
-              const item = node('li', match.label);
-              item.append(historicalMedicineReference(match.medicines, match.pageUrl));
+            const {matches: rubrics, total} = matches[i];
+            for (const rubric of rubrics) {
+              const item = node('li');
+              item.append(action(rubric.label + ' · ' + rubric.source + ' · ' + rubric.pageLabel, async () => {
+                try {
+                  const panel = await showStudy();
+                  await panel?.review(excerpt, terms, rubric.id);
+                } catch (error) {
+                  studyStatus.textContent = error.message;
+                }
+              }));
               candidates.append(item);
             }
-            if (!matches.length) candidates.append(node('li', 'No match in the current index.'));
-            if (matches.length > 5) candidates.append(node('li', (matches.length - 5) + ' more matches in rubric review.'));
-            cell.append(candidates);
+            if (!rubrics.length) candidates.append(node('li', 'No matching rubric.'));
+            if (total > rubrics.length) candidates.append(node('li', total + ' matches in rubric review.'));
+            row.insertCell().append(candidates);
           }
-          if (body.rows.length) liveChart.append(table);
-          liveStatus.textContent = body.rows.length
-            ? 'Draft suggestions. Review each excerpt and rubric before using it in your study chart.'
-            : 'No supported symptom terms recognized yet.';
+          liveChart.append(table);
+          liveStatus.textContent = 'Draft suggestions. Review each excerpt and select the matching rubric to build the chart.';
         } catch (error) {
           if (version === chartVersion) liveStatus.textContent = error.message;
         }
       }
-      preview.addEventListener('input', updateLiveChart);
-      const study = node('div');
-      const studyStatus = node('p');
-      studyStatus.setAttribute('role', 'status');
+      function refreshLiveChart() {
+        chartVersion++;
+        clearTimeout(liveTimer);
+        liveTimer = setTimeout(updateLiveChart, 180);
+        studyPanel?.refreshTranscript();
+      }
+      preview.addEventListener('input', refreshLiveChart);
+      preview.addEventListener('phc:transcript-ready', () => {
+        if (preview.value.trim()) void showStudy().catch(error => { studyStatus.textContent = error.message; });
+      });
+      const importKent = kentImport(() => {
+        for (const [id, rubric] of selection) {
+          if (rubric.source === 'Kent') selection.delete(id);
+        }
+        studyPanel?.refreshIndex();
+        refreshLiveChart();
+      });
       const openStudy = action('Review symptoms and find rubrics', async () => {
         if (!preview.value.trim()) {
           studyStatus.textContent = 'Record or enter a transcript first.';
           return;
         }
         openStudy.disabled = true;
-        studyStatus.textContent = 'Loading historical rubric index…';
         try {
-          await repertorisation(study, ui.api, preview.value);
+          await showStudy();
           studyStatus.textContent = '';
         } catch (error) {
           studyStatus.textContent = error.message;
@@ -215,7 +407,6 @@
           openStudy.disabled = false;
         }
       });
-      preview.addEventListener('input', () => study.replaceChildren());
       const useTranscript = action('Create draft from transcript', () => {
         const draft = transcriptDraft(preview.value.trim());
         if (!draft) return ui.message('Add or transcribe some text first.', true, 'editorMessage');
@@ -247,12 +438,14 @@
         else ui.message('There is not enough room to insert every heading.', true, 'editorMessage');
         history.focus();
       });
-      ui.modal('Consultation document', [detail, ...fields, chart, classical, formatDraft, consultationRecorder(preview, ui), transcript, ui.el('h3', 'Live symptom and rubric draft'), liveStatus, liveChart, useTranscript, openStudy, studyStatus, study], values => ui.api(endpoint, {
+      ui.modal('Consultation document', [detail, ...fields, chart, classical, formatDraft, consultationRecorder(preview, ui), transcript, ui.el('h3', 'Live symptom and rubric draft'), importKent, liveStatus, liveChart, useTranscript, openStudy, studyStatus, study], values => ui.api(endpoint, {
         action: 'consultation', visitId: visit.id, version: saved?.version || 0,
         history: draftChart(values.history), observations: values.observations, follow_up: values.follow_up,
         consent: values.consent === 'yes', reviewed: values.reviewed === 'yes'
       }));
       document.getElementById('editor').addEventListener('close', () => {
+        clearTimeout(liveTimer);
+        chartVersion++;
         stopDictation();
         disposeRecording();
       }, {once: true});
@@ -382,6 +575,7 @@
           const recording = new Blob(chunks, {type: recorder.mimeType});
           url = URL.createObjectURL(recording);
           void voice.transcribeRecording(recording);
+          if (voice.usedLiveRecognition) preview.dispatchEvent(new Event('phc:transcript-ready'));
           audio.src = url;
           audio.hidden = false;
           discard.disabled = false;
@@ -578,9 +772,10 @@
             if (text.trim()) {
               receivedText = true;
               target.value = [target.value.trimEnd(), text.trim()].filter(Boolean).join('\n');
+              target.dispatchEvent(new Event('input'));
             }
           }
-          target.dispatchEvent(new Event('input'));
+          if (receivedText) target.dispatchEvent(new Event('phc:transcript-ready'));
           status.textContent = receivedText ? 'Saaras transcript ready for review.' : 'Saaras returned an empty transcript.';
         } catch (error) {
           if (token === generation) {
@@ -622,8 +817,9 @@
           worker.terminate();
           worker = null;
           if (data.text) {
-            target.value = data.text;
+            target.value = [target.value.trimEnd(), data.text.trim()].filter(Boolean).join('\n');
             target.dispatchEvent(new Event('input'));
+            target.dispatchEvent(new Event('phc:transcript-ready'));
           }
           status.textContent = data.text ? 'Transcript ready. Review it before saving.' : 'No speech recognized.';
         };
@@ -652,7 +848,7 @@
       status.textContent = 'PHC can transcribe the audio on this device after recording stops.';
     }
     box.append(status);
-    return {box, prepare, start, stop, abort, transcribeRecording, get limit() { return useSarvam ? 40 * 60 * 1000 : 900000; }};
+    return {box, prepare, start, stop, abort, transcribeRecording, get usedLiveRecognition() { return !useSarvam && !fallbackLanguage && checkbox.checked; }, get limit() { return useSarvam ? 40 * 60 * 1000 : 900000; }};
   }
 
   function kentPrivateReader() {
@@ -887,23 +1083,13 @@
     return guide;
   }
 
-  async function repertorisation(container, api, transcript) {
-    const {repertory, boericke, progress} = await api(endpoint + '?section=library');
-    const entries = [repertory, boericke].flatMap((index, position) =>
-      index.rubrics.map(rubric => ({
-        id: rubric.id,
-        label: [rubric.chapter, ...rubric.path].join(' → '),
-        terms: rubric.aliases,
-        source: position === 0 ? 'Kent' : 'Boericke',
-        chapter: rubric.chapter,
-        page: rubric.page,
-        edition: index.edition,
-        medicines: rubric.historicalMedicines,
-        pageUrl: index.pages[rubric.page]
-      })));
-    const sessionStudy = transcript !== undefined;
-    const saved = new Map((sessionStudy ? [] : progress).map(item => [item.book_id, item]));
-    const selected = new Set(entries.filter(entry => saved.get(entry.id)?.bookmarked).map(entry => entry.id));
+  async function repertorisation(container, api, transcript, options = {}) {
+    const data = options.data || await api(endpoint + '?section=library');
+    const entries = studyEntries(data);
+    const sessionStudy = Boolean(transcript);
+    const saved = new Map((sessionStudy ? [] : data.progress).map(item => [item.book_id, item]));
+    const selected = options.selection || new Map(entries.filter(entry => saved.get(entry.id)?.bookmarked)
+      .map(entry => [entry.id, entry]));
     const panel = node('section');
     panel.className = 'card';
     const input = node('input');
@@ -912,51 +1098,64 @@
     label.append(input);
     const results = node('ul');
     const review = node('div');
-    if (sessionStudy) {
-      const excerptList = node('ul');
-      const symptom = node('input');
-      const symptomLabel = node('label', 'Review and edit symptom wording');
-      const english = node('input');
-      const englishLabel = node('label', 'English rubric search terms');
-      englishLabel.append(english);
-      const translate = () => {
-        english.value = englishSearchTerms(symptom.value);
-      };
-      symptom.addEventListener('input', translate);
-      symptomLabel.append(symptom);
-      const excerpts = [...new Set(transcript.split(/[.!?।;\n]+/u).map(text => text.trim()).filter(Boolean))];
-      for (const excerpt of excerpts.slice(0, 30)) {
+    const excerptList = node('ul');
+    let excerptLimit = 30;
+    const moreExcerpts = action('Show more transcript excerpts', () => {
+      excerptLimit += 30;
+      refreshTranscript();
+    });
+    const symptom = node('input');
+    const english = node('input');
+    async function reviewExcerpt(excerpt, terms = englishSearchTerms(excerpt), preferredId) {
+      symptom.value = excerpt;
+      english.value = terms;
+      input.value = terms;
+      await renderResults(preferredId);
+    }
+    function refreshTranscript() {
+      if (!sessionStudy) return;
+      const excerpts = [...new Set(transcript().split(/[.!?।;\n]+/u).map(text => text.trim()).filter(Boolean))];
+      excerptList.replaceChildren();
+      moreExcerpts.hidden = excerpts.length <= excerptLimit;
+      for (const excerpt of excerpts.slice(0, excerptLimit)) {
         const item = node('li');
         item.append(action(excerpt, () => {
-          symptom.value = excerpt;
-          translate();
+          void reviewExcerpt(excerpt);
           symptom.focus();
         }));
         excerptList.append(item);
       }
+    }
+    if (sessionStudy) {
+      const symptomLabel = node('label', 'Review and edit symptom wording');
+      const englishLabel = node('label', 'English rubric search terms');
+      englishLabel.append(english);
+      symptom.addEventListener('input', () => { english.value = englishSearchTerms(symptom.value); });
+      symptomLabel.append(symptom);
       review.append(node('h3', 'Review transcript excerpts'),
-        node('p', 'Choose an excerpt and keep only the confirmed symptom words. Check for negation and who reported the symptom.'),
-        excerptList, symptomLabel,
-        node('p', 'English suggestions cover common indexed terms. Check the meaning before searching.'),
-        englishLabel, action('Find matching rubrics', () => {
+        node('p', 'Choose an excerpt and confirm what the patient reported before adding a rubric.'),
+        excerptList, moreExcerpts, symptomLabel, englishLabel, action('Find matching rubrics', () => {
           input.value = english.value.trim() || symptom.value.trim();
-          render();
+          void renderResults();
         }));
     }
     const selection = node('ul');
     const chart = node('table');
+    chart.className = 'kent-study-table';
     const header = chart.createTHead().insertRow();
-    for (const label of ['Historical source', 'Chapter', 'Selected entries']) {
-      header.append(node('th', label));
-    }
+    for (const label of ['Historical source', 'Chapter', 'Selected entries']) header.append(node('th', label));
     const chartBody = chart.createTBody();
     const gradeChart = node('div');
     const status = node('p');
     status.setAttribute('role', 'status');
     let saving = false;
+    const pending = new Set();
+    let version = 0;
+    let indexVersion = 0;
+    let searchTimer;
     const save = action('Save study list', async () => {
       saving = true;
-      render();
+      renderSelection();
       try {
         for (const entry of entries) {
           const prior = saved.get(entry.id);
@@ -972,32 +1171,61 @@
         status.textContent = error.message;
       } finally {
         saving = false;
-        render();
+        renderSelection();
+        void renderResults();
       }
     });
-    function render() {
-      const query = normalize(input.value).trim();
-      const terms = query.split(/\s+/u);
-      const matching = sessionStudy && !query ? [] : entries.filter(entry => terms.every(term =>
-        normalize(entry.label + ' ' + entry.source + ' ' + entry.terms).includes(term)));
+    async function renderResults(preferredId) {
+      const request = ++version;
+      const query = input.value.trim();
       results.replaceChildren();
-      selection.replaceChildren();
-      for (const entry of matching.slice(0, 40)) {
-        const item = node('li');
-        const add = action('Add ' + entry.label + ' (' + entry.source + ')', () => {
-          selected.add(entry.id);
-          status.textContent = '';
-          render();
-        });
-        add.disabled = saving || selected.has(entry.id);
-        item.append(add, node('p', entry.edition + ' · Page ' + entry.page));
-        results.append(item);
+      if (!query) {
+        results.append(node('li', 'Enter symptom words to find historical rubrics.'));
+        return;
       }
-      if (!matching.length) results.append(node('li', sessionStudy && !query ?
-        'Enter reviewed symptom words to find historical rubrics.' : 'No matching rubrics in the current index.'));
-      if (matching.length > 40) results.append(node('li', 'Showing 40 of ' + matching.length + ' matches. Refine your search to see more.'));
+      results.append(node('li', 'Searching historical rubrics…'));
+      try {
+        const [{matches, total}] = await historicalMatches(entries, [query], 40);
+        if (request !== version) return;
+        if (preferredId) matches.sort((a, b) => Number(b.id === preferredId) - Number(a.id === preferredId));
+        results.replaceChildren();
+        for (const entry of matches) {
+          const item = node('li');
+          const add = action('Add ' + entry.label + ' (' + entry.source + ')', async () => {
+            const index = indexVersion;
+            pending.add(entry.id);
+            add.disabled = true;
+            status.textContent = 'Loading source rubric…';
+            try {
+              const rubric = await loadRubric(entry);
+              if (index === indexVersion) {
+                selected.set(entry.id, rubric);
+                status.textContent = '';
+              }
+            } catch (error) {
+              if (index === indexVersion) status.textContent = error.message;
+            } finally {
+              pending.delete(entry.id);
+              renderSelection();
+              void renderResults(preferredId);
+            }
+          });
+          add.disabled = saving || pending.has(entry.id) || selected.has(entry.id);
+          item.append(add, node('p', entry.edition + ' · ' + entry.pageLabel));
+          results.append(item);
+        }
+        if (!total) results.append(node('li', 'No matching rubrics in the current index.'));
+        if (total > matches.length) results.append(node('li', 'Showing ' + matches.length + ' of ' + total + ' matches. Refine your search to see more.'));
+      } catch (error) {
+        if (request === version) results.replaceChildren(node('li', error.message));
+      }
+    }
+    function renderSelection() {
+      selection.replaceChildren();
+      chartBody.replaceChildren();
+      gradeChart.replaceChildren();
       const groups = new Map();
-      for (const entry of entries.filter(entry => selected.has(entry.id))) {
+      for (const entry of selected.values()) {
         const key = entry.source + ' / ' + entry.chapter;
         const group = groups.get(key) || {source: entry.source, chapter: entry.chapter, count: 0};
         group.count++;
@@ -1005,51 +1233,67 @@
         const item = node('li');
         const remove = action('Remove ' + entry.label + ' (' + entry.source + ')', () => {
           selected.delete(entry.id);
-          status.textContent = '';
-          render();
+          renderSelection();
+          void renderResults();
         });
         remove.disabled = saving;
-        item.append(remove, node('p', entry.edition + ' · Page ' + entry.page),
+        item.append(remove, node('p', entry.edition + ' · ' + entry.pageLabel),
           historicalMedicineReference(entry.medicines, entry.pageUrl));
+        if (entry.sourceLines) item.append(sourceExcerpt(entry.sourceLines));
         selection.append(item);
       }
-      chartBody.replaceChildren();
       for (const group of groups.values()) {
         const row = chartBody.insertRow();
         for (const value of [group.source, group.chapter, group.count]) row.insertCell().textContent = value;
       }
       chart.hidden = !selected.size;
-      gradeChart.replaceChildren();
-      const chosen = entries.filter(entry => selected.has(entry.id));
-      if (chosen.length) {
+      if (selected.size) {
         const table = node('table');
+        table.className = 'kent-study-table';
         const heading = table.createTHead().insertRow();
         for (const label of ['Historical rubric', 'Medicine', 'Source grade']) heading.append(node('th', label));
         const body = table.createTBody();
-        for (const entry of chosen) {
-          const graded = (entry.medicines || []).filter(medicine => Number.isInteger(medicine.grade));
-          graded.sort((a, b) => b.grade - a.grade || a.name.localeCompare(b.name));
-          for (const medicine of graded.length ? graded : [null]) {
+        for (const entry of selected.values()) {
+          const medicines = [...(entry.medicines || [])];
+          medicines.sort((a, b) => (b.grade || 0) - (a.grade || 0) || a.name.localeCompare(b.name));
+          for (const medicine of medicines.length ? medicines : [null]) {
             const row = body.insertRow();
-            row.insertCell().textContent = entry.label + ' · ' + entry.source + ' · ' + entry.page;
-            row.insertCell().textContent = medicine?.name || 'No verified grades available';
+            row.insertCell().textContent = entry.label + ' · ' + entry.source + ' · ' + entry.pageLabel;
+            row.insertCell().textContent = medicine?.name || 'No medicine entry available';
             row.insertCell().textContent = medicine?.grade ?? '—';
           }
         }
-        gradeChart.append(node('h3', 'Historical medicine grade chart'), table);
+        gradeChart.append(node('h3', 'Historical medicine grade chart'),
+          node('p', 'For historical study. A dash indicates an unverified source grade.'), table);
+      } else {
+        selection.append(node('li', 'No rubrics selected.'));
       }
-      if (!selected.size) selection.append(node('li', 'No rubrics selected.'));
       save.disabled = saving || !entries.some(entry =>
         Boolean(saved.get(entry.id)?.bookmarked) !== selected.has(entry.id));
     }
-    input.addEventListener('input', render);
-    panel.append(node('p', entries.length + ' indexed rubrics for historical study.'),
-      review, label, node('h2', 'Search results'), results,
-      node('h2', 'Selected rubrics'), selection, chart, gradeChart);
-    if (!sessionStudy) panel.append(save, status);
-    render();
+    input.addEventListener('input', () => {
+      version++;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(renderResults, 180);
+    });
+    function refreshIndex() {
+      indexVersion++;
+      renderSelection();
+      void renderResults();
+    }
+    panel.append(review, label, node('h2', 'Search results'), results,
+      node('h2', 'Selected rubrics'), selection, chart, gradeChart, status);
+    if (!sessionStudy) panel.append(kentImport(() => {
+      for (const [id, rubric] of selected) {
+        if (rubric.privateKent) selected.delete(id);
+      }
+      refreshIndex();
+    }), node('p', 'Save study list applies to the built-in index. Imported Kent rubrics can be charted in this session.'), save);
+    refreshTranscript();
+    refreshIndex();
     container.replaceChildren(panel);
     if (!sessionStudy) container.prepend(kentPrivateReader(), boerickeOcrReader(), studyWorkflow());
+    return {refreshTranscript, refreshIndex, review: reviewExcerpt};
   }
 
   const medicineNames = new Map(Object.entries({
@@ -1202,7 +1446,13 @@
       disposeRecording = () => {};
       stopDictation = () => {};
     },
-    init() {
+    clearAccount() {
+      closeKent();
+      kentAccount = undefined;
+    },
+    init(account) {
+      if (account !== kentAccount) closeKent();
+      kentAccount = account;
       try { document.documentElement.dataset.theme = localStorage.getItem('phc-theme') || 'light'; } catch {}
       navigator.serviceWorker?.register('/admin-sw.js', {scope: '/admin'}).catch(() => {});
     },

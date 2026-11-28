@@ -58,3 +58,27 @@
 .phc-repertory-ocr h3 { font-size: 1.3rem; font-weight: 750; }
 .phc-repertory-ocr strong { font-size: 1.12em; font-weight: 750; }
 .phc-repertory-ocr p { overflow-wrap: anywhere; }
+
+/* Source typography is defined on a light paper background in both themes. */
+.kent-source-excerpt {
+  background: #fff;
+  color: #111;
+  padding: 0.6rem;
+  border-radius: 0.35rem;
+  overflow-wrap: anywhere;
+}
+
+
+.kent-study-table {
+  width: 100%;
+  table-layout: fixed;
+}
+.kent-study-table :is(th, td) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+.kent-study-table button {
+  max-width: 100%;
+  white-space: normal;
+}

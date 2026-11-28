@@ -6,6 +6,7 @@ const path = require('node:path');
 const http = require('node:http');
 const assert = require('node:assert/strict');
 const root = path.resolve(__dirname, '..');
+const kentFile = process.env.PHC_TEST_KENT_FILE;
 const publicRoot = path.join(root, 'public');
 const catalog = require(path.join(root,'docs/reference-library-catalog.json'));
 const boericke = require(path.join(root,'docs/boericke-repertory-index.json'));
@@ -147,6 +148,30 @@ const srv = http.createServer(async (req,res) => {
     await page.getByRole('button', {name: 'Find matching rubrics'}).click();
     await page.getByRole('button', {name: /Add Head → Pain → Pressing → Coughing/}).click();
     await page.getByRole('cell', {name: 'Kent', exact: true}).waitFor();
+    if (kentFile) {
+      await page.getByText('Private Kent index', {exact: true}).click();
+      const picker = page.getByLabel('Choose reconciled Kent JSONL.GZ');
+      await picker.setInputFiles(kentFile);
+      await page.getByText('64,273 Kent rubrics available on this browser.').waitFor();
+      const search = page.getByLabel('Search historical rubrics');
+      await search.fill('head pain pressing coughing while');
+      await page.getByRole('button', {name: /Add Head → PAIN, headache in general → Pressing .* → coughing, while/}).click();
+      const grade = page.getByRole('row').filter({hasText: 'Bryonia Alba'});
+      await grade.getByRole('cell', {name: '3', exact: true}).waitFor();
+      await page.getByText('Show PDF source excerpt', {exact: true}).click();
+      const excerpt = page.locator('.kent-source-excerpt').filter({hasText: 'Bry.'});
+      await excerpt.locator('strong').filter({hasText: 'Bry.'}).waitFor();
+      const originalColour = await excerpt.locator('strong').filter({hasText: 'Bry.'}).evaluate(el => getComputedStyle(el).color);
+      assert.equal(originalColour, 'rgb(255, 0, 0)');
+      await search.fill('head boiling bubbling');
+      await page.getByRole('button', {name: /Add Head → BOILING sensation/}).first().click();
+      const ungraded = page.getByRole('row').filter({hasText: /PDF page 280.*Aconitum Napellus/i});
+      await ungraded.getByRole('cell', {name: '—', exact: true}).waitFor();
+      await page.getByText('Show PDF source excerpt', {exact: true}).last().click();
+      const black = page.locator('.kent-source-excerpt strong').filter({hasText: 'Acon.'});
+      await black.waitFor();
+      assert.equal(await black.evaluate(el => getComputedStyle(el).color), 'rgb(0, 0, 0)');
+    }
     await page.evaluate(() => {
       // Hindi uses the app model independently of Chrome pack availability.
       window.SpeechRecognition.available = async () => 'unavailable';
@@ -159,7 +184,7 @@ const srv = http.createServer(async (req,res) => {
           if (!(samples instanceof Float32Array) || !samples.length || language !== 'hindi') {
             throw new Error('Expected decoded Hindi recording');
           }
-          queueMicrotask(() => this.onmessage({data: {text: 'खाँसी के समय सिर में दर्द'}}));
+          queueMicrotask(() => this.onmessage({data: {text: 'खाँसी के समय सिर में दर्द और दबाव'}}));
         }
         terminate() {}
       };
@@ -173,7 +198,13 @@ const srv = http.createServer(async (req,res) => {
     await page.getByRole('button', {name: 'Stop recording'}).click();
     await page.getByText('Transcript ready. Review it before saving.').waitFor();
     assert.match(await page.getByLabel('Editable transcript preview').inputValue(), /सिर में दर्द/);
-    await page.getByLabel('Live historical study chart').getByText(/Pressing → Coughing, while/).waitFor();
+    await page.getByLabel('Live historical study chart').getByText(kentFile
+      ? /PDF page/ : /Pressing → Coughing, while/).first().waitFor();
+    if (kentFile) {
+      await page.getByRole('button', {name: /Remove Head → BOILING sensation/}).waitFor();
+      await page.getByRole('button', {name: 'खाँसी के समय सिर में दर्द और दबाव', exact: true}).click();
+      assert.equal(await page.getByLabel('English rubric search terms').inputValue(), 'head pain cough pressing');
+    }
     await page.getByRole('button', {name: 'Delete recording'}).click();
     await page.getByLabel(/Use Saaras v4 for this synthetic test clip/).check();
     const transcript = page.getByLabel('Editable transcript preview');
@@ -208,6 +239,17 @@ const srv = http.createServer(async (req,res) => {
     assert.match(document.history, /Duration: two days/);
     await page.evaluate(()=>navigator.serviceWorker.ready);
     assert.deepEqual(await page.evaluate(()=>caches.keys()),[]);
+    if (kentFile) {
+      await page.reload();
+      await nav('Repertorisation');
+      await page.getByText('Private Kent index', {exact: true}).click();
+      await page.getByText('64,273 Kent rubrics available on this browser.').waitFor();
+      await page.setViewportSize({width:390,height:844});
+      await page.getByLabel('Search historical rubrics').fill('head boiling bubbling');
+      await page.getByRole('button', {name: /Add Head → BOILING sensation/}).first().click();
+      await page.getByRole('heading', {name: 'Historical medicine grade chart'}).waitFor();
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), 390);
+    }
     const logout=page.locator('#logout');
     if (!(await logout.isVisible())) await page.locator('#dashboardMenu > summary').click();
     await logout.click();
