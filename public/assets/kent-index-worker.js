@@ -5,6 +5,42 @@ const maxExpandedBytes = 192 * 1024 * 1024;
 const maxRubrics = 80000;
 let account, file, rubrics;
 let requests = Promise.resolve();
+const indexEndpoint = '/.netlify/functions/smart-clinic?section=kent-index';
+const maxPartBytes = 768 * 1024;
+
+async function readAccountIndex(path = '') {
+  const response = await fetch(indexEndpoint + path, {
+    cache: 'no-store', credentials: 'same-origin', signal: AbortSignal.timeout(20000)
+  });
+  if (!response.ok) throw Error('The account Kent index could not be reached.');
+  return response.json();
+}
+
+async function downloadAccountIndex({digest, byte_count: size, part_count: count}) {
+  if (!/^[a-f0-9]{64}$/.test(digest) || !Number.isInteger(size) || size < 1 || size > maxFileBytes ||
+      !Number.isInteger(count) || count !== Math.ceil(size / maxPartBytes)) {
+    throw Error('The account Kent index has invalid metadata.');
+  }
+  const bytes = new Uint8Array(size);
+  let next = 0;
+  async function copyParts() {
+    while (next < count) {
+      const part = next++;
+      const {data} = await readAccountIndex('&digest=' + digest + '&part=' + part);
+      const payload = atob(data);
+      const offset = part * maxPartBytes;
+      if (payload.length !== Math.min(maxPartBytes, size - offset)) {
+        throw Error('The account Kent index has a missing or truncated part.');
+      }
+      for (let i = 0; i < payload.length; i++) bytes[offset + i] = payload.charCodeAt(i);
+    }
+  }
+  await Promise.all(Array.from({length: Math.min(count, 3)}, copyParts));
+  const calculated = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)),
+    byte => byte.toString(16).padStart(2, '0')).join('');
+  if (calculated !== digest) throw Error('The account Kent index failed its integrity check.');
+  return new Blob([bytes]);
+}
 
 const normalize = text => text.toLowerCase().replace(/œ/g, 'oe')
   .normalize('NFD').replace(/([a-z])\p{M}+/gu, '$1').normalize('NFC');
@@ -128,9 +164,29 @@ async function handle(message) {
     case 'open': {
       account = message.account;
       rubrics = undefined;
-      file = await storage('readonly');
+      const saved = await storage('readonly').catch(() => undefined);
+      let accountUnavailable = false;
+      const accountIndex = await readAccountIndex().then(result => result.index).catch(() => {
+        accountUnavailable = true;
+        return null;
+      });
+      if (accountIndex) {
+        try {
+          file = saved?.digest === accountIndex.digest && saved?.blob instanceof Blob
+            ? saved.blob : await downloadAccountIndex(accountIndex);
+          rubrics = await index(file);
+          if (saved?.digest !== accountIndex.digest || saved?.blob !== file) {
+            await storage('readwrite', {digest: accountIndex.digest, blob: file}).catch(() => {});
+          }
+          return {count: rubrics.size, accountIndex: true};
+        } catch (error) {
+          if (!(saved instanceof Blob || saved?.blob instanceof Blob)) throw error;
+        }
+      }
+      file = saved instanceof Blob ? saved : saved?.blob;
+      if (accountUnavailable && !file) throw Error('Could not check the account Kent index. Reopen Repertorisation to retry.');
       if (file) rubrics = await index(file);
-      return {count: rubrics?.size || 0};
+      return {count: rubrics?.size || 0, accountIndex: Boolean(saved?.digest)};
     }
     case 'import': {
       const next = await index(message.file);

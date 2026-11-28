@@ -15,7 +15,9 @@ Install Playwright in a disposable checkout with `npm install --no-save --packag
 
 ## Private Kent repertorisation
 
-In the doctor dashboard, open **Repertorisation** or the consultation document. Open **Private Kent index** and choose the reconciled `Kent_Repertory_Remaining_Reconciled.jsonl.gz`. The index is stored for that doctor in the current browser. Refreshing the dashboard restores it. Import once on each browser that needs the full index. The uploaded file and historical rubric searches stay on the device.
+The reconciled Kent index is loaded by **Repertorisation** and the consultation document from the signed-in doctor’s private PHC Safety Test account. Open **Private Kent index** to see whether the account copy is available. A new device downloads it automatically, and refreshes reuse the browser cache when the account version matches. Rubric searches and transcript excerpts stay on the device. The file picker is available as a local fallback for accounts without a provisioned index.
+
+The test index is stored in `phc_kent_account_indexes` and `phc_kent_index_parts`. Provisioning uses a verified doctor owner and 768 KiB compressed parts, then publishes the manifest after verifying the ordered byte count and SHA-256 digest. The application only reads these tables through the authenticated Smart Clinic API. The digital edition and private index are excluded from Git and public assets.
 
 With a synthetic patient, record a short Hindi, English or Hinglish clip after ticking the applicable consent boxes. After transcription, choose an excerpt, review its wording, and add the matching historical rubric. Check the displayed PDF page, source typography and grade. The chart is for historical reference and shows a dash for an unverified grade. A chart stays in the consultation form until it is closed.
 

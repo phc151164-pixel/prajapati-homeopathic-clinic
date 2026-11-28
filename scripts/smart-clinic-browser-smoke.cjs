@@ -5,8 +5,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
 const assert = require('node:assert/strict');
+const {createHash} = require('node:crypto');
 const root = path.resolve(__dirname, '..');
 const kentFile = process.env.PHC_TEST_KENT_FILE;
+const accountBlob = kentFile && fs.readFileSync(kentFile);
+const partSize = 768 * 1024;
+const digest = accountBlob && createHash('sha256').update(accountBlob).digest('hex');
+let accountIndexEnabled = false;
+let partRequests = 0;
 const publicRoot = path.join(root, 'public');
 const catalog = require(path.join(root,'docs/reference-library-catalog.json'));
 const boericke = require(path.join(root,'docs/boericke-repertory-index.json'));
@@ -34,6 +40,17 @@ const srv = http.createServer(async (req,res) => {
       if (section==='patients') return json({items:[patient],has_more:false});
       if (section==='patient') return json({patient,summary:{completed:0,upcoming:1},visits:[{id:visitId,visit_date:'2026-11-25',visit_time:'11:00',kind:'followup',mode:'walkin',state:'planned'}]});
       return json({items:[],bookings:[],counts:{},stats:{},has_more:false});
+    }
+    if (section === 'kent-index') {
+      if (!accountIndexEnabled || !accountBlob) return json({index: null});
+      const part = url.searchParams.get('part');
+      if (part === null) return json({index: {digest, byte_count: accountBlob.length,
+        part_count: Math.ceil(accountBlob.length / partSize)}});
+      assert.equal(url.searchParams.get('digest'), digest);
+      assert.match(part, /^\d+$/);
+      partRequests++;
+      const start = Number(part) * partSize;
+      return json({data: accountBlob.subarray(start, start + partSize).toString('base64')});
     }
     if (section === 'library') return json({catalog,repertory,boericke,keynotes,progress:progress?[progress]:[]});
     if (section === 'transcription') {
@@ -273,6 +290,30 @@ const srv = http.createServer(async (req,res) => {
       await page.getByRole('button', {name: /Add Head → BOILING sensation/}).first().click();
       await page.getByRole('heading', {name: 'Historical medicine grade chart'}).waitFor();
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), 390);
+    }
+    if (kentFile) {
+      accountIndexEnabled = true;
+      const fresh = await browser.newContext({viewport:{width:390,height:844}});
+      try {
+        const mobile = await fresh.newPage();
+        await mobile.goto('http://127.0.0.1:' + srv.address().port + '/admin');
+        await mobile.locator('#dashboardMenu > summary').click();
+        await mobile.locator('#nav').getByRole('button',{name:'Repertorisation',exact:true}).click();
+        await mobile.getByText('Private Kent index',{exact:true}).click();
+        await mobile.getByText('64,273 Kent rubrics available from your PHC account.').waitFor();
+        assert.equal(partRequests, Math.ceil(accountBlob.length / partSize));
+        assert.equal(await mobile.getByLabel('Choose reconciled Kent JSONL.GZ').isVisible(), false);
+        await mobile.getByLabel('Search historical rubrics').fill('pain knee');
+        await mobile.getByRole('button',{name:/^Add Extremities → PAIN → Knee \(Kent\)$/i}).waitFor();
+        await mobile.reload();
+        await mobile.locator('#dashboardMenu > summary').click();
+        await mobile.locator('#nav').getByRole('button',{name:'Repertorisation',exact:true}).click();
+        await mobile.getByText('Private Kent index',{exact:true}).click();
+        await mobile.getByText('64,273 Kent rubrics available from your PHC account.').waitFor();
+        assert.equal(partRequests, Math.ceil(accountBlob.length / partSize));
+      } finally {
+        await fresh.close();
+      }
     }
     const logout=page.locator('#logout');
     if (!(await logout.isVisible())) await page.locator('#dashboardMenu > summary').click();

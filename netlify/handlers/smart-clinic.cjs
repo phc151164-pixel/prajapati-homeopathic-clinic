@@ -22,6 +22,20 @@ exports.handler = async event => {
   if (!user) return json(401, {error: 'Doctor sign-in required.'});
   const q = event.queryStringParameters || {};
   try {
+    if (q.section === 'kent-index') {
+      if (event.httpMethod !== 'GET') return json(405, {error: 'Method not allowed.'});
+      const owner = 'doctor_id=eq.' + user.id;
+      const [index] = await supa('phc_kent_account_indexes?' + owner + '&select=digest,part_count,byte_count');
+      if (!index || q.part === undefined) return json(200, {index: index || null});
+      if (!/^(0|[1-9][0-9]?)$/.test(q.part) || Number(q.part) >= index.part_count ||
+          q.digest !== index.digest) return json(400, {error: 'Invalid Kent index part.'});
+      const [part] = await supa('phc_kent_index_parts?' + owner + '&digest=eq.' + index.digest +
+        '&part=eq.' + q.part + '&select=content');
+      if (!part || typeof part.content !== 'string' || !part.content.startsWith('\\x')) {
+        return json(503, {error: 'The private Kent index is incomplete.'});
+      }
+      return json(200, {data: Buffer.from(part.content.slice(2), 'hex').toString('base64')});
+    }
     if (event.httpMethod === 'GET') {
       if (q.section === 'medicines') {
         const rows = await supa('phc_medicine_library?doctor_id=eq.' + user.id + '&select=medicines');

@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {PGlite} from '@electric-sql/pglite';
 
 const migration = readFileSync(new URL('../supabase/migrations/20261125090000_smart_clinic.sql', import.meta.url), 'utf8');
+const kentMigration = readFileSync(new URL('../supabase/migrations/20261128162701_phc_private_kent_account_index.sql', import.meta.url), 'utf8');
 const doctor = '11111111-1111-4111-8111-111111111111';
 const inactive = '22222222-2222-4222-8222-222222222222';
 const visit = '33333333-3333-4333-8333-333333333333';
@@ -12,7 +13,7 @@ test('consultation database enforces authorization, consent, version and review 
   const db = await PGlite.create();
   try {
     await db.exec(`
-      CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;
+      CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;
       CREATE TABLE public.phc_admin_accounts(user_id uuid PRIMARY KEY, active boolean NOT NULL);
       CREATE TABLE public.phc_visits(id uuid PRIMARY KEY);
       CREATE TABLE public.phc_audit_log(actor uuid, action text, entity_id text);
@@ -20,18 +21,26 @@ test('consultation database enforces authorization, consent, version and review 
       INSERT INTO public.phc_visits VALUES ('${visit}');
     `);
     await db.exec(migration);
+    await db.exec(kentMigration);
+    const digest = 'a'.repeat(64);
+    await db.query('INSERT INTO public.phc_kent_account_indexes VALUES ($1,$2,3,1)', [doctor, digest]);
+    await db.query("INSERT INTO public.phc_kent_index_parts VALUES($1,$2,0,decode('010203','hex'))", [doctor, digest]);
     const save = async (version, consent, reviewed, actor = doctor) => (await db.query(
       'SELECT * FROM public.phc_save_consultation_document($1,$2,$3,$4,$5,$6,$7,$8)',
       [actor, visit, version, 'Synthetic history', '', '', consent, reviewed]
     )).rows[0];
     for (const role of ['anon', 'authenticated']) {
       await db.exec('SET ROLE ' + role);
+      await assert.rejects(db.query('SELECT * FROM public.phc_kent_account_indexes'), {code: '42501'});
+      await assert.rejects(db.query('SELECT * FROM public.phc_kent_index_parts'), {code: '42501'});
       await assert.rejects(db.query('SELECT * FROM public.phc_reference_progress'), {code: '42501'});
       await assert.rejects(db.query('SELECT * FROM public.phc_consultation_documents'), {code: '42501'});
       await assert.rejects(save(0, true, true), {code: '42501'});
       await db.exec('RESET ROLE');
     }
     await db.exec('SET ROLE service_role');
+    assert.equal((await db.query("SELECT encode(content,'hex') AS value FROM public.phc_kent_index_parts WHERE doctor_id=$1", [doctor])).rows[0].value, '010203');
+    await assert.rejects(db.query('UPDATE public.phc_kent_index_parts SET content=content'), {code:'42501'});
     await assert.rejects(save(0, true, false, inactive), {code: '42501'});
     await assert.rejects(save(0, false, true), {code: '22023'});
     assert.equal((await save(0, true, false)).reviewed_at, null);

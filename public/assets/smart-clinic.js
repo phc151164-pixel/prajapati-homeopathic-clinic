@@ -203,6 +203,7 @@
   };
   let kentAccount, kentWorker, kentReady;
   let kentCount = 0;
+  let kentFromAccount = false;
   let kentMessage = 0;
   const kentPending = new Map();
   const kentDetails = new Map();
@@ -210,6 +211,7 @@
     kentWorker?.terminate();
     kentWorker = kentReady = undefined;
     kentCount = 0;
+    kentFromAccount = false;
     kentDetails.clear();
     for (const {reject} of kentPending.values()) reject(Error('The Kent index was closed.'));
     kentPending.clear();
@@ -229,17 +231,26 @@
   function openKent() {
     if (!kentAccount || !window.DecompressionStream || !window.indexedDB || !window.Worker) return Promise.resolve();
     if (kentReady) return kentReady;
-    kentWorker = new Worker('/assets/kent-index-worker.js?v=3');
-    kentWorker.onmessage = ({data}) => {
+    const worker = new Worker('/assets/kent-index-worker.js?v=4');
+    kentWorker = worker;
+    worker.onmessage = ({data}) => {
       const pending = kentPending.get(data.id);
       if (!pending) return;
       kentPending.delete(data.id);
       if (data.error) pending.reject(Error(data.error));
       else pending.resolve(data.result);
     };
-    kentWorker.onerror = closeKent;
-    kentReady = kentRequest('open', {account: kentAccount}).then(({count}) => {
-      kentCount = count;
+    worker.onerror = () => {
+      if (worker === kentWorker) closeKent();
+    };
+    kentReady = kentRequest('open', {account: kentAccount}).then(({count, accountIndex}) => {
+      if (worker === kentWorker) {
+        kentCount = count;
+        kentFromAccount = accountIndex;
+      }
+    }).catch(error => {
+      if (worker === kentWorker) closeKent();
+      throw error;
     });
     return kentReady;
   }
@@ -254,9 +265,12 @@
     const status = node('p');
     status.setAttribute('role', 'status');
     const showCount = () => {
-      status.textContent = kentCount ? kentCount.toLocaleString('en-IN') + ' Kent rubrics available on this browser.'
+      const source = kentFromAccount ? ' available from your PHC account.' : ' available on this browser.';
+      status.textContent = kentCount ? kentCount.toLocaleString('en-IN') + ' Kent rubrics' + source
         : 'Import the reconciled Kent index to search the complete set.';
+      label.hidden = kentFromAccount;
     };
+    status.textContent = 'Checking your PHC account for the Kent index…';
     void openKent().then(() => {
       if (kentWorker) showCount();
       else {
@@ -266,7 +280,7 @@
     }).catch(error => { status.textContent = error.message; });
     picker.addEventListener('change', async () => {
       const file = picker.files[0];
-      if (!file) return;
+      if (!file || kentFromAccount) return;
       picker.disabled = true;
       status.textContent = 'Checking the Kent index…';
       try {
@@ -284,7 +298,7 @@
       }
     });
     box.append(node('summary', 'Private Kent index'), status,
-      node('p', 'Import once on this browser. The index and rubric searches stay on this device.'), label);
+      node('p', 'An index saved to your PHC account loads on each supported browser after sign-in.'), label);
     return box;
   }
 

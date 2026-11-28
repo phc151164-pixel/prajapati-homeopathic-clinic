@@ -34,11 +34,22 @@ test('Smart Clinic restricts deployment, authorizes the doctor, and binds writes
   let active = true;
   let stale = false;
   let progress;
+  const digest = '1'.repeat(64);
   t.mock.method(globalThis, 'fetch', async (raw, options) => {
     const url = new URL(raw);
     requests.push({url, options});
     if (url.pathname === '/auth/v1/user') return Response.json({id: doctor});
     if (url.pathname.endsWith('/phc_admin_accounts')) return Response.json(active ? [{user_id: doctor}] : []);
+    if (url.pathname.endsWith('/phc_kent_account_indexes')) {
+      assert.equal(url.searchParams.get('doctor_id'), 'eq.' + doctor);
+      return Response.json([{digest, part_count: 1, byte_count: 3}]);
+    }
+    if (url.pathname.endsWith('/phc_kent_index_parts')) {
+      assert.equal(url.searchParams.get('doctor_id'), 'eq.' + doctor);
+      assert.equal(url.searchParams.get('digest'), 'eq.' + digest);
+      assert.equal(url.searchParams.get('part'), 'eq.0');
+      return Response.json([{content: '\\x616263'}]);
+    }
     if (url.pathname.endsWith('/phc_reference_progress')) {
       if (options.method === 'PATCH') return Response.json(progress ? [progress] : []);
       if (options.method === 'POST') progress = {...JSON.parse(options.body), last_opened: null};
@@ -65,6 +76,18 @@ test('Smart Clinic restricts deployment, authorizes the doctor, and binds writes
     assert.equal((await handler(event('GET', {section: 'library'}))).statusCode, 401);
     active = true;
     assert.equal((await handler(event('POST', {}, {}, {origin: 'https://other.example'}))).statusCode, 403);
+
+    const index = await handler(event('GET', {section: 'kent-index', doctorId: visit}));
+    assert.equal(index.headers['Cache-Control'], 'no-store');
+    assert.deepEqual(JSON.parse(index.body), {index: {digest, part_count: 1, byte_count: 3}});
+    for (const query of [{digest, part: '1'}, {digest, part: '0&doctor_id=else'}, {digest: '2'.repeat(64), part: '0'}]) {
+      assert.equal((await handler(event('GET', {section: 'kent-index', ...query}))).statusCode, 400);
+    }
+    const part = await handler(event('GET', {section: 'kent-index', digest, part: '0', doctorId: visit}));
+    assert.equal(part.statusCode, 200);
+    assert.equal(JSON.parse(part.body).data, 'YWJj');
+    assert.equal((await handler(event('GET', {section: 'kent-index'}, undefined, {cookie: ''}))).statusCode, 401);
+    assert.equal((await handler(event('POST', {section: 'kent-index'}, {}))).statusCode, 405);
 
     const consultation = {action: 'consultation', visitId: visit, version: 0, consent: false,
       reviewed: false, history: 'Synthetic only', observations: '', follow_up: '', actor: visit};
