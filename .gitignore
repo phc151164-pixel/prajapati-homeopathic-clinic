@@ -4,3 +4,5 @@
 node_modules/
 .netlify/
 *.log
+/public/assets/pdfjs/
+/public/assets/books/

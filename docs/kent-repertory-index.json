@@ -1,0 +1,1309 @@
+{
+  "edition": "J. T. Kent, Repertory of the Homoeopathic Materia Medica, 1897–1899",
+  "source": "Wellcome Collection",
+  "rights": "Public Domain Mark",
+  "coverage": "Selected historical Head and Mind rubrics from Kent’s first edition.",
+  "pages": {
+    "195": "https://wellcomecollection.org/works/aguw48nw/items?canvas=201",
+    "220": "https://wellcomecollection.org/works/aguw48nw/items?canvas=226",
+    "scan 98": "https://wellcomecollection.org/works/aguw48nw/items?canvas=98&page=17&shouldScrollToCanvas=true",
+    "scan 17": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Repertory_of_the_homoeopathic_materia_medica_%28electronic_resource%29_%28IA_b20416234_001%29.pdf#page=17",
+    "scan 18": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Repertory_of_the_homoeopathic_materia_medica_%28electronic_resource%29_%28IA_b20416234_001%29.pdf#page=18",
+    "scan 19": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Repertory_of_the_homoeopathic_materia_medica_%28electronic_resource%29_%28IA_b20416234_001%29.pdf#page=19",
+    "194–195": "https://wellcomecollection.org/works/aguw48nw/items?canvas=200"
+  },
+  "rubrics": [
+    {
+      "id": "kent-rubric-pressing-cough",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Coughing, while"
+      ],
+      "page": "194–195",
+      "aliases": "सिर दर्द दबाव खाँसी खांसी khansi khasi sar dard dabav",
+      "historicalMedicines": [
+        {
+          "abbreviation": "Acon.",
+          "name": "Aconitum napellus",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "alumn.",
+          "name": "Alumen",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "arn.",
+          "name": "Arnica montana",
+          "grade": 2,
+          "type": "Italic"
+        },
+        {
+          "abbreviation": "Bry.",
+          "name": "Bryonia alba",
+          "grade": 3,
+          "type": "Bold"
+        },
+        {
+          "abbreviation": "chel.",
+          "name": "Chelidonium majus",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "coc-c.",
+          "name": "Coccus cacti",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "con.",
+          "name": "Conium maculatum",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "hep.",
+          "name": "Hepar sulphuris calcareum",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "kreos.",
+          "name": "Kreosotum",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "nit-ac.",
+          "name": "Nitricum acidum",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "petr.",
+          "name": "Petroleum",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "phos.",
+          "name": "Phosphorus",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "ruta.",
+          "name": "Ruta graveolens",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "sars.",
+          "name": "Sarsaparilla",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "sep.",
+          "name": "Sepia",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "spig.",
+          "name": "Spigelia",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "verb.",
+          "name": "Verbascum",
+          "grade": 1,
+          "type": "Roman"
+        }
+      ]
+    },
+    {
+      "id": "kent-rubric-pressing-darkness",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Darkness, in"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव अंधेरा andhera sar dard dabav",
+      "historicalMedicines": [
+        {
+          "abbreviation": "Sil.",
+          "name": "Silicea",
+          "grade": 1,
+          "type": "Roman"
+        }
+      ]
+    },
+    {
+      "id": "kent-rubric-pressing-dinner",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Dinner, during"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव खाना khana sar dard dabav",
+      "historicalMedicines": [
+        {
+          "abbreviation": "Pall.",
+          "name": "Palladium",
+          "grade": 1,
+          "type": "Roman"
+        }
+      ]
+    },
+    {
+      "id": "kent-rubric-pressing-reading",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Reading, while"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव पढ़ते वक्त padhte waqt sar dard dabav",
+      "historicalMedicines": [
+        {
+          "abbreviation": "Bell.",
+          "name": "Belladonna",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "Cocc.",
+          "name": "Cocculus indicus",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "Helon.",
+          "name": "Helonias dioica",
+          "grade": 1,
+          "type": "Roman"
+        },
+        {
+          "abbreviation": "Lyc.",
+          "name": "Lycopodium clavatum",
+          "grade": 1,
+          "type": "Roman"
+        }
+      ]
+    },
+    {
+      "id": "kent-rubric-pressing-sleep",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Sleep, after"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव नींद के बाद neend sone ke baad sar dard dabav"
+    },
+    {
+      "id": "kent-rubric-tearing-sides-right",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Right"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द दाहिनी तरफ dahini taraf sar dard"
+    },
+    {
+      "id": "kent-rubric-tearing-sides-left",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Left"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द बाईं तरफ bain taraf baayi taraf sar dard"
+    },
+    {
+      "id": "kent-rubric-tearing-stooping",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Stooping"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द झुकने पर jhukne par sar dard"
+    },
+    {
+      "id": "kent-rubric-tearing-temples",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Temples"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द कनपटी kanpati sar dard"
+    },
+    {
+      "id": "kent-rubric-pressing-downward",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Downward"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव sar dard dabav नीचे niche"
+    },
+    {
+      "id": "kent-rubric-pressing-drawing",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Drawing"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव sar dard dabav खींचना kheenchna"
+    },
+    {
+      "id": "kent-rubric-pressing-deepseated",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Deep-seated"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव sar dard dabav गहरा gahra deep"
+    },
+    {
+      "id": "kent-rubric-pressing-digging",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Pressing",
+        "Digging"
+      ],
+      "page": 195,
+      "aliases": "सिर दर्द दबाव sar dard dabav खोदने जैसा khodne jaisa"
+    },
+    {
+      "id": "kent-rubric-tearing-daybreak",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Morning"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द तरफ sar dard taraf सुबह subah"
+    },
+    {
+      "id": "kent-rubric-tearing-evening",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Evening"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द तरफ sar dard taraf शाम shaam"
+    },
+    {
+      "id": "kent-rubric-tearing-night",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Night"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द तरफ sar dard taraf रात raat"
+    },
+    {
+      "id": "kent-rubric-tearing-sitting",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Sitting, while"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द तरफ sar dard taraf बैठे हुए baithe hue"
+    },
+    {
+      "id": "kent-rubric-tearing-walking",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Walking, while"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द तरफ sar dard taraf चलते समय chalte samay"
+    },
+    {
+      "id": "kent-rubric-tearing-reading",
+      "chapter": "Head",
+      "path": [
+        "Pain",
+        "Tearing",
+        "Sides",
+        "Reading, while"
+      ],
+      "page": 220,
+      "aliases": "सिर दर्द तरफ sar dard taraf पढ़ते समय padhte samay"
+    },
+    {
+      "id": "kent-rubric-mind-travel",
+      "chapter": "Mind",
+      "path": [
+        "Travel, desire to"
+      ],
+      "page": "scan 98",
+      "aliases": "यात्रा सफर घूमने की इच्छा yatra safar ghoomne ki iccha"
+    },
+    {
+      "id": "kent-rubric-mind-trifles",
+      "chapter": "Mind",
+      "path": [
+        "Trifles, seem important"
+      ],
+      "page": "scan 98",
+      "aliases": "छोटी बातें महत्वपूर्ण choti baatein mahatvapurn"
+    },
+    {
+      "id": "kent-rubric-mind-unattractive",
+      "chapter": "Mind",
+      "path": [
+        "Unattractive, things seem"
+      ],
+      "page": "scan 98",
+      "aliases": "चीजें अनाकर्षक cheezen akarshak nahi"
+    },
+    {
+      "id": "kent-rubric-mind-unconscious",
+      "chapter": "Mind",
+      "path": [
+        "Unconsciousness"
+      ],
+      "page": "scan 98",
+      "aliases": "बेहोशी मूर्छा behoshi behoshee murchha"
+    },
+    {
+      "id": "kent-rubric-mind-unconscious-morning",
+      "chapter": "Mind",
+      "path": [
+        "Unconsciousness",
+        "Morning"
+      ],
+      "page": "scan 98",
+      "aliases": "बेहोशी behoshi सुबह subah"
+    },
+    {
+      "id": "kent-rubric-mind-unconscious-evening",
+      "chapter": "Mind",
+      "path": [
+        "Unconsciousness",
+        "Evening"
+      ],
+      "page": "scan 98",
+      "aliases": "बेहोशी behoshi शाम shaam"
+    },
+    {
+      "id": "kent-rubric-mind-unconscious-night",
+      "chapter": "Mind",
+      "path": [
+        "Unconsciousness",
+        "Night"
+      ],
+      "page": "scan 98",
+      "aliases": "बेहोशी behoshi रात raat"
+    },
+    {
+      "id": "kent-rubric-mind-abandoned",
+      "chapter": "Mind",
+      "path": [
+        "Abandoned"
+      ],
+      "page": "scan 17",
+      "aliases": "अकेला छोड़ दिया akela chhod diya"
+    },
+    {
+      "id": "kent-rubric-mind-abrupt",
+      "chapter": "Mind",
+      "path": [
+        "Abrupt"
+      ],
+      "page": "scan 17",
+      "aliases": "अचानक achanak"
+    },
+    {
+      "id": "kent-rubric-mind-absent-minded",
+      "chapter": "Mind",
+      "path": [
+        "Absent minded"
+      ],
+      "page": "scan 17",
+      "aliases": "ध्यान भटकना dhyan bhatakna"
+    },
+    {
+      "id": "kent-rubric-mind-abusive",
+      "chapter": "Mind",
+      "path": [
+        "Abusive"
+      ],
+      "page": "scan 17",
+      "aliases": "अपशब्द apashabd gaali"
+    },
+    {
+      "id": "kent-rubric-mind-acuteness",
+      "chapter": "Mind",
+      "path": [
+        "Acuteness"
+      ],
+      "page": "scan 17",
+      "aliases": "तीक्ष्णता tikshnata"
+    },
+    {
+      "id": "kent-rubric-mind-affectation",
+      "chapter": "Mind",
+      "path": [
+        "Affectation"
+      ],
+      "page": "scan 17",
+      "aliases": "दिखावा dikhawa"
+    },
+    {
+      "id": "kent-rubric-mind-affectionate",
+      "chapter": "Mind",
+      "path": [
+        "Affectionate"
+      ],
+      "page": "scan 17",
+      "aliases": "स्नेही snehi"
+    },
+    {
+      "id": "kent-rubric-mind-air-castles",
+      "chapter": "Mind",
+      "path": [
+        "Air castles"
+      ],
+      "page": "scan 17",
+      "aliases": "कल्पना kalpana"
+    },
+    {
+      "id": "kent-rubric-mind-ambition-loss",
+      "chapter": "Mind",
+      "path": [
+        "Ambition, loss of"
+      ],
+      "page": "scan 17",
+      "aliases": "महत्वाकांक्षा कम mahatvakanksha"
+    },
+    {
+      "id": "kent-rubric-mind-absent-minded-periodical",
+      "chapter": "Mind",
+      "path": [
+        "Absent minded",
+        "Periodical attacks of, short lasting"
+      ],
+      "page": "scan 17",
+      "aliases": "ध्यान भटकना बार बार dhyan bhatakna"
+    },
+    {
+      "id": "kent-rubric-mind-absent-minded-starts",
+      "chapter": "Mind",
+      "path": [
+        "Absent minded",
+        "Starts when spoken to"
+      ],
+      "page": "scan 17",
+      "aliases": "बोलने पर चौंकना bolne par chaunkna"
+    },
+    {
+      "id": "kent-rubric-mind-abusive-forenoon",
+      "chapter": "Mind",
+      "path": [
+        "Abusive",
+        "Forenoon"
+      ],
+      "page": "scan 17",
+      "aliases": "अपशब्द सुबह gaali subah"
+    },
+    {
+      "id": "kent-rubric-mind-abusive-evening",
+      "chapter": "Mind",
+      "path": [
+        "Abusive",
+        "Evening"
+      ],
+      "page": "scan 17",
+      "aliases": "अपशब्द शाम gaali shaam"
+    },
+    {
+      "id": "kent-rubric-mind-anger",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा क्रोध gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-morning",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Morning"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा सुबह gussa subah"
+    },
+    {
+      "id": "kent-rubric-mind-anger-alternates-cheerfulness",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Alternating with cheerfulness"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा खुशी gussa khushi"
+    },
+    {
+      "id": "kent-rubric-mind-absorbed",
+      "chapter": "Mind",
+      "path": [
+        "Absorbed, buried in thought"
+      ],
+      "page": "scan 17",
+      "aliases": "विचारों में खोया vicharon mein khoya"
+    },
+    {
+      "id": "kent-rubric-mind-absorbed-morning",
+      "chapter": "Mind",
+      "path": [
+        "Absorbed, buried in thought",
+        "Morning"
+      ],
+      "page": "scan 17",
+      "aliases": "विचारों में खोया vicharon mein khoya"
+    },
+    {
+      "id": "kent-rubric-mind-absorbed-evening",
+      "chapter": "Mind",
+      "path": [
+        "Absorbed, buried in thought",
+        "Evening"
+      ],
+      "page": "scan 17",
+      "aliases": "विचारों में खोया vicharon mein khoya"
+    },
+    {
+      "id": "kent-rubric-mind-absorbed-frivolity",
+      "chapter": "Mind",
+      "path": [
+        "Absorbed, buried in thought",
+        "Alternating with frivolity"
+      ],
+      "page": "scan 17",
+      "aliases": "विचारों में खोया vicharon mein khoya"
+    },
+    {
+      "id": "kent-rubric-mind-absorbed-future",
+      "chapter": "Mind",
+      "path": [
+        "Absorbed, buried in thought",
+        "As to what would become of him"
+      ],
+      "page": "scan 17",
+      "aliases": "विचारों में खोया vicharon mein khoya"
+    },
+    {
+      "id": "kent-rubric-mind-absorbed-eating",
+      "chapter": "Mind",
+      "path": [
+        "Absorbed, buried in thought",
+        "Eating, after"
+      ],
+      "page": "scan 17",
+      "aliases": "विचारों में खोया vicharon mein khoya"
+    },
+    {
+      "id": "kent-rubric-mind-absorbed-menses",
+      "chapter": "Mind",
+      "path": [
+        "Absorbed, buried in thought",
+        "Menses, during"
+      ],
+      "page": "scan 17",
+      "aliases": "विचारों में खोया vicharon mein khoya"
+    },
+    {
+      "id": "kent-rubric-mind-abstraction",
+      "chapter": "Mind",
+      "path": [
+        "Abstraction of mind"
+      ],
+      "page": "scan 17",
+      "aliases": "ध्यान खोना dhyan khona"
+    },
+    {
+      "id": "kent-rubric-mind-abusive-angry",
+      "chapter": "Mind",
+      "path": [
+        "Abusive",
+        "Angry, without being"
+      ],
+      "page": "scan 17",
+      "aliases": "अपशब्द gaali"
+    },
+    {
+      "id": "kent-rubric-mind-abusive-pains",
+      "chapter": "Mind",
+      "path": [
+        "Abusive",
+        "Pains, with the"
+      ],
+      "page": "scan 17",
+      "aliases": "अपशब्द gaali"
+    },
+    {
+      "id": "kent-rubric-mind-abusive-scolds",
+      "chapter": "Mind",
+      "path": [
+        "Abusive",
+        "Scolds until the lips are blue and eyes stare and she falls down fainting"
+      ],
+      "page": "scan 17",
+      "aliases": "अपशब्द gaali"
+    },
+    {
+      "id": "kent-rubric-mind-ambition-afternoon",
+      "chapter": "Mind",
+      "path": [
+        "Ambition, loss of",
+        "Afternoon and evening"
+      ],
+      "page": "scan 17",
+      "aliases": "महत्वाकांक्षा mahatvakanksha"
+    },
+    {
+      "id": "kent-rubric-mind-ambition-damp",
+      "chapter": "Mind",
+      "path": [
+        "Ambition, loss of",
+        "Damp weather"
+      ],
+      "page": "scan 17",
+      "aliases": "महत्वाकांक्षा mahatvakanksha"
+    },
+    {
+      "id": "kent-rubric-mind-amusement",
+      "chapter": "Mind",
+      "path": [
+        "Amusement, averse to"
+      ],
+      "page": "scan 17",
+      "aliases": "मनोरंजन manoranjan"
+    },
+    {
+      "id": "kent-rubric-mind-amusement-desire",
+      "chapter": "Mind",
+      "path": [
+        "Amusement, desire for"
+      ],
+      "page": "scan 17",
+      "aliases": "मनोरंजन manoranjan"
+    },
+    {
+      "id": "kent-rubric-mind-anger-evening",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Evening"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-causeless",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Causeless"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-consoled",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Consoled, when"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-contradiction",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Contradiction, from"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-cough-before",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Cough, before"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-cough-from",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Cough, from the"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-fever",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Fever, during"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-involuntary",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Involuntary"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-mistakes",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Mistakes, over his"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-news",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "News unpleasant"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-noise",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Noise"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-sleep",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Sleep, after"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-suppressed",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Suppressed, with"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-throws",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Throws things away"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-trifles",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Trifles"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-violent",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Violent"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa krodh"
+    },
+    {
+      "id": "kent-rubric-mind-anger-waking",
+      "chapter": "Mind",
+      "path": [
+        "Anger (irascibility)",
+        "Morning",
+        "Waking, on"
+      ],
+      "page": "scan 18",
+      "aliases": "गुस्सा gussa jagne par"
+    },
+    {
+      "id": "kent-rubric-mind-anguish",
+      "chapter": "Mind",
+      "path": [
+        "Anguish"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-anguish-daytime",
+      "chapter": "Mind",
+      "path": [
+        "Anguish",
+        "Daytime"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-anguish-afternoon",
+      "chapter": "Mind",
+      "path": [
+        "Anguish",
+        "Afternoon"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-anguish-evening",
+      "chapter": "Mind",
+      "path": [
+        "Anguish",
+        "Evening"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-anguish-night",
+      "chapter": "Mind",
+      "path": [
+        "Anguish",
+        "Night"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-anguish-chill",
+      "chapter": "Mind",
+      "path": [
+        "Anguish",
+        "Chill, during"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-anguish-eating",
+      "chapter": "Mind",
+      "path": [
+        "Anguish",
+        "Eating, while"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-anguish-heat",
+      "chapter": "Mind",
+      "path": [
+        "Anguish",
+        "Heat, during"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-anguish-menses",
+      "chapter": "Mind",
+      "path": [
+        "Anguish",
+        "Menses, during"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-anguish-air",
+      "chapter": "Mind",
+      "path": [
+        "Anguish",
+        "Open air amel"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-anguish-perspiration",
+      "chapter": "Mind",
+      "path": [
+        "Anguish",
+        "Perspiration, during"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-anguish-stool",
+      "chapter": "Mind",
+      "path": [
+        "Anguish",
+        "Stool, before"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-anguish-walking",
+      "chapter": "Mind",
+      "path": [
+        "Anguish",
+        "Walking in open air"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-anguish-stool-during",
+      "chapter": "Mind",
+      "path": [
+        "Anguish",
+        "Stool, before",
+        "During"
+      ],
+      "page": "scan 19",
+      "aliases": "व्याकुलता vyakulata"
+    },
+    {
+      "id": "kent-rubric-mind-answers",
+      "chapter": "Mind",
+      "path": [
+        "Answers"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-aversion",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Aversion to"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-morning",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Morning"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-loquacious",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Loquacious at other times"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-sings",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Sings, talks, but will not answer questions"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-confusedly",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Confusedly as though thinking of something else"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-difficult",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Difficult"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-disconnected",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Disconnected"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-foolish",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Foolish"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-hastily",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Hastily"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-incoherently",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Incoherently"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-incorrectly",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Incorrectly"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-irrelevantly",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Irrelevantly"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-monosyllabic",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Monosyllabic"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-no",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "“No” to all questions"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-refuses",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Refuses to"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-reflects",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Reflects long"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-reluctantly",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Reluctantly"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-repeats",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Repeats the question first"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-shortly",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Shortly, abruptly, curtly"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-slowly",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Slowly"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-unintelligibly",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Unintelligibly"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-answers-violently",
+      "chapter": "Mind",
+      "path": [
+        "Answers",
+        "Violently as if angry"
+      ],
+      "page": "scan 19",
+      "aliases": "जवाब jawab"
+    },
+    {
+      "id": "kent-rubric-mind-antagonism",
+      "chapter": "Mind",
+      "path": [
+        "Antagonism with herself"
+      ],
+      "page": "scan 19",
+      "aliases": ""
+    },
+    {
+      "id": "kent-rubric-mind-anthropophobia",
+      "chapter": "Mind",
+      "path": [
+        "Anthropophobia"
+      ],
+      "page": "scan 19",
+      "aliases": "लोगों से डर logon se dar"
+    },
+    {
+      "id": "kent-rubric-mind-anxiety",
+      "chapter": "Mind",
+      "path": [
+        "Anxiety"
+      ],
+      "page": "scan 19",
+      "aliases": "चिंता chinta anxiety"
+    }
+  ]
+}
