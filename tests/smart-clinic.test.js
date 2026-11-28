@@ -172,3 +172,20 @@ test('Head, Cough and Extremities are separate in a mixed consultation transcrip
   ]);
   assert.deepEqual(contexts('घुटने में दर्द नहीं है।'), [{chapter:'', terms:''}]);
 });
+
+
+test('transcript search separates additional Kent chapters and keeps unclear excerpts reviewable', () => {
+  const {transcriptExcerpts, rubricSearchContext} = require('../public/assets/smart-clinic.js');
+  const contexts = text => transcriptExcerpts(text).map(rubricSearchContext);
+  assert.deepEqual(contexts('मुझे छींक आती है और कमर में दर्द है। गले में खराश है।'), [
+    {terms:'sneezing', chapter:'Nose'}, {terms:'pain lumbar', chapter:'Back'},
+    {terms:'pain', chapter:'Throat'},
+  ]);
+  assert.deepEqual(contexts('itchy skin and trouble sleeping'), [
+    {terms:'itching', chapter:'Skin'}, {terms:'sleeplessness', chapter:'Sleep'},
+  ]);
+  assert.deepEqual(contexts('My tongue is cracked.'), [{terms:'tongue cracked',chapter:''}]);
+  for (const text of ['Is there sneezing?', 'maybe a cough', 'छींक नहीं आती', 'Duration two days']) {
+    assert.deepEqual(contexts(text), [{terms:'', chapter:''}]);
+  }
+});

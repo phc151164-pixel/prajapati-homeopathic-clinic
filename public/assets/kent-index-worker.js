@@ -97,6 +97,7 @@ async function index(blob) {
       rubric,
       words: normalize(label),
       title: normalize(title),
+      rootWords: normalize(row.pathCandidate[0].replace(/\([^)]*\)/gu, '')).match(/[\p{L}\p{M}]+/gu) || [],
       chapter: normalize(row.chapterHint)
     });
   }
@@ -132,17 +133,43 @@ function search(queries) {
     const terms = [...new Set(normalize(query).match(/[\p{L}\p{M}\d]+/gu) || [])];
     if (!terms.length || !rubrics) return {total: 0, matches: []};
     const matches = [];
-    for (const {rubric, words, title, chapter} of rubrics.values()) {
+    for (const {rubric, words, title, rootWords, chapter} of rubrics.values()) {
       if (chapterFilter && chapter !== chapterFilter) continue;
       const searchable = chapterFilter ? chapter + ' ' + title : words;
       if (!terms.every(term => searchable.includes(term))) continue;
-      const relevance = terms.reduce((score, term) =>
-        score + (chapter === term ? 4 : title.includes(term) ? 2 : 0), 0);
+      const relevance = terms.reduce((score, term) => {
+        if (chapter === term && !chapterFilter) return score + 4;
+        const directRoot = chapterFilter && rootWords.includes(term);
+        return score + (title.includes(term) ? 2 : 0) + (directRoot ? 3 : 0);
+      }, 0);
       matches.push({rubric, relevance});
     }
     matches.sort((a, b) => b.relevance - a.relevance || a.rubric.label.length - b.rubric.label.length);
     return {total: matches.length, matches: matches.slice(0, limit).map(({rubric}) => rubric)};
   });
+}
+
+function chapters() {
+  const counts = new Map();
+  for (const {rubric} of rubrics?.values() || []) {
+    counts.set(rubric.chapter, (counts.get(rubric.chapter) || 0) + 1);
+  }
+  return [...counts].map(([chapter, count]) => ({chapter, count}))
+    .sort((a, b) => a.chapter.localeCompare(b.chapter));
+}
+
+function browse({chapter, offset}) {
+  if (typeof chapter !== 'string' || !Number.isInteger(offset) || offset < 0) {
+    throw Error('Choose a Kent chapter and a valid page.');
+  }
+  const matches = [];
+  let total = 0;
+  for (const {rubric} of rubrics?.values() || []) {
+    if (rubric.chapter !== chapter) continue;
+    if (total >= offset && matches.length < 40) matches.push(rubric);
+    total++;
+  }
+  return {matches, total};
 }
 
 async function details(id) {
@@ -196,6 +223,8 @@ async function handle(message) {
       return {count: rubrics.size};
     }
     case 'search': return search(message.queries);
+    case 'chapters': return chapters();
+    case 'browse': return browse(message);
     case 'details': return details(message.rubricId);
     default: throw Error('Unknown Kent index operation.');
   }
